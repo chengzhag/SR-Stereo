@@ -1,3 +1,4 @@
+# example: PYTHONPATH=../ python Stereo_train.py
 from __future__ import print_function
 import argparse
 import os
@@ -22,19 +23,19 @@ parser.add_argument('--maxdisp', type=int, default=192,
                     help='maxium disparity')
 parser.add_argument('--model', default='stackhourglass',
                     help='select model')
-parser.add_argument('--datapath', default='/media/jiaren/ImageNet/SceneFlowData/',
+parser.add_argument('--datapath', default='../../datasets/sceneflow/',
                     help='datapath')
 parser.add_argument('--epochs', type=int, default=10,
                     help='number of epochs to train')
-parser.add_argument('--loadmodel', default=None,
+parser.add_argument('--loadmodel', default='../logs/pretrained/PSMNet_pretrained_sceneflow.tar',
                     help='load model')
-parser.add_argument('--savemodel', default='./',
+parser.add_argument('--savemodel', default='../logs/unamed_PSMNet_sceneflow/',
                     help='save model')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--bothdisparity', type=bool, default=False,
+parser.add_argument('--bothdisparity', type=bool, default=True,
                     help='if train on disparity maps from both views')
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
