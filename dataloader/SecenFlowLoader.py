@@ -7,7 +7,7 @@ import random
 from PIL import Image, ImageOps
 from utils import preprocess
 from dataloader import listflowfile as lt
-from utils import readpfm as rp
+from utils import python_pfm as pfm
 import numpy as np
 
 IMG_EXTENSIONS = [
@@ -22,7 +22,7 @@ def default_loader(path):
     return Image.open(path).convert('RGB')
 
 def disparity_loader(path):
-    return rp.readPFM(path)
+    return pfm.readPFM(path)
 
 
 class myImageFloder(data.Dataset):
