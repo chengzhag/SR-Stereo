@@ -1,6 +1,3 @@
-# example:
-# cd SR-Stereo
-# PYTHONPATH=./ python train/Stereo_train.py
 from __future__ import print_function
 import argparse
 import os
