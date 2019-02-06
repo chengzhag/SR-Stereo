@@ -15,7 +15,7 @@ import time
 import math
 from dataloader import listflowfile as lt
 from dataloader import SecenFlowLoader as DA
-from models import *
+from models.PSMNet import *
 
 parser = argparse.ArgumentParser(description='PSMNet')
 parser.add_argument('--maxdisp', type=int, default=192,
