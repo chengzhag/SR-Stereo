@@ -1,4 +1,6 @@
-# example: PYTHONPATH=../ python Stereo_train.py
+# example:
+# cd SR-Stereo
+# PYTHONPATH=./ python train/Stereo_train.py
 from __future__ import print_function
 import argparse
 import os
@@ -23,13 +25,13 @@ parser.add_argument('--maxdisp', type=int, default=192,
                     help='maxium disparity')
 parser.add_argument('--model', default='stackhourglass',
                     help='select model')
-parser.add_argument('--datapath', default='../../datasets/sceneflow/',
+parser.add_argument('--datapath', default='../datasets/sceneflow/',
                     help='datapath')
 parser.add_argument('--epochs', type=int, default=10,
                     help='number of epochs to train')
-parser.add_argument('--loadmodel', default='../logs/pretrained/PSMNet_pretrained_sceneflow.tar',
+parser.add_argument('--loadmodel', default='logs/pretrained/PSMNet_pretrained_sceneflow.tar',
                     help='load model')
-parser.add_argument('--savemodel', default='../logs/unamed_PSMNet_sceneflow/',
+parser.add_argument('--savemodel', default='logs/unamed_PSMNet_sceneflow/',
                     help='save model')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
