@@ -15,12 +15,12 @@ import time
 import math
 from dataloader import listflowfile as lt
 from dataloader import SecenFlowLoader as DA
-from models.PSMNet import *
+from models.Stereo import Stereo
 
-parser = argparse.ArgumentParser(description='PSMNet')
+parser = argparse.ArgumentParser(description='Stereo')
 parser.add_argument('--maxdisp', type=int, default=192,
                     help='maxium disparity')
-parser.add_argument('--model', default='stackhourglass',
+parser.add_argument('--model', default='PSMNet',
                     help='select model')
 parser.add_argument('--datapath', default='../datasets/sceneflow/',
                     help='datapath')
@@ -54,102 +54,17 @@ TestImgLoader = torch.utils.data.DataLoader(
     DA.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
     batch_size=6, shuffle=False, num_workers=8, drop_last=False)
 
-if args.model == 'stackhourglass':
-    model = stackhourglass(args.maxdisp)
-elif args.model == 'basic':
-    model = basic(args.maxdisp)
-else:
-    print('no model')
+stereo = Stereo(maxdisp=args.maxdisp, model=args.model)
 
 if args.cuda:
-    model = nn.DataParallel(model)
-    model.cuda()
+    stereo.model = nn.DataParallel(stereo.model)
+    stereo.model.cuda()
 
 if args.loadmodel is not None:
     state_dict = torch.load(args.loadmodel)
-    model.load_state_dict(state_dict['state_dict'])
+    stereo.model.load_state_dict(state_dict['state_dict'])
 
-print('Number of model parameters: {}'.format(sum([p.data.nelement() for p in model.parameters()])))
-
-optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999))
-
-
-def train(imgL, imgR, disp_L, disp_R):
-    model.train()
-    imgL = Variable(torch.FloatTensor(imgL))
-    imgR = Variable(torch.FloatTensor(imgR))
-    disp_L = Variable(torch.FloatTensor(disp_L))
-
-    if args.cuda:
-        imgL, imgR, disp_true = imgL.cuda(), imgR.cuda(), disp_L.cuda()
-
-    # ---------
-    mask = disp_true < args.maxdisp
-    mask.detach_()
-
-    # ----
-
-    def update(imgL, imgR, disp_true):
-        optimizer.zero_grad()
-
-        if args.model == 'stackhourglass':
-            output1, output2, output3 = model(imgL, imgR)
-            output1 = torch.squeeze(output1, 1)
-            output2 = torch.squeeze(output2, 1)
-            output3 = torch.squeeze(output3, 1)
-            loss = 0.5 * F.smooth_l1_loss(output1[mask], disp_true[mask], size_average=True) + 0.7 * F.smooth_l1_loss(
-                output2[mask], disp_true[mask], size_average=True) + F.smooth_l1_loss(output3[mask], disp_true[mask],
-                                                                                      size_average=True)
-        elif args.model == 'basic':
-            output = model(imgL, imgR)
-            output = torch.squeeze(output, 1)
-            loss = F.smooth_l1_loss(output[mask], disp_true[mask], size_average=True)
-
-        loss.backward()
-        optimizer.step()
-        return loss.data
-
-    loss = update(imgL, imgR, disp_true)
-
-    # swap and flip input for right disparity map
-    if args.bothdisparity:
-        disp_R = Variable(torch.FloatTensor(disp_R))
-        if args.cuda:
-            disp_true = disp_R.cuda()
-        # ---------
-        mask = disp_true < args.maxdisp
-        mask.detach_()
-        # ----
-
-        loss = loss + update(imgR.flip(3), imgL.flip(3), disp_true.flip(2))
-        loss = loss / 2
-
-    return loss
-
-
-def test(imgL, imgR, disp_true):
-    model.eval()
-    imgL = Variable(torch.FloatTensor(imgL))
-    imgR = Variable(torch.FloatTensor(imgR))
-    if args.cuda:
-        imgL, imgR = imgL.cuda(), imgR.cuda()
-
-    # ---------
-    mask = disp_true < 192
-    # ----
-
-    with torch.no_grad():
-        output3 = model(imgL, imgR)
-
-    output = torch.squeeze(output3.data.cpu(), 1)[:, 4:, :]
-
-    if len(disp_true[mask]) == 0:
-        loss = 0
-    else:
-        loss = torch.mean(torch.abs(output[mask] - disp_true[mask]))  # end-point-error
-
-    return loss
-
+print('Number of model parameters: {}'.format(sum([p.data.nelement() for p in stereo.model.parameters()])))
 
 def adjust_learning_rate(optimizer, epoch):
     lr = 0.001
@@ -165,13 +80,14 @@ def main():
     for epoch in range(1, args.epochs + 1):
         print('This is %d-th epoch' % (epoch))
         total_train_loss = 0
-        adjust_learning_rate(optimizer, epoch)
+        adjust_learning_rate(stereo.optimizer, epoch)
 
         ## training ##
         for batch_idx, (imgL_crop, imgR_crop, disp_crop_L, disp_crop_R) in enumerate(TrainImgLoader):
             start_time = time.time()
-
-            loss = train(imgL_crop, imgR_crop, disp_crop_L, disp_crop_R)
+            if args.cuda:
+                imgL_crop, imgR_crop, disp_crop_L, disp_crop_R = imgL_crop.cuda(), imgR_crop.cuda(), disp_crop_L.cuda(), disp_crop_R.cuda(),
+            loss = stereo.train(imgL_crop, imgR_crop, disp_crop_L, disp_crop_R)
             print('Iter %d training loss = %.3f , time = %.2f' % (batch_idx, loss, time.time() - start_time))
             total_train_loss += loss
         print('epoch %d total training loss = %.3f' % (epoch, total_train_loss / len(TrainImgLoader)))
@@ -182,7 +98,7 @@ def main():
             os.makedirs(args.savemodel)
         torch.save({
             'epoch': epoch,
-            'state_dict': model.state_dict(),
+            'state_dict': stereo.model.state_dict(),
             'train_loss': total_train_loss / len(TrainImgLoader),
         }, savefilename)
 
@@ -191,8 +107,10 @@ def main():
     # ------------- TEST ------------------------------------------------------------
     total_test_loss = 0
     for batch_idx, (imgL, imgR, disp_L, disp_R) in enumerate(TestImgLoader):
-        test_loss = test(imgL, imgR, disp_L)
-        test_loss = test_loss + test(imgR.flip(3), imgL.flip(3), disp_R.flip(2))
+        if args.cuda:
+            imgL, imgR = imgL.cuda(), imgR.cuda()
+        test_loss = stereo.test(imgL, imgR, disp_L)
+        test_loss = test_loss + stereo.test(imgR.flip(3), imgL.flip(3), disp_R.flip(2))
         test_loss = test_loss / 2
         print('Iter %d test loss = %.3f' % (batch_idx, test_loss))
         total_test_loss += test_loss
