@@ -6,7 +6,7 @@ import torchvision.transforms as transforms
 import random
 from PIL import Image, ImageOps
 from utils import preprocess
-from dataloader import listflowfile as lt
+from . import listflowfile as lt
 from utils import python_pfm as pfm
 import numpy as np
 

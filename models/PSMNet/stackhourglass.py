@@ -5,7 +5,7 @@ import torch.utils.data
 from torch.autograd import Variable
 import torch.nn.functional as F
 import math
-from models.PSMNet.submodule import *
+from .submodule import *
 
 
 class hourglass(nn.Module):
