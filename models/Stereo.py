@@ -16,8 +16,9 @@ class _Stereo_PSMNet():
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
         self.maxdisp = PSMNet.maxdisp
 
-    def train(self, imgL, imgR, disp_L, disp_R=None):
-
+    def train(self, imgL, imgR, dispL=None, dispR=None):
+        if dispL is None and dispR is None:
+            raise Exception('No disp input!')
         def _train(self, imgL, imgR, disp_true):
             self.optimizer.zero_grad()
 
@@ -36,13 +37,16 @@ class _Stereo_PSMNet():
             self.optimizer.step()
             return loss.data
 
-        self.model.train()
-        loss = _train(self, imgL, imgR, disp_L)
+        losses = []
+        if dispL is not None:
+            self.model.train()
+            losses.append(_train(self, imgL, imgR, dispL))
 
-        if disp_R is not None:
+        if dispR is not None:
             # swap and flip input for right disparity map
-            loss = loss + _train(self, imgR.flip(3), imgL.flip(3), disp_R.flip(2))
-            loss = loss / 2
+            losses.append(_train(self, imgR.flip(3), imgL.flip(3), dispR.flip(2)))
+
+        loss = sum(losses)/len(losses)
 
         return loss
 
