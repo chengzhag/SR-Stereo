@@ -46,11 +46,11 @@ if args.cuda:
 all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = lt.dataloader(
     args.datapath)
 
-TrainImgLoader = torch.utils.data.DataLoader(
+trainImgLoader = torch.utils.data.DataLoader(
     DA.myImageFloder(all_left_img, all_right_img, all_left_disp, all_right_disp, True),
     batch_size=12, shuffle=True, num_workers=8, drop_last=False)
 
-TestImgLoader = torch.utils.data.DataLoader(
+testImgLoader = torch.utils.data.DataLoader(
     DA.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
     batch_size=11, shuffle=False, num_workers=8, drop_last=False)
 
@@ -66,6 +66,7 @@ if args.loadmodel is not None:
 
 print('Number of model parameters: {}'.format(sum([p.data.nelement() for p in stereo.model.parameters()])))
 
+
 def adjust_learning_rate(optimizer, epoch):
     lr = 0.001
     print(lr)
@@ -74,52 +75,54 @@ def adjust_learning_rate(optimizer, epoch):
 
 
 def main():
-    start_full_time = time.time()
+    ticFull = time.time()
     if not os.path.exists(args.savemodel):
         os.makedirs(args.savemodel)
+    # TRAIN
     for epoch in range(1, args.epochs + 1):
         print('This is %d-th epoch' % (epoch))
-        total_train_loss = 0
+        totalTrainLoss = 0
         adjust_learning_rate(stereo.optimizer, epoch)
 
-        ## training ##
-        for batch_idx, (imgL_crop, imgR_crop, disp_crop_L, disp_crop_R) in enumerate(TrainImgLoader):
+        # iteration
+        for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(trainImgLoader):
             start_time = time.time()
             if args.cuda:
-                imgL_crop, imgR_crop, disp_crop_L, disp_crop_R = imgL_crop.cuda(), imgR_crop.cuda(), disp_crop_L.cuda(), disp_crop_R.cuda(),
-            loss, [lossL, lossR] = stereo.train(imgL_crop, imgR_crop, disp_crop_L, disp_crop_R)
-            print('Iter %d training loss = %.3f, lossL = %.3f, lossR = %.3f, time = %.2f' % (batch_idx, loss, lossL, lossR, time.time() - start_time))
-            total_train_loss += loss
-        print('epoch %d total training loss = %.3f' % (epoch, total_train_loss / len(TrainImgLoader)))
+                imgL, imgR, dispL, dispR = imgL.cuda(), imgR.cuda(), dispL.cuda(), dispR.cuda(),
+            lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR)
+            print('it %d, lossAvg = %.3f, lossL %.2f, lossR %.2f, time %.2f' % (
+                batch_idx, lossAvg, lossL, lossR, time.time() - start_time))
+            totalTrainLoss += lossAvg
+        print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / len(trainImgLoader)))
 
-        # SAVE
-        savefilename = args.savemodel + '/checkpoint_' + str(epoch) + '.tar'
+        # save
+        saveDir = os.path.join(args.savemodel, 'checkpoint_%05d.tar' % epoch)
         if not os.path.exists(args.savemodel):
             os.makedirs(args.savemodel)
         torch.save({
             'epoch': epoch,
             'state_dict': stereo.model.state_dict(),
-            'train_loss': total_train_loss / len(TrainImgLoader),
-        }, savefilename)
+            'train_loss': totalTrainLoss / len(trainImgLoader),
+        }, saveDir)
 
-    print('full training time = %.2f HR' % ((time.time() - start_full_time) / 3600))
+    print('full training time = %.2f HR' % ((time.time() - ticFull) / 3600))
 
-    # ------------- TEST ------------------------------------------------------------
-    total_test_loss = 0
-    for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(TestImgLoader):
+    # TEST
+    totalTestLoss = 0
+    for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(testImgLoader):
         if args.cuda:
             imgL, imgR = imgL.cuda(), imgR.cuda()
-        testLoss, [testLossL, testLossR] = stereo.test(imgL, imgR, dispL, dispR, type='l1')
-        print('Iter %d test loss = %.3f, left loss = %.3f, right loss = %.3f' % (batch_idx, testLoss, testLossL, testLossR))
-        total_test_loss += testLoss
+        lossAvg, [lossL, lossR] = stereo.test(imgL, imgR, dispL, dispR, type='l1')
+        print('it %d, loss = %.3f, lossL = %.3f, lossR = %.3f' % (batch_idx, lossAvg, lossL, lossR))
+        totalTestLoss += lossAvg
 
-    print('total test loss = %.3f' % (total_test_loss / len(TestImgLoader)))
+    print('total test loss = %.3f' % (totalTestLoss / len(testImgLoader)))
     # ----------------------------------------------------------------------------------
     # SAVE test information
-    savefilename = args.savemodel + 'testinformation.tar'
+    saveDir = args.savemodel + 'testinformation.tar'
     torch.save({
-        'test_loss': total_test_loss / len(TestImgLoader),
-    }, savefilename)
+        'test_loss': totalTestLoss / len(testImgLoader),
+    }, saveDir)
 
 
 if __name__ == '__main__':
