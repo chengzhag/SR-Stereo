@@ -106,14 +106,14 @@ def main():
 
     # ------------- TEST ------------------------------------------------------------
     total_test_loss = 0
-    for batch_idx, (imgL, imgR, disp_L, disp_R) in enumerate(TestImgLoader):
+    for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(TestImgLoader):
         if args.cuda:
             imgL, imgR = imgL.cuda(), imgR.cuda()
-        test_loss = stereo.test(imgL, imgR, disp_L)
-        test_loss = test_loss + stereo.test(imgR.flip(3), imgL.flip(3), disp_R.flip(2))
-        test_loss = test_loss / 2
-        print('Iter %d test loss = %.3f' % (batch_idx, test_loss))
-        total_test_loss += test_loss
+        testLossL = stereo.test(imgL, imgR, dispL=dispL, type='l1')
+        testLossR = stereo.test(imgL, imgR, dispR=dispR, type='l1')
+        testLoss = (testLossL + testLossR) / 2
+        print('Iter %d test loss = %.3f, left loss = %.3f, right loss = %.3f' % (batch_idx, testLoss, testLossL, testLossR))
+        total_test_loss += testLoss
 
     print('total test loss = %.3f' % (total_test_loss / len(TestImgLoader)))
     # ----------------------------------------------------------------------------------

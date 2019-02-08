@@ -17,8 +17,8 @@ class _Stereo_PSMNet():
         self.maxdisp = PSMNet.maxdisp
 
     def train(self, imgL, imgR, dispL=None, dispR=None):
-        if dispL is None and dispR is None:
-            raise Exception('No disp input!')
+        self.model.train()
+        self._assertDisp(dispL, dispR)
         def _train(self, imgL, imgR, disp_true):
             self.optimizer.zero_grad()
 
@@ -39,35 +39,67 @@ class _Stereo_PSMNet():
 
         losses = []
         if dispL is not None:
-            self.model.train()
             losses.append(_train(self, imgL, imgR, dispL))
 
         if dispR is not None:
             # swap and flip input for right disparity map
-            losses.append(_train(self, imgR.flip(3), imgL.flip(3), dispR.flip(2)))
+            losses.append(_train(self, self._flip(imgR), self._flip(imgL), self._flip(dispR)))
 
         loss = sum(losses)/len(losses)
 
         return loss
 
-    def test(self, imgL, imgR, disp_true):
+    def predict(self, imgL, imgR, mode='both'):
+        def _predictL(self, imgL, imgR):return self.model(imgL, imgR)
+        def _predictR(self, imgL, imgR):return self._flip(self.model(self._flip(imgR), self._flip(imgL)))
         self.model.eval()
-        # imgL = Variable(torch.FloatTensor(imgL))
-        # imgR = Variable(torch.FloatTensor(imgR))
-
-        mask = disp_true < 192
-
         with torch.no_grad():
-            output3 = self.model(imgL, imgR)
+            if mode == 'left':
+                return _predictL(self, imgL, imgR)
+            elif mode == 'right':
+                return _predictR(self, imgL, imgR)
+            elif mode == 'both':
+                return [_predictL(self, imgL, imgR), _predictR(self, imgL, imgR)]
+            else:
+                raise Exception('No mode \'%s\'!' % mode)
 
-        output = torch.squeeze(output3.data.cpu(), 1)[:, 4:, :]
+    def test(self, imgL, imgR, dispL=None, dispR=None, type='l1'):
+        self._assertDisp(dispL, dispR)
 
-        if len(disp_true[mask]) == 0:
-            loss = 0
+        def _test(fcn, imgL, imgR, dispL=None, dispR=None):
+            losses = []
+
+            for gt, mode in zip([dispL, dispR], ['left', 'right']):
+                if gt is None:
+                    continue
+                output = self.predict(imgL, imgR, mode)
+                mask = gt < self.maxdisp
+                output = torch.squeeze(output.data.cpu(), 1)[:, 4:, :]
+                losses.append(fcn(gt[mask], output[mask]))
+
+            loss = sum(losses) / len(losses)
+            return loss
+
+        if type == 'l1':
+            def l1Loss(gt, output):
+                if len(gt) == 0:
+                    loss = 0
+                else:
+                    loss = torch.mean(torch.abs(output - gt))  # end-point-error
+                return loss
+            loss = _test(l1Loss, imgL, imgR, dispL, dispR)
+
         else:
-            loss = torch.mean(torch.abs(output[mask] - disp_true[mask]))  # end-point-error
+            raise Exception('No error type \'%s\'!' % type)
 
         return loss
+
+    def _flip(self, im):
+        return im.flip(-1)
+
+    def _assertDisp(self, dispL=None, dispR=None):
+        if dispL is None and dispR is None:
+            raise Exception('No disp input!')
 
 
 
