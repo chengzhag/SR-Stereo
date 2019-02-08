@@ -48,11 +48,11 @@ all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_
 
 TrainImgLoader = torch.utils.data.DataLoader(
     DA.myImageFloder(all_left_img, all_right_img, all_left_disp, all_right_disp, True),
-    batch_size=6, shuffle=True, num_workers=8, drop_last=False)
+    batch_size=12, shuffle=True, num_workers=8, drop_last=False)
 
 TestImgLoader = torch.utils.data.DataLoader(
     DA.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
-    batch_size=6, shuffle=False, num_workers=8, drop_last=False)
+    batch_size=11, shuffle=False, num_workers=8, drop_last=False)
 
 stereo = Stereo(maxdisp=args.maxdisp, model=args.model)
 
@@ -87,8 +87,8 @@ def main():
             start_time = time.time()
             if args.cuda:
                 imgL_crop, imgR_crop, disp_crop_L, disp_crop_R = imgL_crop.cuda(), imgR_crop.cuda(), disp_crop_L.cuda(), disp_crop_R.cuda(),
-            loss = stereo.train(imgL_crop, imgR_crop, disp_crop_L, disp_crop_R)
-            print('Iter %d training loss = %.3f , time = %.2f' % (batch_idx, loss, time.time() - start_time))
+            loss, [lossL, lossR] = stereo.train(imgL_crop, imgR_crop, disp_crop_L, disp_crop_R)
+            print('Iter %d training loss = %.3f, lossL = %.3f, lossR = %.3f, time = %.2f' % (batch_idx, loss, lossL, lossR, time.time() - start_time))
             total_train_loss += loss
         print('epoch %d total training loss = %.3f' % (epoch, total_train_loss / len(TrainImgLoader)))
 
@@ -109,9 +109,7 @@ def main():
     for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(TestImgLoader):
         if args.cuda:
             imgL, imgR = imgL.cuda(), imgR.cuda()
-        testLossL = stereo.test(imgL, imgR, dispL=dispL, type='l1')
-        testLossR = stereo.test(imgL, imgR, dispR=dispR, type='l1')
-        testLoss = (testLossL + testLossR) / 2
+        testLoss, [testLossL, testLossR] = stereo.test(imgL, imgR, dispL, dispR, type='l1')
         print('Iter %d test loss = %.3f, left loss = %.3f, right loss = %.3f' % (batch_idx, testLoss, testLossL, testLossR))
         total_test_loss += testLoss
 

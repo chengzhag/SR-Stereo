@@ -47,19 +47,20 @@ class _Stereo_PSMNet():
 
         loss = sum(losses)/len(losses)
 
-        return loss
+        return loss, losses
 
     def predict(self, imgL, imgR, mode='both'):
+        self.model.eval()
         def _predictL(self, imgL, imgR):return self.model(imgL, imgR)
         def _predictR(self, imgL, imgR):return self._flip(self.model(self._flip(imgR), self._flip(imgL)))
-        self.model.eval()
+
         with torch.no_grad():
             if mode == 'left':
                 return _predictL(self, imgL, imgR)
             elif mode == 'right':
                 return _predictR(self, imgL, imgR)
             elif mode == 'both':
-                return [_predictL(self, imgL, imgR), _predictR(self, imgL, imgR)]
+                return _predictL(self, imgL, imgR), _predictR(self, imgL, imgR)
             else:
                 raise Exception('No mode \'%s\'!' % mode)
 
@@ -75,10 +76,10 @@ class _Stereo_PSMNet():
                 output = self.predict(imgL, imgR, mode)
                 mask = gt < self.maxdisp
                 output = torch.squeeze(output.data.cpu(), 1)[:, 4:, :]
-                losses.append(fcn(gt[mask], output[mask]))
+                losses.append(fcn(gt[mask], output[mask]).data)
 
             loss = sum(losses) / len(losses)
-            return loss
+            return loss, losses
 
         if type == 'l1':
             def l1Loss(gt, output):
@@ -87,12 +88,11 @@ class _Stereo_PSMNet():
                 else:
                     loss = torch.mean(torch.abs(output - gt))  # end-point-error
                 return loss
-            loss = _test(l1Loss, imgL, imgR, dispL, dispR)
+            return _test(l1Loss, imgL, imgR, dispL, dispR)
 
         else:
             raise Exception('No error type \'%s\'!' % type)
 
-        return loss
 
     def _flip(self, im):
         return im.flip(-1)
