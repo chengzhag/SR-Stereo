@@ -87,15 +87,18 @@ def main():
         adjust_learning_rate(stereo.optimizer, epoch)
 
         # iteration
+        tic = time.time()
         for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(trainImgLoader):
-            start_time = time.time()
             if args.cuda:
                 imgL, imgR, dispL, dispR = imgL.cuda(), imgR.cuda(), dispL.cuda(), dispR.cuda(),
             lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR)
-            print('it %d/%d, lossAvg = %.3f, lossL %.2f, lossR %.2f, time %.2f' % (
-                batch_idx, len(trainImgLoader), lossAvg, lossL, lossR, time.time() - start_time))
             writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, batch_idx)
             totalTrainLoss += lossAvg
+            left = (time.time() - tic) / 3600 * ((args.epochs - epoch + 1) * len(trainImgLoader) - batch_idx - 1)
+            print('it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, left %.2fh' % (
+                batch_idx, len(trainImgLoader) * args.epochs, lossAvg, lossL, lossR, left))
+            tic = time.time()
+
         print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / len(trainImgLoader)))
 
         # save
@@ -107,18 +110,23 @@ def main():
             'state_dict': stereo.model.state_dict(),
             'train_loss': totalTrainLoss / len(trainImgLoader),
         }, saveDir)
+
     writer.close()
     print('full training time = %.2f HR' % ((time.time() - ticFull) / 3600))
 
     # TEST
     totalTestLoss = [0, 0, 0]
+    tic = time.time()
     for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(testImgLoader):
         if args.cuda:
             imgL, imgR = imgL.cuda(), imgR.cuda()
         lossAvg, [lossL, lossR] = stereo.test(imgL, imgR, dispL, dispR, type='l1')
         totalTestLoss = [total + batch for total, batch in zip(totalTestLoss, [lossAvg, lossL, lossR])]
-        print('it %d/%d, lossAvg = %.3f, lossL = %.3f, lossR = %.3f, lossTotal = %.3f, lossLTotal = %.3f, lossRTotal = %.3f' % tuple(
-            [batch_idx, len(testImgLoader)] + [lossAvg, lossL, lossR] + [l / (batch_idx + 1) for l in totalTestLoss]))
+        left = (time.time() - tic) / 3600 * (len(testImgLoader) - batch_idx - 1)
+        print(
+            'it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, lossTotal %.2f, lossLTotal %.2f, lossRTotal %.2f, left %.2fh' % tuple(
+                [batch_idx, len(testImgLoader)] + [lossAvg, lossL, lossR] + [l / (batch_idx + 1) for l in totalTestLoss] + [left]))
+        tic = time.time()
 
     # SAVE test information
     saveDir = args.savemodel + 'testinformation.tar'
