@@ -1,15 +1,17 @@
-from models.PSMNet import *
+import os
+import time
 import torch.optim as optim
 import torch
-from torch.autograd import Variable
 import torch.nn.functional as F
 import torch.nn as nn
-
+from models.PSMNet import *
 from evaluation import evalFcn
 
 
 class PSMNet():
     def __init__(self, maxdisp=192, cuda=True):
+        self.startTime = time.localtime(time.time())
+        self.saveFolder = time.strftime('%y%m%d%H%M%S_', self.startTime) + self.__class__.__name__
         self.model = stackhourglass(maxdisp)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
         self.maxdisp = maxdisp
@@ -105,3 +107,15 @@ class PSMNet():
 
     def nParams(self):
         return sum([p.data.nelement() for p in self.model.parameters()])
+
+    def save(self, stage, epoch, iteration, trainLoss):
+        saveFolder = os.path.join('logs', stage, self.saveFolder)
+        saveDir = os.path.join(saveFolder, 'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
+        if not os.path.exists(saveFolder):
+            os.makedirs(saveFolder)
+        torch.save({
+            'epoch': epoch,
+            'iteration': iteration,
+            'state_dict': self.model.state_dict(),
+            'train_loss': trainLoss,
+        }, saveDir)

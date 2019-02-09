@@ -93,24 +93,20 @@ def main():
             print('it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, left %.2fh' % (
                 batch_idx, len(trainImgLoader) * args.epochs, lossAvg, lossL, lossR, timeLeft))
             tic = time.time()
+            break
 
         print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / len(trainImgLoader)))
 
         # save
-        saveDir = os.path.join(args.savemodel, 'checkpoint_%05d.tar' % epoch)
-        if not os.path.exists(args.savemodel):
-            os.makedirs(args.savemodel)
-        torch.save({
-            'epoch': epoch,
-            'state_dict': stereo.model.state_dict(),
-            'train_loss': totalTrainLoss / len(trainImgLoader),
-        }, saveDir)
+        stereo.save(stage='Stereo_train', epoch=epoch, iteration=batch_idx,
+                    trainLoss=totalTrainLoss / len(trainImgLoader))
 
     writer.close()
     print('full training time = %.2f HR' % ((time.time() - ticFull) / 3600))
 
     # TEST
-    totalTestScores, testTime = Stereo_eval.test(stereo=stereo, testImgLoader=testImgLoader, mode='both', type=args.test_type)
+    totalTestScores, testTime = Stereo_eval.test(stereo=stereo, testImgLoader=testImgLoader, mode='both',
+                                                 type=args.test_type)
 
     # SAVE test information
     Stereo_eval.logTest(args.datapath, args.savemodel, args.test_type, testTime, (
