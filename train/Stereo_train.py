@@ -16,6 +16,7 @@ import math
 from dataloader import listflowfile as lt
 from dataloader import SecenFlowLoader as DA
 from models.Stereo import Stereo
+from tensorboardX import SummaryWriter
 
 parser = argparse.ArgumentParser(description='Stereo')
 parser.add_argument('--maxdisp', type=int, default=192,
@@ -46,11 +47,11 @@ if args.cuda:
 all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = lt.dataloader(
     args.datapath)
 
-TrainImgLoader = torch.utils.data.DataLoader(
+trainImgLoader = torch.utils.data.DataLoader(
     DA.myImageFloder(all_left_img, all_right_img, all_left_disp, all_right_disp, True),
     batch_size=12, shuffle=True, num_workers=8, drop_last=False)
 
-TestImgLoader = torch.utils.data.DataLoader(
+testImgLoader = torch.utils.data.DataLoader(
     DA.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
     batch_size=11, shuffle=False, num_workers=8, drop_last=False)
 
@@ -66,6 +67,7 @@ if args.loadmodel is not None:
 
 print('Number of model parameters: {}'.format(sum([p.data.nelement() for p in stereo.model.parameters()])))
 
+
 def adjust_learning_rate(optimizer, epoch):
     lr = 0.001
     print(lr)
@@ -74,52 +76,63 @@ def adjust_learning_rate(optimizer, epoch):
 
 
 def main():
-    start_full_time = time.time()
+    ticFull = time.time()
     if not os.path.exists(args.savemodel):
         os.makedirs(args.savemodel)
+    writer = SummaryWriter(os.path.join(args.savemodel, 'logs'))
+    # TRAIN
     for epoch in range(1, args.epochs + 1):
         print('This is %d-th epoch' % (epoch))
-        total_train_loss = 0
+        totalTrainLoss = 0
         adjust_learning_rate(stereo.optimizer, epoch)
 
-        ## training ##
-        for batch_idx, (imgL_crop, imgR_crop, disp_crop_L, disp_crop_R) in enumerate(TrainImgLoader):
-            start_time = time.time()
+        # iteration
+        tic = time.time()
+        for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(trainImgLoader):
             if args.cuda:
-                imgL_crop, imgR_crop, disp_crop_L, disp_crop_R = imgL_crop.cuda(), imgR_crop.cuda(), disp_crop_L.cuda(), disp_crop_R.cuda(),
-            loss, [lossL, lossR] = stereo.train(imgL_crop, imgR_crop, disp_crop_L, disp_crop_R)
-            print('Iter %d training loss = %.3f, lossL = %.3f, lossR = %.3f, time = %.2f' % (batch_idx, loss, lossL, lossR, time.time() - start_time))
-            total_train_loss += loss
-        print('epoch %d total training loss = %.3f' % (epoch, total_train_loss / len(TrainImgLoader)))
+                imgL, imgR, dispL, dispR = imgL.cuda(), imgR.cuda(), dispL.cuda(), dispR.cuda(),
+            lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR)
+            writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, batch_idx)
+            totalTrainLoss += lossAvg
+            left = (time.time() - tic) / 3600 * ((args.epochs - epoch + 1) * len(trainImgLoader) - batch_idx - 1)
+            print('it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, left %.2fh' % (
+                batch_idx, len(trainImgLoader) * args.epochs, lossAvg, lossL, lossR, left))
+            tic = time.time()
 
-        # SAVE
-        savefilename = args.savemodel + '/checkpoint_' + str(epoch) + '.tar'
+        print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / len(trainImgLoader)))
+
+        # save
+        saveDir = os.path.join(args.savemodel, 'checkpoint_%05d.tar' % epoch)
         if not os.path.exists(args.savemodel):
             os.makedirs(args.savemodel)
         torch.save({
             'epoch': epoch,
             'state_dict': stereo.model.state_dict(),
-            'train_loss': total_train_loss / len(TrainImgLoader),
-        }, savefilename)
+            'train_loss': totalTrainLoss / len(trainImgLoader),
+        }, saveDir)
 
-    print('full training time = %.2f HR' % ((time.time() - start_full_time) / 3600))
+    writer.close()
+    print('full training time = %.2f HR' % ((time.time() - ticFull) / 3600))
 
-    # ------------- TEST ------------------------------------------------------------
-    total_test_loss = 0
-    for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(TestImgLoader):
+    # TEST
+    totalTestLoss = [0, 0, 0]
+    tic = time.time()
+    for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(testImgLoader):
         if args.cuda:
             imgL, imgR = imgL.cuda(), imgR.cuda()
-        testLoss, [testLossL, testLossR] = stereo.test(imgL, imgR, dispL, dispR, type='l1')
-        print('Iter %d test loss = %.3f, left loss = %.3f, right loss = %.3f' % (batch_idx, testLoss, testLossL, testLossR))
-        total_test_loss += testLoss
+        lossAvg, [lossL, lossR] = stereo.test(imgL, imgR, dispL, dispR, type='l1')
+        totalTestLoss = [total + batch for total, batch in zip(totalTestLoss, [lossAvg, lossL, lossR])]
+        left = (time.time() - tic) / 3600 * (len(testImgLoader) - batch_idx - 1)
+        print(
+            'it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, lossTotal %.2f, lossLTotal %.2f, lossRTotal %.2f, left %.2fh' % tuple(
+                [batch_idx, len(testImgLoader)] + [lossAvg, lossL, lossR] + [l / (batch_idx + 1) for l in totalTestLoss] + [left]))
+        tic = time.time()
 
-    print('total test loss = %.3f' % (total_test_loss / len(TestImgLoader)))
-    # ----------------------------------------------------------------------------------
     # SAVE test information
-    savefilename = args.savemodel + 'testinformation.tar'
+    saveDir = args.savemodel + 'testinformation.tar'
     torch.save({
-        'test_loss': total_test_loss / len(TestImgLoader),
-    }, savefilename)
+        'test_loss': [l / len(testImgLoader) for l in totalTestLoss],
+    }, saveDir)
 
 
 if __name__ == '__main__':
