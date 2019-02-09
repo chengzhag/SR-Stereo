@@ -22,4 +22,28 @@ def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
                         [batch_idx, len(testImgLoader)] + scoresPrint + [timeLeft]))
             tic = time.time()
         return [l / len(testImgLoader) for l in totalTestScores]
+    elif mode == 'left' or mode == 'right':
+        totalTestScore = 0
+        tic = time.time()
+        for batch_idx, (imgL, imgR, dispGT) in enumerate(testImgLoader):
+            if stereo.cuda:
+                imgL, imgR = imgL.cuda(), imgR.cuda()
+            if mode == 'left':
+                score = stereo.test(imgL, imgR, dispL=dispGT, type=type, kitti=kitti)
+            else:
+                score = stereo.test(imgL, imgR, dispR=dispGT, type=type, kitti=kitti)
+            totalTestScore += score
+            timeLeft = (time.time() - tic) / 3600 * (len(testImgLoader) - batch_idx - 1)
+
+            scoresPrint = [score, totalTestScore/(batch_idx + 1)]
+            if type == 'outlier':
+                print(
+                    'it %d/%d, score %.2f%%, totalTestScore %.2f%%, left %.2fh' % tuple(
+                        [batch_idx, len(testImgLoader)] + [s * 100 for s in scoresPrint] + [timeLeft]))
+            else:
+                print(
+                    'it %d/%d, loss %.2f, totalTestLoss %.2f, left %.2fh' % tuple(
+                        [batch_idx, len(testImgLoader)] + scoresPrint + [timeLeft]))
+            tic = time.time()
+        return totalTestScore/ len(testImgLoader)
 
