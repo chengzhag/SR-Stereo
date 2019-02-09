@@ -58,12 +58,7 @@ testImgLoader = torch.utils.data.DataLoader(
     batch_size=11, shuffle=False, num_workers=8, drop_last=False)
 
 stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda)
-
-if args.loadmodel is not None:
-    state_dict = torch.load(args.loadmodel)
-    stereo.model.load_state_dict(state_dict['state_dict'])
-
-print('Number of model parameters: {}'.format(sum([p.data.nelement() for p in stereo.model.parameters()])))
+stereo.load(args.loadmodel)
 
 
 def adjust_learning_rate(optimizer, epoch):

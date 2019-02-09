@@ -93,4 +93,13 @@ class PSMNet():
         if dispL is None and dispR is None:
             raise Exception('No disp input!')
 
+    def load(self, checkpoint):
+        if checkpoint is not None:
+            state_dict = torch.load(checkpoint)
+            self.model.load_state_dict(state_dict['state_dict'])
+            print('Loading complete! Number of model parameters: %d' % self.nParams())
+        else:
+            raise Exception('checkpoint dir is None!')
 
+    def nParams(self):
+        return sum([p.data.nelement() for p in self.model.parameters()])
