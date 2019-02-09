@@ -16,6 +16,7 @@ import math
 from dataloader import listflowfile as lt
 from dataloader import SecenFlowLoader as DA
 from models.Stereo import Stereo
+from tensorboardX import SummaryWriter
 
 parser = argparse.ArgumentParser(description='Stereo')
 parser.add_argument('--maxdisp', type=int, default=192,
@@ -78,6 +79,7 @@ def main():
     ticFull = time.time()
     if not os.path.exists(args.savemodel):
         os.makedirs(args.savemodel)
+    writer = SummaryWriter(os.path.join(args.savemodel, 'logs'))
     # TRAIN
     for epoch in range(1, args.epochs + 1):
         print('This is %d-th epoch' % (epoch))
@@ -90,8 +92,9 @@ def main():
             if args.cuda:
                 imgL, imgR, dispL, dispR = imgL.cuda(), imgR.cuda(), dispL.cuda(), dispR.cuda(),
             lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR)
-            print('it %d, lossAvg = %.3f, lossL %.2f, lossR %.2f, time %.2f' % (
-                batch_idx, lossAvg, lossL, lossR, time.time() - start_time))
+            print('it %d/%d, lossAvg = %.3f, lossL %.2f, lossR %.2f, time %.2f' % (
+                batch_idx, len(trainImgLoader), lossAvg, lossL, lossR, time.time() - start_time))
+            writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, batch_idx)
             totalTrainLoss += lossAvg
         print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / len(trainImgLoader)))
 
@@ -104,24 +107,23 @@ def main():
             'state_dict': stereo.model.state_dict(),
             'train_loss': totalTrainLoss / len(trainImgLoader),
         }, saveDir)
-
+    writer.close()
     print('full training time = %.2f HR' % ((time.time() - ticFull) / 3600))
 
     # TEST
-    totalTestLoss = 0
+    totalTestLoss = [0, 0, 0]
     for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(testImgLoader):
         if args.cuda:
             imgL, imgR = imgL.cuda(), imgR.cuda()
         lossAvg, [lossL, lossR] = stereo.test(imgL, imgR, dispL, dispR, type='l1')
-        print('it %d, loss = %.3f, lossL = %.3f, lossR = %.3f' % (batch_idx, lossAvg, lossL, lossR))
-        totalTestLoss += lossAvg
+        totalTestLoss = [total + batch for total, batch in zip(totalTestLoss, [lossAvg, lossL, lossR])]
+        print('it %d/%d, lossAvg = %.3f, lossL = %.3f, lossR = %.3f, lossTotal = %.3f, lossLTotal = %.3f, lossRTotal = %.3f' % tuple(
+            [batch_idx, len(testImgLoader)] + [lossAvg, lossL, lossR] + [l / (batch_idx + 1) for l in totalTestLoss]))
 
-    print('total test loss = %.3f' % (totalTestLoss / len(testImgLoader)))
-    # ----------------------------------------------------------------------------------
     # SAVE test information
     saveDir = args.savemodel + 'testinformation.tar'
     torch.save({
-        'test_loss': totalTestLoss / len(testImgLoader),
+        'test_loss': [l / len(testImgLoader) for l in totalTestLoss],
     }, saveDir)
 
 
