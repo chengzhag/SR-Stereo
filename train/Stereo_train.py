@@ -13,8 +13,8 @@ import torch.nn.functional as F
 import numpy as np
 import time
 import math
-from dataloader import listflowfile as lt
-from dataloader import SecenFlowLoader as DA
+from dataloader import listSceneFlowFile
+from dataloader import SceneFlowLoader
 from models import Stereo
 from tensorboardX import SummaryWriter
 from evaluation import Stereo_eval
@@ -47,15 +47,15 @@ torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
-all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = lt.dataloader(
+all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = listSceneFlowFile.dataloader(
     args.datapath)
 
 trainImgLoader = torch.utils.data.DataLoader(
-    DA.myImageFloder(all_left_img, all_right_img, all_left_disp, all_right_disp, True),
+    SceneFlowLoader.myImageFloder(all_left_img, all_right_img, all_left_disp, all_right_disp, True),
     batch_size=12, shuffle=True, num_workers=8, drop_last=False)
 
 testImgLoader = torch.utils.data.DataLoader(
-    DA.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
+    SceneFlowLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
     batch_size=11, shuffle=False, num_workers=8, drop_last=False)
 
 stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda)
