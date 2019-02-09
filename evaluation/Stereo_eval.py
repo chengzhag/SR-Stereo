@@ -1,4 +1,6 @@
+import argparse
 import time
+import torch
 
 def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
     if mode == 'both':
@@ -46,4 +48,29 @@ def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
                         [batch_idx, len(testImgLoader)] + scoresPrint + [timeLeft]))
             tic = time.time()
         return totalTestScore/ len(testImgLoader)
+
+def main():
+    parser = argparse.ArgumentParser(description='Stereo')
+    parser.add_argument('--maxdisp', type=int, default=192,
+                        help='maxium disparity')
+    parser.add_argument('--model', default='PSMNet',
+                        help='select model')
+    parser.add_argument('--datapath', default='../datasets/sceneflow/',
+                        help='datapath')
+    parser.add_argument('--loadmodel', default='logs/pretrained/PSMNet_pretrained_sceneflow.tar',
+                        help='load model')
+    parser.add_argument('--no_cuda', action='store_true', default=False,
+                        help='enables CUDA training')
+    parser.add_argument('--seed', type=int, default=1, metavar='S',
+                        help='random seed (default: 1)')
+    parser.add_argument('--test_type', type=str, default='outlier',
+                        help='evaluation type used in testing')
+    args = parser.parse_args()
+    args.cuda = not args.no_cuda and torch.cuda.is_available()
+
+    # TODO: Add code to test given model
+    pass
+
+if __name__ == '__main__':
+    main()
 

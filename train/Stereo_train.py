@@ -32,11 +32,11 @@ parser.add_argument('--loadmodel', default='logs/pretrained/PSMNet_pretrained_sc
                     help='load model')
 parser.add_argument('--savemodel', default='logs/unamed_PSMNet_sceneflow/',
                     help='save model')
-parser.add_argument('--no-cuda', action='store_true', default=False,
+parser.add_argument('--no_cuda', action='store_true', default=False,
                     help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--bothdisparity', type=bool, default=True,
+parser.add_argument('--both_disparity', type=bool, default=True,
                     help='if train on disparity maps from both views')
 parser.add_argument('--test_type', type=str, default='outlier',
                     help='evaluation type used in testing')
