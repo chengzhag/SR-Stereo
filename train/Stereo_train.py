@@ -57,11 +57,7 @@ testImgLoader = torch.utils.data.DataLoader(
     DA.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
     batch_size=11, shuffle=False, num_workers=8, drop_last=False)
 
-stereo = Stereo(maxdisp=args.maxdisp, model=args.model)
-
-if args.cuda:
-    stereo.model = nn.DataParallel(stereo.model)
-    stereo.model.cuda()
+stereo = Stereo(maxdisp=args.maxdisp, model=args.model, cuda=args.cuda)
 
 if args.loadmodel is not None:
     state_dict = torch.load(args.loadmodel)

@@ -3,21 +3,24 @@ import torch.optim as optim
 import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
+import torch.nn as nn
+
 from evaluation import evalFcn
 
 
-def Stereo(maxdisp=192, model='PSMNet'):
+def Stereo(maxdisp=192, model='PSMNet', cuda=True):
     if model == 'PSMNet':
-        return _Stereo_PSMNet(stackhourglass(maxdisp))
+        return _Stereo_PSMNet(stackhourglass(maxdisp), cuda=cuda)
     else:
         print('no model')
 
 
 class _Stereo_PSMNet():
-    def __init__(self, PSMNet):
+    def __init__(self, PSMNet, cuda = True):
         self.model = PSMNet
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
         self.maxdisp = PSMNet.maxdisp
+        self._cuda()
 
     def train(self, imgL, imgR, dispL=None, dispR=None):
         self.model.train()
@@ -94,3 +97,7 @@ class _Stereo_PSMNet():
     def _assertDisp(self, dispL=None, dispR=None):
         if dispL is None and dispR is None:
             raise Exception('No disp input!')
+
+    def _cuda(self):
+        self.model = nn.DataParallel(self.model)
+        self.model.cuda()
