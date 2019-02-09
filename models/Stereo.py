@@ -19,7 +19,7 @@ class _Stereo_PSMNet():
     def train(self, imgL, imgR, dispL=None, dispR=None):
         self.model.train()
         self._assertDisp(dispL, dispR)
-        def _train(self, imgL, imgR, disp_true):
+        def _train(imgL, imgR, disp_true):
             self.optimizer.zero_grad()
 
             mask = disp_true < self.maxdisp
@@ -39,11 +39,11 @@ class _Stereo_PSMNet():
 
         losses = []
         if dispL is not None:
-            losses.append(_train(self, imgL, imgR, dispL))
+            losses.append(_train(imgL, imgR, dispL))
 
         if dispR is not None:
             # swap and flip input for right disparity map
-            losses.append(_train(self, self._flip(imgR), self._flip(imgL), self._flip(dispR)))
+            losses.append(_train(self._flip(imgR), self._flip(imgL), self._flip(dispR)))
 
         loss = sum(losses)/len(losses)
 
@@ -51,16 +51,16 @@ class _Stereo_PSMNet():
 
     def predict(self, imgL, imgR, mode='both'):
         self.model.eval()
-        def _predictL(self, imgL, imgR):return self.model(imgL, imgR)
-        def _predictR(self, imgL, imgR):return self._flip(self.model(self._flip(imgR), self._flip(imgL)))
+        def _predictL():return self.model(imgL, imgR)
+        def _predictR():return self._flip(self.model(self._flip(imgR), self._flip(imgL)))
 
         with torch.no_grad():
             if mode == 'left':
-                return _predictL(self, imgL, imgR)
+                return _predictL()
             elif mode == 'right':
-                return _predictR(self, imgL, imgR)
+                return _predictR()
             elif mode == 'both':
-                return _predictL(self, imgL, imgR), _predictR(self, imgL, imgR)
+                return _predictL(), _predictR()
             else:
                 raise Exception('No mode \'%s\'!' % mode)
 
