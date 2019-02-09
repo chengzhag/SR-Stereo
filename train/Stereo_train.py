@@ -75,6 +75,7 @@ def main():
         os.makedirs(args.savemodel)
     writer = SummaryWriter(os.path.join(args.savemodel, 'logs'))
     # TRAIN
+    # TODO: move traing code to a fcn
     for epoch in range(1, args.epochs + 1):
         print('This is %d-th epoch' % (epoch))
         totalTrainLoss = 0

@@ -1,6 +1,9 @@
 import argparse
 import time
 import torch
+from dataloader import listSceneFlowFile
+from dataloader import SceneFlowLoader
+from models import Stereo
 
 def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
     if mode == 'both':
@@ -68,8 +71,31 @@ def main():
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
-    # TODO: Add code to test given model
-    pass
+    # TODO: Add code to test given model and different dataset
+    torch.manual_seed(args.seed)
+    if args.cuda:
+        torch.cuda.manual_seed(args.seed)
+
+        _, _, _, _, test_left_img, test_right_img, test_left_disp, test_right_disp = listSceneFlowFile.dataloader(
+        args.datapath)
+
+    testImgLoader = torch.utils.data.DataLoader(
+        SceneFlowLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
+        batch_size=11, shuffle=False, num_workers=8, drop_last=False)
+
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda)
+    stereo.load(args.loadmodel)
+
+    # TEST
+    totalTestScores = test(stereo=stereo, testImgLoader=testImgLoader, mode='both', type=args.test_type)
+
+    # SAVE test information
+    saveDir = args.savemodel + 'testinformation.tar'
+    torch.save({
+        'scoreAvg': totalTestScores[0],
+        'scoreL': totalTestScores[1],
+        'scoreR': totalTestScores[2]
+    }, saveDir)
 
 if __name__ == '__main__':
     main()

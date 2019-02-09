@@ -96,6 +96,7 @@ class PSMNet():
 
     def load(self, checkpoint):
         if checkpoint is not None:
+            print('Loading weight...')
             state_dict = torch.load(checkpoint)
             self.model.load_state_dict(state_dict['state_dict'])
             print('Loading complete! Number of model parameters: %d' % self.nParams())
