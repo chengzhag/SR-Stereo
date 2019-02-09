@@ -3,6 +3,7 @@ import torch.optim as optim
 import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
+from evaluation import errorFcn
 
 def Stereo(maxdisp=192, model='PSMNet'):
     if model == 'PSMNet':
@@ -64,32 +65,26 @@ class _Stereo_PSMNet():
             else:
                 raise Exception('No mode \'%s\'!' % mode)
 
-    def test(self, imgL, imgR, dispL=None, dispR=None, type='l1'):
+    def test(self, imgL, imgR, dispL=None, dispR=None, type='l1', kitti=False):
         self._assertDisp(dispL, dispR)
 
-        def _test(fcn, imgL, imgR, dispL=None, dispR=None):
+        # for kitti dataset, only consider loss of none zero disparity pixels in gt
+        def _test(fcn):
             losses = []
 
             for gt, mode in zip([dispL, dispR], ['left', 'right']):
                 if gt is None:
                     continue
                 output = self.predict(imgL, imgR, mode)
-                mask = gt < self.maxdisp
-                output = torch.squeeze(output.data.cpu(), 1)[:, 4:, :]
+                mask = (gt < self.maxdisp) & (gt > 0) if kitti else (gt < self.maxdisp)
+                output = torch.squeeze(output.data.cpu(), 1)[:, 4:, :] # TODO: generalize padding and unpadding process
                 losses.append(fcn(gt[mask], output[mask]).data)
 
             loss = sum(losses) / len(losses)
             return loss, losses
 
         if type == 'l1':
-            def l1Loss(gt, output):
-                if len(gt) == 0:
-                    loss = 0
-                else:
-                    loss = torch.mean(torch.abs(output - gt))  # end-point-error
-                return loss
-            return _test(l1Loss, imgL, imgR, dispL, dispR)
-
+            return _test(errorFcn.l1)
         else:
             raise Exception('No error type \'%s\'!' % type)
 
