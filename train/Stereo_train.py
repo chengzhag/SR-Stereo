@@ -37,6 +37,8 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--bothdisparity', type=bool, default=True,
                     help='if train on disparity maps from both views')
+parser.add_argument('--test_type', type=str, default='outlier',
+                    help='evaluation type used in testing')
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -94,9 +96,9 @@ def main():
             lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR)
             writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, batch_idx)
             totalTrainLoss += lossAvg
-            left = (time.time() - tic) / 3600 * ((args.epochs - epoch + 1) * len(trainImgLoader) - batch_idx - 1)
+            timeLeft = (time.time() - tic) / 3600 * ((args.epochs - epoch + 1) * len(trainImgLoader) - batch_idx - 1)
             print('it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, left %.2fh' % (
-                batch_idx, len(trainImgLoader) * args.epochs, lossAvg, lossL, lossR, left))
+                batch_idx, len(trainImgLoader) * args.epochs, lossAvg, lossL, lossR, timeLeft))
             tic = time.time()
 
         print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / len(trainImgLoader)))
@@ -115,23 +117,30 @@ def main():
     print('full training time = %.2f HR' % ((time.time() - ticFull) / 3600))
 
     # TEST
-    totalTestLoss = [0, 0, 0]
+    totalTestScores = [0, 0, 0]
     tic = time.time()
     for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(testImgLoader):
         if args.cuda:
             imgL, imgR = imgL.cuda(), imgR.cuda()
-        lossAvg, [lossL, lossR] = stereo.test(imgL, imgR, dispL, dispR, type='l1')
-        totalTestLoss = [total + batch for total, batch in zip(totalTestLoss, [lossAvg, lossL, lossR])]
-        left = (time.time() - tic) / 3600 * (len(testImgLoader) - batch_idx - 1)
-        print(
-            'it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, lossTotal %.2f, lossLTotal %.2f, lossRTotal %.2f, left %.2fh' % tuple(
-                [batch_idx, len(testImgLoader)] + [lossAvg, lossL, lossR] + [l / (batch_idx + 1) for l in totalTestLoss] + [left]))
+        scoreAvg, [scoreL, scoreR] = stereo.test(imgL, imgR, dispL, dispR, type=args.test_type)
+        totalTestScores = [total + batch for total, batch in zip(totalTestScores, [scoreAvg, scoreL, scoreR])]
+        timeLeft = (time.time() - tic) / 3600 * (len(testImgLoader) - batch_idx - 1)
+
+        scoresPrint = [scoreAvg, scoreL, scoreR] + [l / (batch_idx + 1) for l in totalTestScores]
+        if args.test_type == 'outlier':
+            print(
+                'it %d/%d, scoreAvg %.2f%%, scoreL %.2f%%, scoreR %.2f%%, scoreTotal %.2f%%, scoreLTotal %.2f%%, scoreRTotal %.2f%%, left %.2fh' % tuple(
+                    [batch_idx, len(testImgLoader)] + [s * 100 for s in scoresPrint] + [timeLeft]))
+        else:
+            print(
+                'it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, lossTotal %.2f, lossLTotal %.2f, lossRTotal %.2f, left %.2fh' % tuple(
+                    [batch_idx, len(testImgLoader)] + scoresPrint + [timeLeft]))
         tic = time.time()
 
     # SAVE test information
     saveDir = args.savemodel + 'testinformation.tar'
     torch.save({
-        'test_loss': [l / len(testImgLoader) for l in totalTestLoss],
+        'test_loss': [l / len(testImgLoader) for l in totalTestScores],
     }, saveDir)
 
 

@@ -3,12 +3,15 @@ import torch.optim as optim
 import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
+from evaluation import evalFcn
+
 
 def Stereo(maxdisp=192, model='PSMNet'):
     if model == 'PSMNet':
         return _Stereo_PSMNet(stackhourglass(maxdisp))
     else:
         print('no model')
+
 
 class _Stereo_PSMNet():
     def __init__(self, PSMNet):
@@ -19,7 +22,8 @@ class _Stereo_PSMNet():
     def train(self, imgL, imgR, dispL=None, dispR=None):
         self.model.train()
         self._assertDisp(dispL, dispR)
-        def _train(self, imgL, imgR, disp_true):
+
+        def _train(imgL, imgR, disp_true):
             self.optimizer.zero_grad()
 
             mask = disp_true < self.maxdisp
@@ -39,60 +43,50 @@ class _Stereo_PSMNet():
 
         losses = []
         if dispL is not None:
-            losses.append(_train(self, imgL, imgR, dispL))
+            losses.append(_train(imgL, imgR, dispL))
 
         if dispR is not None:
             # swap and flip input for right disparity map
-            losses.append(_train(self, self._flip(imgR), self._flip(imgL), self._flip(dispR)))
+            losses.append(_train(self._flip(imgR), self._flip(imgL), self._flip(dispR)))
 
-        loss = sum(losses)/len(losses)
+        loss = sum(losses) / len(losses)
 
         return loss, losses
 
     def predict(self, imgL, imgR, mode='both'):
         self.model.eval()
-        def _predictL(self, imgL, imgR):return self.model(imgL, imgR)
-        def _predictR(self, imgL, imgR):return self._flip(self.model(self._flip(imgR), self._flip(imgL)))
+
+        def _predictL():
+            return self.model(imgL, imgR)
+
+        def _predictR():
+            return self._flip(self.model(self._flip(imgR), self._flip(imgL)))
 
         with torch.no_grad():
             if mode == 'left':
-                return _predictL(self, imgL, imgR)
+                return _predictL()
             elif mode == 'right':
-                return _predictR(self, imgL, imgR)
+                return _predictR()
             elif mode == 'both':
-                return _predictL(self, imgL, imgR), _predictR(self, imgL, imgR)
+                return _predictL(), _predictR()
             else:
                 raise Exception('No mode \'%s\'!' % mode)
 
-    def test(self, imgL, imgR, dispL=None, dispR=None, type='l1'):
+    def test(self, imgL, imgR, dispL=None, dispR=None, type='l1', kitti=False):
         self._assertDisp(dispL, dispR)
 
-        def _test(fcn, imgL, imgR, dispL=None, dispR=None):
-            losses = []
+        # for kitti dataset, only consider loss of none zero disparity pixels in gt
+        scores = []
+        for gt, mode in zip([dispL, dispR], ['left', 'right']):
+            if gt is None:
+                continue
+            output = self.predict(imgL, imgR, mode)
+            mask = (gt < self.maxdisp) & (gt > 0) if kitti else (gt < self.maxdisp)
+            output = torch.squeeze(output.data.cpu(), 1)[:, 4:, :]  # TODO: generalize padding and unpadding process
+            scores.append(getattr(evalFcn, type)(gt[mask], output[mask]).data)
 
-            for gt, mode in zip([dispL, dispR], ['left', 'right']):
-                if gt is None:
-                    continue
-                output = self.predict(imgL, imgR, mode)
-                mask = gt < self.maxdisp
-                output = torch.squeeze(output.data.cpu(), 1)[:, 4:, :]
-                losses.append(fcn(gt[mask], output[mask]).data)
-
-            loss = sum(losses) / len(losses)
-            return loss, losses
-
-        if type == 'l1':
-            def l1Loss(gt, output):
-                if len(gt) == 0:
-                    loss = 0
-                else:
-                    loss = torch.mean(torch.abs(output - gt))  # end-point-error
-                return loss
-            return _test(l1Loss, imgL, imgR, dispL, dispR)
-
-        else:
-            raise Exception('No error type \'%s\'!' % type)
-
+        scoreAvg = sum(scores) / len(scores)
+        return scoreAvg, scores
 
     def _flip(self, im):
         return im.flip(-1)
@@ -100,6 +94,3 @@ class _Stereo_PSMNet():
     def _assertDisp(self, dispL=None, dispR=None):
         if dispL is None and dispR is None:
             raise Exception('No disp input!')
-
-
-
