@@ -3,21 +3,20 @@ import torch.optim as optim
 import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
+import torch.nn as nn
+
 from evaluation import evalFcn
 
 
-def Stereo(maxdisp=192, model='PSMNet'):
-    if model == 'PSMNet':
-        return _Stereo_PSMNet(stackhourglass(maxdisp))
-    else:
-        print('no model')
-
-
-class _Stereo_PSMNet():
-    def __init__(self, PSMNet):
-        self.model = PSMNet
+class PSMNet():
+    def __init__(self, maxdisp=192, cuda=True):
+        self.model = stackhourglass(maxdisp)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
-        self.maxdisp = PSMNet.maxdisp
+        self.maxdisp = maxdisp
+        self.cuda = cuda
+        if cuda:
+            self.model = nn.DataParallel(self.model)
+            self.model.cuda()
 
     def train(self, imgL, imgR, dispL=None, dispR=None):
         self.model.train()
@@ -83,7 +82,7 @@ class _Stereo_PSMNet():
             output = self.predict(imgL, imgR, mode)
             mask = (gt < self.maxdisp) & (gt > 0) if kitti else (gt < self.maxdisp)
             output = torch.squeeze(output.data.cpu(), 1)[:, 4:, :]  # TODO: generalize padding and unpadding process
-            scores.append(getattr(evalFcn, type)(gt[mask], output[mask]).data)
+            scores.append(getattr(evalFcn, type)(gt[mask], output[mask]))
 
         scoreAvg = sum(scores) / len(scores)
         return scoreAvg, scores
@@ -94,3 +93,15 @@ class _Stereo_PSMNet():
     def _assertDisp(self, dispL=None, dispR=None):
         if dispL is None and dispR is None:
             raise Exception('No disp input!')
+
+    def load(self, checkpoint):
+        if checkpoint is not None:
+            print('Loading checkpoint...')
+            state_dict = torch.load(checkpoint)
+            self.model.load_state_dict(state_dict['state_dict'])
+            print('Loading complete! Number of model parameters: %d' % self.nParams())
+        else:
+            raise Exception('checkpoint dir is None!')
+
+    def nParams(self):
+        return sum([p.data.nelement() for p in self.model.parameters()])

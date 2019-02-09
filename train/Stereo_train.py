@@ -13,10 +13,11 @@ import torch.nn.functional as F
 import numpy as np
 import time
 import math
-from dataloader import listflowfile as lt
-from dataloader import SecenFlowLoader as DA
-from models.Stereo import Stereo
+from dataloader import listSceneFlowFile
+from dataloader import SceneFlowLoader
+from models import Stereo
 from tensorboardX import SummaryWriter
+from evaluation import Stereo_eval
 
 parser = argparse.ArgumentParser(description='Stereo')
 parser.add_argument('--maxdisp', type=int, default=192,
@@ -31,11 +32,11 @@ parser.add_argument('--loadmodel', default='logs/pretrained/PSMNet_pretrained_sc
                     help='load model')
 parser.add_argument('--savemodel', default='logs/unamed_PSMNet_sceneflow/',
                     help='save model')
-parser.add_argument('--no-cuda', action='store_true', default=False,
+parser.add_argument('--no_cuda', action='store_true', default=False,
                     help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--bothdisparity', type=bool, default=True,
+parser.add_argument('--both_disparity', type=bool, default=True,
                     help='if train on disparity maps from both views')
 parser.add_argument('--test_type', type=str, default='outlier',
                     help='evaluation type used in testing')
@@ -46,28 +47,19 @@ torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
-all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = lt.dataloader(
+all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = listSceneFlowFile.dataloader(
     args.datapath)
 
 trainImgLoader = torch.utils.data.DataLoader(
-    DA.myImageFloder(all_left_img, all_right_img, all_left_disp, all_right_disp, True),
+    SceneFlowLoader.myImageFloder(all_left_img, all_right_img, all_left_disp, all_right_disp, True),
     batch_size=12, shuffle=True, num_workers=8, drop_last=False)
 
 testImgLoader = torch.utils.data.DataLoader(
-    DA.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
+    SceneFlowLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
     batch_size=11, shuffle=False, num_workers=8, drop_last=False)
 
-stereo = Stereo(maxdisp=args.maxdisp, model=args.model)
-
-if args.cuda:
-    stereo.model = nn.DataParallel(stereo.model)
-    stereo.model.cuda()
-
-if args.loadmodel is not None:
-    state_dict = torch.load(args.loadmodel)
-    stereo.model.load_state_dict(state_dict['state_dict'])
-
-print('Number of model parameters: {}'.format(sum([p.data.nelement() for p in stereo.model.parameters()])))
+stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda)
+stereo.load(args.loadmodel)
 
 
 def adjust_learning_rate(optimizer, epoch):
@@ -83,6 +75,7 @@ def main():
         os.makedirs(args.savemodel)
     writer = SummaryWriter(os.path.join(args.savemodel, 'logs'))
     # TRAIN
+    # TODO: move traing code to a fcn
     for epoch in range(1, args.epochs + 1):
         print('This is %d-th epoch' % (epoch))
         totalTrainLoss = 0
@@ -117,31 +110,14 @@ def main():
     print('full training time = %.2f HR' % ((time.time() - ticFull) / 3600))
 
     # TEST
-    totalTestScores = [0, 0, 0]
-    tic = time.time()
-    for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(testImgLoader):
-        if args.cuda:
-            imgL, imgR = imgL.cuda(), imgR.cuda()
-        scoreAvg, [scoreL, scoreR] = stereo.test(imgL, imgR, dispL, dispR, type=args.test_type)
-        totalTestScores = [total + batch for total, batch in zip(totalTestScores, [scoreAvg, scoreL, scoreR])]
-        timeLeft = (time.time() - tic) / 3600 * (len(testImgLoader) - batch_idx - 1)
-
-        scoresPrint = [scoreAvg, scoreL, scoreR] + [l / (batch_idx + 1) for l in totalTestScores]
-        if args.test_type == 'outlier':
-            print(
-                'it %d/%d, scoreAvg %.2f%%, scoreL %.2f%%, scoreR %.2f%%, scoreTotal %.2f%%, scoreLTotal %.2f%%, scoreRTotal %.2f%%, left %.2fh' % tuple(
-                    [batch_idx, len(testImgLoader)] + [s * 100 for s in scoresPrint] + [timeLeft]))
-        else:
-            print(
-                'it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, lossTotal %.2f, lossLTotal %.2f, lossRTotal %.2f, left %.2fh' % tuple(
-                    [batch_idx, len(testImgLoader)] + scoresPrint + [timeLeft]))
-        tic = time.time()
+    totalTestScores, testTime = Stereo_eval.test(stereo=stereo, testImgLoader=testImgLoader, mode='both', type=args.test_type)
 
     # SAVE test information
-    saveDir = args.savemodel + 'testinformation.tar'
-    torch.save({
-        'test_loss': [l / len(testImgLoader) for l in totalTestScores],
-    }, saveDir)
+    Stereo_eval.logTest(args.datapath, args.savemodel, args.test_type, testTime, (
+        ('scoreAvg', totalTestScores[0]),
+        ('scoreL', totalTestScores[1]),
+        ('scoreR', totalTestScores[2])
+    ))
 
 
 if __name__ == '__main__':
