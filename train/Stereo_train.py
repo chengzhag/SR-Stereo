@@ -17,6 +17,7 @@ from dataloader import listflowfile as lt
 from dataloader import SecenFlowLoader as DA
 from models import Stereo
 from tensorboardX import SummaryWriter
+from evaluation import Stereo_eval
 
 parser = argparse.ArgumentParser(description='Stereo')
 parser.add_argument('--maxdisp', type=int, default=192,
@@ -108,30 +109,14 @@ def main():
     print('full training time = %.2f HR' % ((time.time() - ticFull) / 3600))
 
     # TEST
-    totalTestScores = [0, 0, 0]
-    tic = time.time()
-    for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(testImgLoader):
-        if args.cuda:
-            imgL, imgR = imgL.cuda(), imgR.cuda()
-        scoreAvg, [scoreL, scoreR] = stereo.test(imgL, imgR, dispL, dispR, type=args.test_type)
-        totalTestScores = [total + batch for total, batch in zip(totalTestScores, [scoreAvg, scoreL, scoreR])]
-        timeLeft = (time.time() - tic) / 3600 * (len(testImgLoader) - batch_idx - 1)
-
-        scoresPrint = [scoreAvg, scoreL, scoreR] + [l / (batch_idx + 1) for l in totalTestScores]
-        if args.test_type == 'outlier':
-            print(
-                'it %d/%d, scoreAvg %.2f%%, scoreL %.2f%%, scoreR %.2f%%, scoreTotal %.2f%%, scoreLTotal %.2f%%, scoreRTotal %.2f%%, left %.2fh' % tuple(
-                    [batch_idx, len(testImgLoader)] + [s * 100 for s in scoresPrint] + [timeLeft]))
-        else:
-            print(
-                'it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, lossTotal %.2f, lossLTotal %.2f, lossRTotal %.2f, left %.2fh' % tuple(
-                    [batch_idx, len(testImgLoader)] + scoresPrint + [timeLeft]))
-        tic = time.time()
+    totalTestScores = Stereo_eval.test(stereo=stereo, testImgLoader=testImgLoader, mode='both', type=args.test_type)
 
     # SAVE test information
     saveDir = args.savemodel + 'testinformation.tar'
     torch.save({
-        'test_loss': [l / len(testImgLoader) for l in totalTestScores],
+        'scoreAvg': totalTestScores[0],
+        'scoreL': totalTestScores[1],
+        'scoreR': totalTestScores[2]
     }, saveDir)
 
 

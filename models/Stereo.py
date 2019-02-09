@@ -13,6 +13,7 @@ class PSMNet():
         self.model = stackhourglass(maxdisp)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
         self.maxdisp = maxdisp
+        self.cuda = cuda
         if cuda:
             self.model = nn.DataParallel(self.model)
             self.model.cuda()
