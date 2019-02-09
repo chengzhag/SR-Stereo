@@ -1,11 +1,14 @@
 import argparse
 import time
 import torch
+import os
 from dataloader import listSceneFlowFile
 from dataloader import SceneFlowLoader
 from models import Stereo
 
+
 def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
+    tic = time.time()
     if mode == 'both':
         totalTestScores = [0, 0, 0]
         tic = time.time()
@@ -16,7 +19,7 @@ def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
             totalTestScores = [total + batch for total, batch in zip(totalTestScores, [scoreAvg, scoreL, scoreR])]
             timeLeft = (time.time() - tic) / 3600 * (len(testImgLoader) - batch_idx - 1)
 
-            scoresPrint = [scoreAvg, scoreL, scoreR] + [l / (batch_idx + 1) for l in totalTestScores]
+            scoresPrint = [scoreAvg, scoreL, scoreR] + [loss / (batch_idx + 1) for loss in totalTestScores]
             if type == 'outlier':
                 print(
                     'it %d/%d, scoreAvg %.2f%%, scoreL %.2f%%, scoreR %.2f%%, scoreTotal %.2f%%, scoreLTotal %.2f%%, scoreRTotal %.2f%%, left %.2fh' % tuple(
@@ -26,7 +29,8 @@ def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
                     'it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, lossTotal %.2f, lossLTotal %.2f, lossRTotal %.2f, left %.2fh' % tuple(
                         [batch_idx, len(testImgLoader)] + scoresPrint + [timeLeft]))
             tic = time.time()
-        return [l / len(testImgLoader) for l in totalTestScores]
+        testTime = time.time() - tic
+        return [loss / (batch_idx + 1) for loss in totalTestScores], testTime
     elif mode == 'left' or mode == 'right':
         totalTestScore = 0
         tic = time.time()
@@ -40,7 +44,7 @@ def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
             totalTestScore += score
             timeLeft = (time.time() - tic) / 3600 * (len(testImgLoader) - batch_idx - 1)
 
-            scoresPrint = [score, totalTestScore/(batch_idx + 1)]
+            scoresPrint = [score, totalTestScore / (batch_idx + 1)]
             if type == 'outlier':
                 print(
                     'it %d/%d, score %.2f%%, totalTestScore %.2f%%, left %.2fh' % tuple(
@@ -50,7 +54,30 @@ def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
                     'it %d/%d, loss %.2f, totalTestLoss %.2f, left %.2fh' % tuple(
                         [batch_idx, len(testImgLoader)] + scoresPrint + [timeLeft]))
             tic = time.time()
-        return totalTestScore/ len(testImgLoader)
+        testTime = time.time() - tic
+        return totalTestScore / len(testImgLoader), testTime
+
+
+def logTest(datapath, chkpointDir, test_type, testTime, results):
+    chkpointFolder, _ = os.path.split(chkpointDir)
+    logDir = os.path.join(chkpointFolder, 'test_results.txt')
+    with open(logDir, "a") as log: pass
+    with open(logDir, "r+") as log:
+        log.seek(0)
+        logOld = log.read()
+        log.seek(0)
+        localtime = time.asctime(time.localtime(time.time()))
+        log.write('---------------------- %s ----------------------\n' % localtime)
+        log.write('data: %s\n' % datapath)
+        log.write('checkpoint: %s\n' % chkpointDir)
+        log.write('test_type: %s\n' % test_type)
+        log.write('test_time: %f\n' % testTime)
+        log.write('\n')
+        for (name, value) in results:
+            log.write('%s: %f\n' % (name, value))
+        log.write('\n')
+        log.write(logOld)
+
 
 def main():
     parser = argparse.ArgumentParser(description='Stereo')
@@ -77,7 +104,7 @@ def main():
         torch.cuda.manual_seed(args.seed)
 
         _, _, _, _, test_left_img, test_right_img, test_left_disp, test_right_disp = listSceneFlowFile.dataloader(
-        args.datapath)
+            args.datapath)
 
     testImgLoader = torch.utils.data.DataLoader(
         SceneFlowLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
@@ -87,16 +114,15 @@ def main():
     stereo.load(args.loadmodel)
 
     # TEST
-    totalTestScores = test(stereo=stereo, testImgLoader=testImgLoader, mode='both', type=args.test_type)
+    totalTestScores, testTime = test(stereo=stereo, testImgLoader=testImgLoader, mode='both', type=args.test_type)
 
     # SAVE test information
-    saveDir = args.savemodel + 'testinformation.tar'
-    torch.save({
-        'scoreAvg': totalTestScores[0],
-        'scoreL': totalTestScores[1],
-        'scoreR': totalTestScores[2]
-    }, saveDir)
+    logTest(args.datapath, args.loadmodel, args.test_type, testTime, (
+        ('scoreAvg', totalTestScores[0]),
+        ('scoreL', totalTestScores[1]),
+        ('scoreR', totalTestScores[2])
+    ))
+
 
 if __name__ == '__main__':
     main()
-

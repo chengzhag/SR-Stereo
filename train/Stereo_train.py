@@ -110,15 +110,14 @@ def main():
     print('full training time = %.2f HR' % ((time.time() - ticFull) / 3600))
 
     # TEST
-    totalTestScores = Stereo_eval.test(stereo=stereo, testImgLoader=testImgLoader, mode='both', type=args.test_type)
+    totalTestScores, testTime = Stereo_eval.test(stereo=stereo, testImgLoader=testImgLoader, mode='both', type=args.test_type)
 
     # SAVE test information
-    saveDir = args.savemodel + 'testinformation.tar'
-    torch.save({
-        'scoreAvg': totalTestScores[0],
-        'scoreL': totalTestScores[1],
-        'scoreR': totalTestScores[2]
-    }, saveDir)
+    Stereo_eval.logTest(args.datapath, args.savemodel, args.test_type, testTime, (
+        ('scoreAvg', totalTestScores[0]),
+        ('scoreL', totalTestScores[1]),
+        ('scoreR', totalTestScores[2])
+    ))
 
 
 if __name__ == '__main__':

@@ -82,7 +82,7 @@ class PSMNet():
             output = self.predict(imgL, imgR, mode)
             mask = (gt < self.maxdisp) & (gt > 0) if kitti else (gt < self.maxdisp)
             output = torch.squeeze(output.data.cpu(), 1)[:, 4:, :]  # TODO: generalize padding and unpadding process
-            scores.append(getattr(evalFcn, type)(gt[mask], output[mask]).data)
+            scores.append(getattr(evalFcn, type)(gt[mask], output[mask]))
 
         scoreAvg = sum(scores) / len(scores)
         return scoreAvg, scores
@@ -96,7 +96,7 @@ class PSMNet():
 
     def load(self, checkpoint):
         if checkpoint is not None:
-            print('Loading weight...')
+            print('Loading checkpoint...')
             state_dict = torch.load(checkpoint)
             self.model.load_state_dict(state_dict['state_dict'])
             print('Loading complete! Number of model parameters: %d' % self.nParams())
