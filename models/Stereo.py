@@ -8,7 +8,7 @@ from models.PSMNet import *
 from evaluation import evalFcn
 
 
-class PSMNet():
+class PSMNet:
     def __init__(self, maxdisp=192, cuda=True, stage='unnamed'):
         self.stage = stage
         self.startTime = time.localtime(time.time())

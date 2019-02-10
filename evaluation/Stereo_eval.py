@@ -6,79 +6,114 @@ from dataloader import listSceneFlowFile
 from dataloader import SceneFlowLoader
 from models import Stereo
 
+
 # testing for any stereo model including SR-Stereo
-def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
-    tic = time.time()
-    if mode == 'both':
-        totalTestScores = [0, 0, 0]
+class Test:
+    def __init__(self, testImgLoader, mode='both', evalFcn='outlier', kitti=False, datapath=None):
+        self.testImgLoader = testImgLoader
+        self.mode = mode
+        self.evalFcn = evalFcn
+        self.kitti = kitti
+        self.datapath = datapath
+        self.localtime = None
+        self.totalTestScores = None
+        self.testTime = None
+
+    def __call__(self, stereo):
         tic = time.time()
-        for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(testImgLoader, 1):
-            if stereo.cuda:
-                imgL, imgR = imgL.cuda(), imgR.cuda()
-            scoreAvg, [scoreL, scoreR] = stereo.test(imgL, imgR, dispL, dispR, type=type, kitti=kitti)
-            totalTestScores = [total + batch for total, batch in zip(totalTestScores, [scoreAvg, scoreL, scoreR])]
-            timeLeft = (time.time() - tic) / 3600 * (len(testImgLoader) - batch_idx)
 
-            scoresPrint = [scoreAvg, scoreL, scoreR] + [loss / (batch_idx + 1) for loss in totalTestScores]
-            if type == 'outlier':
-                print(
-                    'it %d/%d, scoreAvg %.2f%%, scoreL %.2f%%, scoreR %.2f%%, scoreTotal %.2f%%, scoreLTotal %.2f%%, scoreRTotal %.2f%%, left %.2fh' % tuple(
-                        [batch_idx, len(testImgLoader)] + [s * 100 for s in scoresPrint] + [timeLeft]))
-            else:
-                print(
-                    'it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, lossTotal %.2f, lossLTotal %.2f, lossRTotal %.2f, left %.2fh' % tuple(
-                        [batch_idx, len(testImgLoader)] + scoresPrint + [timeLeft]))
+        class NameValues:
+            def __init__(self, prefix, suffixes, values):
+                self.pairs = []
+                for suffix, value in zip(suffixes, values):
+                    self.pairs.append((prefix + suffix, value))
+
+            def str(self, unit=''):
+                scale = 1
+                if unit == '%':
+                    scale = 100
+                str = ''
+                for name, value in self.pairs:
+                    str += '%s: %.2f%s, ' % (name, value * scale, unit)
+                return str
+
+        scoreUnit = '%' if self.evalFcn == 'outlier' else ''
+
+        if self.mode == 'both':
+            totalTestScores = [0, 0, 0]
             tic = time.time()
-        totalTestScores = [loss / batch_idx for loss in totalTestScores]
-    elif mode == 'left' or mode == 'right':
-        totalTestScore = 0
-        tic = time.time()
-        for batch_idx, (imgL, imgR, dispGT) in enumerate(testImgLoader, 1):
-            if stereo.cuda:
-                imgL, imgR = imgL.cuda(), imgR.cuda()
-            if mode == 'left':
-                score = stereo.test(imgL, imgR, dispL=dispGT, type=type, kitti=kitti)
-            else:
-                score = stereo.test(imgL, imgR, dispR=dispGT, type=type, kitti=kitti)
-            totalTestScore += score
-            timeLeft = (time.time() - tic) / 3600 * (len(testImgLoader) - batch_idx)
+            for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(self.testImgLoader, 1):
+                if stereo.cuda:
+                    imgL, imgR = imgL.cuda(), imgR.cuda()
+                scoreAvg, [scoreL, scoreR] = stereo.test(imgL, imgR, dispL, dispR, type=self.evalFcn, kitti=self.kitti)
+                totalTestScores = [total + batch for total, batch in zip(totalTestScores, (scoreAvg, scoreL, scoreR))]
+                timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
 
-            scoresPrint = [score, totalTestScore / (batch_idx)]
-            if type == 'outlier':
-                print(
-                    'it %d/%d, score %.2f%%, totalTestScore %.2f%%, left %.2fh' % tuple(
-                        [batch_idx, len(testImgLoader)] + [s * 100 for s in scoresPrint] + [timeLeft]))
-            else:
-                print(
-                    'it %d/%d, loss %.2f, totalTestLoss %.2f, left %.2fh' % tuple(
-                        [batch_idx, len(testImgLoader)] + scoresPrint + [timeLeft]))
+                scoresPairs = NameValues(self.evalFcn,
+                                         ('Avg', 'L', 'R', 'Total', 'Total', 'Total'),
+                                         [scoreAvg, scoreL, scoreR] + [score / batch_idx for score in totalTestScores])
+                print('it %d/%d, %sleft %.2fh' % (
+                    batch_idx, len(self.testImgLoader),
+                    scoresPairs.str(scoreUnit), timeLeft))
+                tic = time.time()
+            totalTestScores = [loss / batch_idx for loss in totalTestScores]
+            self.testResults = NameValues(self.evalFcn, ('Avg', 'L', 'R'), totalTestScores).pairs
+        elif self.mode == 'left' or self.mode == 'right':
+            totalTestScore = 0
             tic = time.time()
-        totalTestScores = totalTestScore / batch_idx
-    testTime = time.time() - tic
-    return totalTestScores, testTime
+            for batch_idx, (imgL, imgR, dispGT) in enumerate(self.testImgLoader, 1):
+                if stereo.cuda:
+                    imgL, imgR = imgL.cuda(), imgR.cuda()
+                if self.mode == 'left':
+                    score = stereo.test(imgL, imgR, dispL=dispGT, type=self.evalFcn, kitti=self.kitti)
+                else:
+                    score = stereo.test(imgL, imgR, dispR=dispGT, type=self.evalFcn, kitti=self.kitti)
+                totalTestScore += score
+                timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
 
-# log file will be saved to where chkpoint file is
-def logTest(datapath, chkpointDir, test_type, testTime, results, epoch=None, it=None):
-    chkpointFolder, _ = os.path.split(chkpointDir)
-    logDir = os.path.join(chkpointFolder, 'test_results.txt')
-    with open(logDir, "a") as log: pass
-    with open(logDir, "r+") as log:
-        log.seek(0)
-        logOld = log.read()
-        log.seek(0)
-        localtime = time.asctime(time.localtime(time.time()))
-        log.write('---------------------- %s ----------------------\n' % localtime)
-        log.write('data: %s\n' % datapath)
-        log.write('checkpoint: %s\n' % chkpointDir)
-        log.write('test_type: %s\n' % test_type)
-        log.write('test_time: %f\n' % testTime)
-        if epoch is not None: log.write('epoch: %d\n' % epoch)
-        if it is not None: log.write('iteration: %d\n' % it)
-        log.write('\n')
-        for (name, value) in results:
-            log.write('%s: %f\n' % (name, value))
-        log.write('\n')
-        log.write(logOld)
+                scoresPairs = NameValues(self.evalFcn, ('', 'Total'), (score, totalTestScore / batch_idx))
+                print('it %d/%d, %sleft %.2fh' % (
+                    batch_idx, len(self.testImgLoader),
+                    scoresPairs.str(scoreUnit), timeLeft))
+                tic = time.time()
+            totalTestScores = totalTestScore / batch_idx
+            self.testResults = NameValues(self.evalFcn, (''), (totalTestScores)).pairs
+
+        testTime = time.time() - tic
+        print('Full testing time = %.2fh' % (testTime / 3600))
+        self.localtime = time.asctime(time.localtime(time.time()))
+        self.totalTestScores = totalTestScores
+        self.testTime = testTime
+        return totalTestScores, testTime
+
+    # log file will be saved to where chkpoint file is
+    def log(self, chkpointDir, epoch=None, it=None, additionalValue=()):
+        chkpointFolder, _ = os.path.split(chkpointDir)
+        logDir = os.path.join(chkpointFolder, 'test_results.txt')
+        with open(logDir, "a") as log:
+            pass
+        with open(logDir, "r+") as log:
+            def writeNotNone(name, value):
+                if value is not None: log.write(name + ': ' + str(value) + '\n')
+
+            log.seek(0)
+            logOld = log.read()
+
+            log.seek(0)
+            log.write('---------------------- %s ----------------------\n' % self.localtime)
+            baseInfos = (('data', self.datapath),
+                         ('checkpoint', chkpointDir),
+                         ('test_type', self.evalFcn),
+                         ('test_time', self.testTime),
+                         ('epoch', epoch),
+                         ('iteration', it)
+                         )
+            for pairs in (baseInfos, self.testResults, additionalValue):
+                for (name, value) in pairs:
+                    writeNotNone(name, value)
+                log.write('\n')
+
+            log.write(logOld)
 
 
 def main():
@@ -95,8 +130,8 @@ def main():
                         help='enables CUDA training')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
-    parser.add_argument('--test_type', type=str, default='outlier',
-                        help='evaluation type used in testing')
+    parser.add_argument('--eval_fcn', type=str, default='outlier',
+                        help='evaluation function used in testing')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -116,14 +151,9 @@ def main():
     stereo.load(args.loadmodel)
 
     # TEST
-    totalTestScores, testTime = test(stereo=stereo, testImgLoader=testImgLoader, mode='both', type=args.test_type)
-
-    # SAVE test information
-    logTest(args.datapath, args.loadmodel, args.test_type, testTime, (
-        ('scoreAvg', totalTestScores[0]),
-        ('scoreL', totalTestScores[1]),
-        ('scoreR', totalTestScores[2])
-    ))
+    test = Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath)
+    test(stereo=stereo)
+    test.log(args.loadmodel)
 
 
 if __name__ == '__main__':
