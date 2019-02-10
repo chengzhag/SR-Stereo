@@ -12,12 +12,12 @@ def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
     if mode == 'both':
         totalTestScores = [0, 0, 0]
         tic = time.time()
-        for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(testImgLoader):
+        for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(testImgLoader, 1):
             if stereo.cuda:
                 imgL, imgR = imgL.cuda(), imgR.cuda()
             scoreAvg, [scoreL, scoreR] = stereo.test(imgL, imgR, dispL, dispR, type=type, kitti=kitti)
             totalTestScores = [total + batch for total, batch in zip(totalTestScores, [scoreAvg, scoreL, scoreR])]
-            timeLeft = (time.time() - tic) / 3600 * (len(testImgLoader) - batch_idx - 1)
+            timeLeft = (time.time() - tic) / 3600 * (len(testImgLoader) - batch_idx)
 
             scoresPrint = [scoreAvg, scoreL, scoreR] + [loss / (batch_idx + 1) for loss in totalTestScores]
             if type == 'outlier':
@@ -34,7 +34,7 @@ def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
     elif mode == 'left' or mode == 'right':
         totalTestScore = 0
         tic = time.time()
-        for batch_idx, (imgL, imgR, dispGT) in enumerate(testImgLoader):
+        for batch_idx, (imgL, imgR, dispGT) in enumerate(testImgLoader, 1):
             if stereo.cuda:
                 imgL, imgR = imgL.cuda(), imgR.cuda()
             if mode == 'left':
@@ -42,9 +42,9 @@ def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
             else:
                 score = stereo.test(imgL, imgR, dispR=dispGT, type=type, kitti=kitti)
             totalTestScore += score
-            timeLeft = (time.time() - tic) / 3600 * (len(testImgLoader) - batch_idx - 1)
+            timeLeft = (time.time() - tic) / 3600 * (len(testImgLoader) - batch_idx)
 
-            scoresPrint = [score, totalTestScore / (batch_idx + 1)]
+            scoresPrint = [score, totalTestScore / (batch_idx)]
             if type == 'outlier':
                 print(
                     'it %d/%d, score %.2f%%, totalTestScore %.2f%%, left %.2fh' % tuple(

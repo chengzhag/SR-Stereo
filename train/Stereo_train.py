@@ -82,14 +82,13 @@ def main():
 
         # iteration
         tic = time.time()
-        for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(trainImgLoader):
-            batch_idx += 1
+        for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(trainImgLoader, 1):
             if args.cuda:
                 imgL, imgR, dispL, dispR = imgL.cuda(), imgR.cuda(), dispL.cuda(), dispR.cuda(),
             lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR)
             writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, batch_idx)
             totalTrainLoss += lossAvg
-            timeLeft = (time.time() - tic) / 3600 * ((args.epochs - epoch + 1) * len(trainImgLoader) - batch_idx - 1)
+            timeLeft = (time.time() - tic) / 3600 * ((args.epochs - epoch + 1) * len(trainImgLoader) - batch_idx)
             print('it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, left %.2fh' % (
                 batch_idx, len(trainImgLoader) * args.epochs, lossAvg, lossL, lossR, timeLeft))
             tic = time.time()
