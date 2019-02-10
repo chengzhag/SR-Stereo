@@ -22,6 +22,7 @@ class PSMNet:
         if cuda:
             self.model = nn.DataParallel(self.model)
             self.model.cuda()
+        self.checkpoint = None
 
     def train(self, imgL, imgR, dispL=None, dispR=None):
         self.model.train()
@@ -104,6 +105,7 @@ class PSMNet:
             print('Loading checkpoint...')
             state_dict = torch.load(checkpoint)
             self.model.load_state_dict(state_dict['state_dict'])
+            self.checkpoint = checkpoint
             print('Loading complete! Number of model parameters: %d' % self.nParams())
         else:
             raise Exception('checkpoint dir is None!')
@@ -112,7 +114,7 @@ class PSMNet:
         return sum([p.data.nelement() for p in self.model.parameters()])
 
     def save(self, epoch, iteration, trainLoss):
-        saveDir = os.path.join(self.saveFolder, 'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
+        self.checkpoint = os.path.join(self.saveFolder, 'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
         if not os.path.exists(self.saveFolder):
             os.makedirs(self.saveFolder)
         torch.save({
@@ -120,5 +122,5 @@ class PSMNet:
             'iteration': iteration,
             'state_dict': self.model.state_dict(),
             'train_loss': trainLoss,
-        }, saveDir)
-        return saveDir
+        }, self.checkpoint)
+        return self.checkpoint

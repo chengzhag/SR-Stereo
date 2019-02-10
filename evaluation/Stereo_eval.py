@@ -7,7 +7,7 @@ from dataloader import SceneFlowLoader
 from models import Stereo
 
 
-# testing for any stereo model including SR-Stereo
+# Testing for any stereo model including SR-Stereo
 class Test:
     def __init__(self, testImgLoader, mode='both', evalFcn='outlier', kitti=False, datapath=None):
         self.testImgLoader = testImgLoader
@@ -18,8 +18,10 @@ class Test:
         self.localtime = None
         self.totalTestScores = None
         self.testTime = None
+        self.checkpoint = None
 
     def __call__(self, stereo):
+        self.checkpoint = stereo.checkpoint
         tic = time.time()
 
         class NameValues:
@@ -56,8 +58,10 @@ class Test:
                     batch_idx, len(self.testImgLoader),
                     scoresPairs.str(scoreUnit), timeLeft))
                 tic = time.time()
+
             totalTestScores = [loss / batch_idx for loss in totalTestScores]
             self.testResults = NameValues(self.evalFcn, ('Avg', 'L', 'R'), totalTestScores).pairs
+
         elif self.mode == 'left' or self.mode == 'right':
             totalTestScore = 0
             tic = time.time()
@@ -76,6 +80,7 @@ class Test:
                     batch_idx, len(self.testImgLoader),
                     scoresPairs.str(scoreUnit), timeLeft))
                 tic = time.time()
+
             totalTestScores = totalTestScore / batch_idx
             self.testResults = NameValues(self.evalFcn, (''), (totalTestScores)).pairs
 
@@ -87,8 +92,8 @@ class Test:
         return totalTestScores, testTime
 
     # log file will be saved to where chkpoint file is
-    def log(self, chkpointDir, epoch=None, it=None, additionalValue=()):
-        chkpointFolder, _ = os.path.split(chkpointDir)
+    def log(self, epoch=None, it=None, additionalValue=()):
+        chkpointFolder, _ = os.path.split(self.checkpoint)
         logDir = os.path.join(chkpointFolder, 'test_results.txt')
         with open(logDir, "a") as log:
             pass
@@ -102,7 +107,7 @@ class Test:
             log.seek(0)
             log.write('---------------------- %s ----------------------\n' % self.localtime)
             baseInfos = (('data', self.datapath),
-                         ('checkpoint', chkpointDir),
+                         ('checkpoint', self.checkpoint),
                          ('test_type', self.evalFcn),
                          ('test_time', self.testTime),
                          ('epoch', epoch),
@@ -153,7 +158,7 @@ def main():
     # TEST
     test = Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath)
     test(stereo=stereo)
-    test.log(args.loadmodel)
+    test.log()
 
 
 if __name__ == '__main__':

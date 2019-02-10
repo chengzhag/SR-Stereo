@@ -1,113 +1,109 @@
 from __future__ import print_function
 import argparse
-import os
-import random
-import torch
-import torch.nn as nn
-import torch.nn.parallel
-import torch.backends.cudnn as cudnn
-import torch.optim as optim
 import torch.utils.data
-from torch.autograd import Variable
-import torch.nn.functional as F
-import numpy as np
 import time
-import math
 from dataloader import listSceneFlowFile
 from dataloader import SceneFlowLoader
 from models import Stereo
 from tensorboardX import SummaryWriter
 from evaluation import Stereo_eval
 
-parser = argparse.ArgumentParser(description='Stereo')
-parser.add_argument('--maxdisp', type=int, default=192,
-                    help='maxium disparity')
-parser.add_argument('--model', default='PSMNet',
-                    help='select model')
-parser.add_argument('--datapath', default='../datasets/sceneflow/',
-                    help='datapath')
-parser.add_argument('--epochs', type=int, default=10,
-                    help='number of epochs to train')
-parser.add_argument('--loadmodel', default='logs/pretrained/PSMNet_pretrained_sceneflow.tar',
-                    help='load model')
-parser.add_argument('--savemodel', default='logs/unamed_PSMNet_sceneflow/',
-                    help='save model')
-parser.add_argument('--no_cuda', action='store_true', default=False,
-                    help='enables CUDA training')
-parser.add_argument('--seed', type=int, default=1, metavar='S',
-                    help='random seed (default: 1)')
-parser.add_argument('--both_disparity', type=bool, default=True,
-                    help='if train on disparity maps from both views')
-parser.add_argument('--eval_fcn', type=str, default='outlier',
-                    help='evaluation function used in testing')
-args = parser.parse_args()
-args.cuda = not args.no_cuda and torch.cuda.is_available()
 
-torch.manual_seed(args.seed)
-if args.cuda:
-    torch.cuda.manual_seed(args.seed)
+class Train:
+    def __init__(self, trainImgLoader):
+        self.trainImgLoader = trainImgLoader
 
-all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = listSceneFlowFile.dataloader(
-    args.datapath)
+    def __call__(self, stereo, nEpochs):
+        def adjust_learning_rate(optimizer, epoch):
+            lr = 0.001
+            print(lr)
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr
 
-trainImgLoader = torch.utils.data.DataLoader(
-    SceneFlowLoader.myImageFloder(all_left_img, all_right_img, all_left_disp, all_right_disp, True),
-    batch_size=12, shuffle=True, num_workers=8, drop_last=False)
+        # TRAIN
+        ticFull = time.time()
+        writer = SummaryWriter(stereo.logFolder)
+        epoch = None
+        batch_idx = None
+        for epoch in range(1, nEpochs + 1):
+            print('This is %d-th epoch' % (epoch))
+            totalTrainLoss = 0
+            adjust_learning_rate(stereo.optimizer, epoch)
 
-testImgLoader = torch.utils.data.DataLoader(
-    SceneFlowLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
-    batch_size=11, shuffle=False, num_workers=8, drop_last=False)
+            # iteration
+            tic = time.time()
+            for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(self.trainImgLoader, 1):
+                if stereo.cuda:
+                    imgL, imgR, dispL, dispR = imgL.cuda(), imgR.cuda(), dispL.cuda(), dispR.cuda(),
+                lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR)
+                writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, batch_idx)
+                totalTrainLoss += lossAvg
+                timeLeft = (time.time() - tic) / 3600 * ((nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
+                print('it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, left %.2fh' % (
+                    batch_idx, len(self.trainImgLoader) * nEpochs, lossAvg, lossL, lossR, timeLeft))
+                tic = time.time()
 
-stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage='Stereo_train')
-stereo.load(args.loadmodel)
+            print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / len(self.trainImgLoader)))
 
+            # save
+            stereo.save(epoch=epoch, iteration=batch_idx,
+                        trainLoss=totalTrainLoss / len(self.trainImgLoader))
 
-def adjust_learning_rate(optimizer, epoch):
-    lr = 0.001
-    print(lr)
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
+        writer.close()
+        print('Full training time = %.2fh' % ((time.time() - ticFull) / 3600))
 
 
 def main():
-    ticFull = time.time()
-    writer = SummaryWriter(stereo.logFolder)
-    # TRAIN
-    # TODO: move traing code to a fcn
-    chkpointDir = args.loadmodel
-    epoch = None
-    batch_idx = None
-    for epoch in range(1, args.epochs + 1):
-        print('This is %d-th epoch' % (epoch))
-        totalTrainLoss = 0
-        adjust_learning_rate(stereo.optimizer, epoch)
+    parser = argparse.ArgumentParser(description='Stereo')
+    parser.add_argument('--maxdisp', type=int, default=192,
+                        help='maxium disparity')
+    parser.add_argument('--model', default='PSMNet',
+                        help='select model')
+    parser.add_argument('--datapath', default='../datasets/sceneflow/',
+                        help='datapath')
+    parser.add_argument('--epochs', type=int, default=10,
+                        help='number of epochs to train')
+    parser.add_argument('--loadmodel', default='logs/pretrained/PSMNet_pretrained_sceneflow.tar',
+                        help='load model')
+    parser.add_argument('--no_cuda', action='store_true', default=False,
+                        help='enables CUDA training')
+    parser.add_argument('--seed', type=int, default=1, metavar='S',
+                        help='random seed (default: 1)')
+    parser.add_argument('--both_disparity', type=bool, default=True,
+                        help='if train on disparity maps from both views')
+    parser.add_argument('--eval_fcn', type=str, default='outlier',
+                        help='evaluation function used in testing')
+    args = parser.parse_args()
+    args.cuda = not args.no_cuda and torch.cuda.is_available()
 
-        # iteration
-        tic = time.time()
-        for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(trainImgLoader, 1):
-            if args.cuda:
-                imgL, imgR, dispL, dispR = imgL.cuda(), imgR.cuda(), dispL.cuda(), dispR.cuda(),
-            lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR)
-            writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, batch_idx)
-            totalTrainLoss += lossAvg
-            timeLeft = (time.time() - tic) / 3600 * ((args.epochs - epoch + 1) * len(trainImgLoader) - batch_idx)
-            print('it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, left %.2fh' % (
-                batch_idx, len(trainImgLoader) * args.epochs, lossAvg, lossL, lossR, timeLeft))
-            tic = time.time()
+    torch.manual_seed(args.seed)
+    if args.cuda:
+        torch.cuda.manual_seed(args.seed)
 
-        print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / len(trainImgLoader)))
+    # Dataset
+    all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = listSceneFlowFile.dataloader(
+        args.datapath)
 
-        # save
-        chkpointDir = stereo.save(epoch=epoch, iteration=batch_idx,
-                    trainLoss=totalTrainLoss / len(trainImgLoader))
+    trainImgLoader = torch.utils.data.DataLoader(
+        SceneFlowLoader.myImageFloder(all_left_img, all_right_img, all_left_disp, all_right_disp, True),
+        batch_size=12, shuffle=True, num_workers=8, drop_last=False)
 
-    writer.close()
-    print('Full training time = %.2fh' % ((time.time() - ticFull) / 3600))
+    testImgLoader = torch.utils.data.DataLoader(
+        SceneFlowLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
+        batch_size=11, shuffle=False, num_workers=8, drop_last=False)
 
-    # TEST
+    # Load model
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage='Stereo_train')
+    stereo.load(args.loadmodel)
+
+    # Train
+    train = Train(trainImgLoader)
+    train(stereo=stereo, nEpochs=args.epochs)
+
+    # Test
     test = Stereo_eval.Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath)
     test(stereo=stereo)
-    test.log(chkpointDir, epoch=epoch, it=batch_idx)
+    test.log()
 
 
 if __name__ == '__main__':
