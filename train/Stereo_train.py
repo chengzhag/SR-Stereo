@@ -38,8 +38,8 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--both_disparity', type=bool, default=True,
                     help='if train on disparity maps from both views')
-parser.add_argument('--test_type', type=str, default='outlier',
-                    help='evaluation type used in testing')
+parser.add_argument('--eval_fcn', type=str, default='outlier',
+                    help='evaluation function used in testing')
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -56,7 +56,7 @@ trainImgLoader = torch.utils.data.DataLoader(
 
 testImgLoader = torch.utils.data.DataLoader(
     SceneFlowLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
-    batch_size=12, shuffle=False, num_workers=8, drop_last=False)
+    batch_size=11, shuffle=False, num_workers=8, drop_last=False)
 
 stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage='Stereo_train')
 stereo.load(args.loadmodel)
@@ -75,6 +75,8 @@ def main():
     # TRAIN
     # TODO: move traing code to a fcn
     chkpointDir = args.loadmodel
+    epoch = None
+    batch_idx = None
     for epoch in range(1, args.epochs + 1):
         print('This is %d-th epoch' % (epoch))
         totalTrainLoss = 0
@@ -100,18 +102,12 @@ def main():
                     trainLoss=totalTrainLoss / len(trainImgLoader))
 
     writer.close()
-    print('full training time = %.2f HR' % ((time.time() - ticFull) / 3600))
+    print('Full training time = %.2fh' % ((time.time() - ticFull) / 3600))
 
     # TEST
-    totalTestScores, testTime = Stereo_eval.test(stereo=stereo, testImgLoader=testImgLoader, mode='both',
-                                                 type=args.test_type)
-
-    # SAVE test information
-    Stereo_eval.logTest(args.datapath, chkpointDir, args.test_type, testTime, (
-        ('scoreAvg', totalTestScores[0]),
-        ('scoreL', totalTestScores[1]),
-        ('scoreR', totalTestScores[2])
-    ),epoch, batch_idx)
+    test = Stereo_eval.Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath)
+    test(stereo=stereo)
+    test.log(chkpointDir, epoch=epoch, it=batch_idx)
 
 
 if __name__ == '__main__':
