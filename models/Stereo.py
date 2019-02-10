@@ -58,7 +58,6 @@ class PSMNet():
         return loss, losses
 
     def predict(self, imgL, imgR, mode='both'):
-        torch.cuda.empty_cache()
         self.model.eval()
 
         def _predictL():

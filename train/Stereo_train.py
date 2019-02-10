@@ -56,7 +56,7 @@ trainImgLoader = torch.utils.data.DataLoader(
 
 testImgLoader = torch.utils.data.DataLoader(
     SceneFlowLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
-    batch_size=12, shuffle=False, num_workers=8, drop_last=False)
+    batch_size=11, shuffle=False, num_workers=8, drop_last=False)
 
 stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage='Stereo_train')
 stereo.load(args.loadmodel)
