@@ -23,6 +23,11 @@ class Train:
         # TRAIN
         ticFull = time.time()
         writer = SummaryWriter(stereo.logFolder)
+        def disp2gray(disp):
+            disp[disp > stereo.maxdisp] = stereo.maxdisp
+            disp = disp/stereo.maxdisp
+            return disp.unsqueeze(1).repeat(1,3,1,1)
+
         epoch = None
         batch_idx = None
         for epoch in range(1, nEpochs + 1):
@@ -31,12 +36,20 @@ class Train:
             adjust_learning_rate(stereo.optimizer, epoch)
 
             # iteration
+            global_step = 1
             tic = time.time()
             for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(self.trainImgLoader, 1):
                 if stereo.cuda:
                     imgL, imgR, dispL, dispR = imgL.cuda(), imgR.cuda(), dispL.cuda(), dispR.cuda(),
-                lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR)
-                writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, batch_idx)
+                lossAvg, [lossL, lossR], ouputs = stereo.train(imgL, imgR, dispL, dispR)
+
+                writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, global_step)
+                writer.add_images('dispL', disp2gray(dispL), batch_idx, global_step)
+                writer.add_images('dispR', disp2gray(dispR), batch_idx, global_step)
+                writer.add_images('ouputL', disp2gray(ouputs[0]), batch_idx, global_step)
+                writer.add_images('ouputR', disp2gray(ouputs[1]), batch_idx, global_step)
+                global_step += 1
+
                 totalTrainLoss += lossAvg
                 timeLeft = (time.time() - tic) / 3600 * ((nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
                 print('it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, left %.2fh' % (
