@@ -10,8 +10,10 @@ from evaluation import Stereo_eval
 
 
 class Train:
-    def __init__(self, trainImgLoader):
+    def __init__(self, trainImgLoader, logEvery, ndisLog):
         self.trainImgLoader = trainImgLoader
+        self.logEvery = logEvery
+        self.ndisLog = max(ndisLog, 1)
 
     def __call__(self, stereo, nEpochs):
         def adjust_learning_rate(optimizer, epoch):
@@ -23,6 +25,14 @@ class Train:
         # TRAIN
         ticFull = time.time()
         writer = SummaryWriter(stereo.logFolder)
+
+        def disp2gray(disp):
+            ndisLog = min(self.ndisLog, disp.size(0))
+            disp = disp[:ndisLog, :, :]
+            disp[disp > stereo.maxdisp] = stereo.maxdisp
+            disp = disp / stereo.maxdisp
+            return disp.unsqueeze(1).repeat(1, 3, 1, 1)
+
         epoch = None
         batch_idx = None
         for epoch in range(1, nEpochs + 1):
@@ -31,12 +41,23 @@ class Train:
             adjust_learning_rate(stereo.optimizer, epoch)
 
             # iteration
+            global_step = 1
             tic = time.time()
             for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(self.trainImgLoader, 1):
                 if stereo.cuda:
                     imgL, imgR, dispL, dispR = imgL.cuda(), imgR.cuda(), dispL.cuda(), dispR.cuda(),
-                lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR)
-                writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, batch_idx)
+                if self.logEvery > 0 and global_step % self.logEvery == 0:
+                    lossAvg, [lossL, lossR], ouputs = stereo.train(imgL, imgR, dispL, dispR, output=True)
+                    writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, global_step)
+                    writer.add_images('disp/dispL', disp2gray(dispL), batch_idx, global_step)
+                    writer.add_images('disp/dispR', disp2gray(dispR), batch_idx, global_step)
+                    writer.add_images('disp/ouputL', disp2gray(ouputs[0]), batch_idx, global_step)
+                    writer.add_images('disp/ouputR', disp2gray(ouputs[1]), batch_idx, global_step)
+                else:
+                    lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR, output=False)
+
+                global_step += 1
+
                 totalTrainLoss += lossAvg
                 timeLeft = (time.time() - tic) / 3600 * ((nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
                 print('it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, left %.2fh' % (
@@ -73,6 +94,10 @@ def main():
                         help='if train on disparity maps from both views')
     parser.add_argument('--eval_fcn', type=str, default='outlier',
                         help='evaluation function used in testing')
+    parser.add_argument('--log_every', type=int, default=10,
+                        help='log every log_every iterations')
+    parser.add_argument('--ndis_log', type=int, default=1,
+                        help='number of disparity maps to log')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -97,7 +122,7 @@ def main():
     stereo.load(args.loadmodel)
 
     # Train
-    train = Train(trainImgLoader)
+    train = Train(trainImgLoader=trainImgLoader, logEvery=args.log_every, ndisLog=args.ndis_log)
     train(stereo=stereo, nEpochs=args.epochs)
 
     # Test

@@ -24,7 +24,7 @@ class PSMNet:
             self.model.cuda()
         self.checkpoint = None
 
-    def train(self, imgL, imgR, dispL=None, dispR=None):
+    def train(self, imgL, imgR, dispL=None, dispR=None, output=True):
         self.model.train()
         self._assertDisp(dispL, dispR)
 
@@ -44,36 +44,56 @@ class PSMNet:
 
             loss.backward()
             self.optimizer.step()
-            return loss.data
+            if output:
+                return loss.data.item(), output3
+            else:
+                return loss.data.item()
+
 
         losses = []
-        if dispL is not None:
-            losses.append(_train(imgL, imgR, dispL))
+        if output:
+            ouputs = []
+            if dispL is not None:
+                loss, ouput = _train(imgL, imgR, dispL)
+                losses.append(loss)
+                ouputs.append(ouput.cpu())
 
-        if dispR is not None:
-            # swap and flip input for right disparity map
-            losses.append(_train(self._flip(imgR), self._flip(imgL), self._flip(dispR)))
+            if dispR is not None:
+                # swap and flip input for right disparity map
+                loss, ouput = _train(self._flip(imgR), self._flip(imgL), self._flip(dispR))
+                losses.append(loss)
+                ouputs.append(self._flip(ouput).cpu())
+            loss = sum(losses) / len(losses)
+            return loss, losses, ouputs
+        else:
+            if dispL is not None:
+                losses.append(_train(imgL, imgR, dispL))
 
-        loss = sum(losses) / len(losses)
+            if dispR is not None:
+                # swap and flip input for right disparity map
+                losses.append(_train(self._flip(imgR), self._flip(imgL), self._flip(dispR)))
+            loss = sum(losses) / len(losses)
+            return loss, losses
 
-        return loss, losses
 
     def predict(self, imgL, imgR, mode='both'):
         self.model.eval()
+        def postProcess(output):
+            return torch.squeeze(output.data.cpu(), 1)[:, 4:, :]  # TODO: generalize padding and unpadding process
 
-        def _predictL():
-            return self.model(imgL, imgR)
+        def predictL():
+            return postProcess(self.model(imgL, imgR))
 
-        def _predictR():
-            return self._flip(self.model(self._flip(imgR), self._flip(imgL)))
+        def predictR():
+            return postProcess(self._flip(self.model(self._flip(imgR), self._flip(imgL))))
 
         with torch.no_grad():
             if mode == 'left':
-                return _predictL()
+                return predictL()
             elif mode == 'right':
-                return _predictR()
+                return predictR()
             elif mode == 'both':
-                return _predictL(), _predictR()
+                return predictL(), predictR()
             else:
                 raise Exception('No mode \'%s\'!' % mode)
 
@@ -87,7 +107,6 @@ class PSMNet:
                 continue
             output = self.predict(imgL, imgR, mode)
             mask = (gt < self.maxdisp) & (gt > 0) if kitti else (gt < self.maxdisp)
-            output = torch.squeeze(output.data.cpu(), 1)[:, 4:, :]  # TODO: generalize padding and unpadding process
             scores.append(getattr(evalFcn, type)(gt[mask], output[mask]))
 
         scoreAvg = sum(scores) / len(scores)
