@@ -145,8 +145,8 @@ def main():
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
 
-        _, _, _, _, test_left_img, test_right_img, test_left_disp, test_right_disp = listSceneFlowFile.dataloader(
-            args.datapath)
+    _, _, _, _, test_left_img, test_right_img, test_left_disp, test_right_disp = listSceneFlowFile.dataloader(
+        args.datapath)
 
     testImgLoader = torch.utils.data.DataLoader(
         SceneFlowLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
