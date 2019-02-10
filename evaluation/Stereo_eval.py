@@ -57,8 +57,8 @@ def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
         testTime = time.time() - tic
         return totalTestScore / len(testImgLoader), testTime
 
-
-def logTest(datapath, chkpointDir, test_type, testTime, results):
+# log file will be saved to where chkpoint file is
+def logTest(datapath, chkpointDir, test_type, testTime, results, epoch=None, it=None):
     chkpointFolder, _ = os.path.split(chkpointDir)
     logDir = os.path.join(chkpointFolder, 'test_results.txt')
     with open(logDir, "a") as log: pass
@@ -72,6 +72,8 @@ def logTest(datapath, chkpointDir, test_type, testTime, results):
         log.write('checkpoint: %s\n' % chkpointDir)
         log.write('test_type: %s\n' % test_type)
         log.write('test_time: %f\n' % testTime)
+        if epoch is not None: log.write('epoch: %d\n' % epoch)
+        if it is not None: log.write('iteration: %d\n' % it)
         log.write('\n')
         for (name, value) in results:
             log.write('%s: %f\n' % (name, value))

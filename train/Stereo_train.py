@@ -56,9 +56,9 @@ trainImgLoader = torch.utils.data.DataLoader(
 
 testImgLoader = torch.utils.data.DataLoader(
     SceneFlowLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
-    batch_size=11, shuffle=False, num_workers=8, drop_last=False)
+    batch_size=12, shuffle=False, num_workers=8, drop_last=False)
 
-stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda)
+stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage='Stereo_train')
 stereo.load(args.loadmodel)
 
 
@@ -71,11 +71,10 @@ def adjust_learning_rate(optimizer, epoch):
 
 def main():
     ticFull = time.time()
-    if not os.path.exists(args.savemodel):
-        os.makedirs(args.savemodel)
-    writer = SummaryWriter(os.path.join(args.savemodel, 'logs'))
+    writer = SummaryWriter(stereo.logFolder)
     # TRAIN
     # TODO: move traing code to a fcn
+    chkpointDir = args.loadmodel
     for epoch in range(1, args.epochs + 1):
         print('This is %d-th epoch' % (epoch))
         totalTrainLoss = 0
@@ -84,6 +83,7 @@ def main():
         # iteration
         tic = time.time()
         for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(trainImgLoader):
+            batch_idx += 1
             if args.cuda:
                 imgL, imgR, dispL, dispR = imgL.cuda(), imgR.cuda(), dispL.cuda(), dispR.cuda(),
             lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR)
@@ -93,12 +93,11 @@ def main():
             print('it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, left %.2fh' % (
                 batch_idx, len(trainImgLoader) * args.epochs, lossAvg, lossL, lossR, timeLeft))
             tic = time.time()
-            break
 
         print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / len(trainImgLoader)))
 
         # save
-        stereo.save(stage='Stereo_train', epoch=epoch, iteration=batch_idx,
+        chkpointDir = stereo.save(epoch=epoch, iteration=batch_idx,
                     trainLoss=totalTrainLoss / len(trainImgLoader))
 
     writer.close()
@@ -109,11 +108,11 @@ def main():
                                                  type=args.test_type)
 
     # SAVE test information
-    Stereo_eval.logTest(args.datapath, args.savemodel, args.test_type, testTime, (
+    Stereo_eval.logTest(args.datapath, chkpointDir, args.test_type, testTime, (
         ('scoreAvg', totalTestScores[0]),
         ('scoreL', totalTestScores[1]),
         ('scoreR', totalTestScores[2])
-    ))
+    ),epoch, batch_idx)
 
 
 if __name__ == '__main__':
