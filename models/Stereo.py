@@ -1,15 +1,20 @@
-from models.PSMNet import *
+import os
+import time
 import torch.optim as optim
 import torch
-from torch.autograd import Variable
 import torch.nn.functional as F
 import torch.nn as nn
-
+from models.PSMNet import *
 from evaluation import evalFcn
 
 
 class PSMNet():
-    def __init__(self, maxdisp=192, cuda=True):
+    def __init__(self, maxdisp=192, cuda=True, stage='unnamed'):
+        self.stage = stage
+        self.startTime = time.localtime(time.time())
+        self.saveFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) + self.__class__.__name__
+        self.saveFolder = os.path.join('logs', stage, self.saveFolderName)
+        self.logFolder = os.path.join(self.saveFolder, 'logs')
         self.model = stackhourglass(maxdisp)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
         self.maxdisp = maxdisp
@@ -53,6 +58,7 @@ class PSMNet():
         return loss, losses
 
     def predict(self, imgL, imgR, mode='both'):
+        torch.cuda.empty_cache()
         self.model.eval()
 
         def _predictL():
@@ -105,3 +111,15 @@ class PSMNet():
 
     def nParams(self):
         return sum([p.data.nelement() for p in self.model.parameters()])
+
+    def save(self, epoch, iteration, trainLoss):
+        saveDir = os.path.join(self.saveFolder, 'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
+        if not os.path.exists(self.saveFolder):
+            os.makedirs(self.saveFolder)
+        torch.save({
+            'epoch': epoch,
+            'iteration': iteration,
+            'state_dict': self.model.state_dict(),
+            'train_loss': trainLoss,
+        }, saveDir)
+        return saveDir
