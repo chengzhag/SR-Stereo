@@ -6,7 +6,7 @@ from dataloader import listSceneFlowFile
 from dataloader import SceneFlowLoader
 from models import Stereo
 
-
+# testing for any stereo model including SR-Stereo
 def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
     tic = time.time()
     if mode == 'both':
@@ -29,8 +29,7 @@ def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
                     'it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, lossTotal %.2f, lossLTotal %.2f, lossRTotal %.2f, left %.2fh' % tuple(
                         [batch_idx, len(testImgLoader)] + scoresPrint + [timeLeft]))
             tic = time.time()
-        testTime = time.time() - tic
-        return [loss / (batch_idx + 1) for loss in totalTestScores], testTime
+        totalTestScores = [loss / batch_idx for loss in totalTestScores]
     elif mode == 'left' or mode == 'right':
         totalTestScore = 0
         tic = time.time()
@@ -54,8 +53,9 @@ def test(stereo, testImgLoader, mode='both', type='outlier', kitti=False):
                     'it %d/%d, loss %.2f, totalTestLoss %.2f, left %.2fh' % tuple(
                         [batch_idx, len(testImgLoader)] + scoresPrint + [timeLeft]))
             tic = time.time()
-        testTime = time.time() - tic
-        return totalTestScore / len(testImgLoader), testTime
+        totalTestScores = totalTestScore / batch_idx
+    testTime = time.time() - tic
+    return totalTestScores, testTime
 
 # log file will be saved to where chkpoint file is
 def logTest(datapath, chkpointDir, test_type, testTime, results, epoch=None, it=None):
