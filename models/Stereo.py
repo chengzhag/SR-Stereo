@@ -28,6 +28,10 @@ class PSMNet:
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True):
         self.model.train()
         self._assertDisp(dispL, dispR)
+        if self.cuda:
+            imgL, imgR = imgL.cuda(), imgR.cuda()
+            dispL = dispL.cuda() if dispL is not None else None
+            dispR = dispR.cuda() if dispR is not None else None
 
         def _train(imgL, imgR, disp_true):
             self.optimizer.zero_grad()
@@ -56,13 +60,13 @@ class PSMNet:
             if dispL is not None:
                 loss, ouput = _train(imgL, imgR, dispL)
                 losses.append(loss)
-                ouputs.append(ouput.cpu())
+                ouputs.append(ouput)
 
             if dispR is not None:
                 # swap and flip input for right disparity map
                 loss, ouput = _train(self._flip(imgR), self._flip(imgL), self._flip(dispR))
                 losses.append(loss)
-                ouputs.append(self._flip(ouput).cpu())
+                ouputs.append(self._flip(ouput))
             loss = sum(losses) / len(losses)
             return loss, losses, ouputs
         else:
@@ -84,12 +88,13 @@ class PSMNet:
 
         with torch.no_grad():
             def pad(input):
-                inputPad = torch.zeros([N, C, HPad, WPad], dtype=input.dtype)
+                inputPad = torch.zeros([N, C, HPad, WPad], dtype=input.dtype, device = 'cuda' if self.cuda else 'cpu')
                 inputPad[:, :, (HPad - H):, (WPad - W):] = input
                 return inputPad
 
             def unpad(output):
-                return torch.squeeze(output.data.cpu(), 1)[:, (HPad - H):, (WPad - W):]
+                output = output[:, (HPad - H):, (WPad - W):]
+                return output
 
             def predictL():
                 return unpad(self.model(imgL, imgR))
@@ -109,7 +114,11 @@ class PSMNet:
 
     def test(self, imgL, imgR, dispL=None, dispR=None, type='l1', kitti=False):
         self._assertDisp(dispL, dispR)
-
+        if self.cuda:
+            imgL, imgR = imgL.cuda(), imgR.cuda()
+            dispL = dispL.cuda() if dispL is not None else None
+            dispR = dispR.cuda() if dispR is not None else None
+            
         # for kitti dataset, only consider loss of none zero disparity pixels in gt
         scores = []
         for gt, mode in zip([dispL, dispR], ['left', 'right']):

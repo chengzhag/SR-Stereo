@@ -44,8 +44,6 @@ class Train:
             global_step = 1
             tic = time.time()
             for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(self.trainImgLoader, 1):
-                if stereo.cuda:
-                    imgL, imgR, dispL, dispR = imgL.cuda(), imgR.cuda(), dispL.cuda(), dispR.cuda(),
                 if self.logEvery > 0 and global_step % self.logEvery == 0:
                     lossAvg, [lossL, lossR], ouputs = stereo.train(imgL, imgR, dispL, dispR, output=True)
                     writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, global_step)

@@ -45,8 +45,6 @@ class Test:
             totalTestScores = [0, 0, 0]
             tic = time.time()
             for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(self.testImgLoader, 1):
-                if stereo.cuda:
-                    imgL, imgR = imgL.cuda(), imgR.cuda()
                 scoreAvg, [scoreL, scoreR] = stereo.test(imgL, imgR, dispL, dispR, type=self.evalFcn, kitti=self.kitti)
                 totalTestScores = [total + batch for total, batch in zip(totalTestScores, (scoreAvg, scoreL, scoreR))]
                 timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
@@ -66,8 +64,6 @@ class Test:
             totalTestScore = 0
             tic = time.time()
             for batch_idx, (imgL, imgR, dispGT) in enumerate(self.testImgLoader, 1):
-                if stereo.cuda:
-                    imgL, imgR = imgL.cuda(), imgR.cuda()
                 if self.mode == 'left':
                     score = stereo.test(imgL, imgR, dispL=dispGT, type=self.evalFcn, kitti=self.kitti)
                 else:
