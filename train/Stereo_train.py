@@ -10,8 +10,9 @@ from evaluation import Stereo_eval
 
 
 class Train:
-    def __init__(self, trainImgLoader):
+    def __init__(self, trainImgLoader, logEvery):
         self.trainImgLoader = trainImgLoader
+        self.logEvery = logEvery
 
     def __call__(self, stereo, nEpochs):
         def adjust_learning_rate(optimizer, epoch):
@@ -41,13 +42,16 @@ class Train:
             for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(self.trainImgLoader, 1):
                 if stereo.cuda:
                     imgL, imgR, dispL, dispR = imgL.cuda(), imgR.cuda(), dispL.cuda(), dispR.cuda(),
-                lossAvg, [lossL, lossR], ouputs = stereo.train(imgL, imgR, dispL, dispR)
+                if self.logEvery > 0 and global_step % self.logEvery == 0:
+                    lossAvg, [lossL, lossR], ouputs = stereo.train(imgL, imgR, dispL, dispR, output=True)
+                    writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, global_step)
+                    writer.add_images('dispL', disp2gray(dispL), batch_idx, global_step)
+                    writer.add_images('dispR', disp2gray(dispR), batch_idx, global_step)
+                    writer.add_images('ouputL', disp2gray(ouputs[0]), batch_idx, global_step)
+                    writer.add_images('ouputR', disp2gray(ouputs[1]), batch_idx, global_step)
+                else:
+                    lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR, output=False)
 
-                writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, global_step)
-                writer.add_images('dispL', disp2gray(dispL), batch_idx, global_step)
-                writer.add_images('dispR', disp2gray(dispR), batch_idx, global_step)
-                writer.add_images('ouputL', disp2gray(ouputs[0]), batch_idx, global_step)
-                writer.add_images('ouputR', disp2gray(ouputs[1]), batch_idx, global_step)
                 global_step += 1
 
                 totalTrainLoss += lossAvg
@@ -86,6 +90,8 @@ def main():
                         help='if train on disparity maps from both views')
     parser.add_argument('--eval_fcn', type=str, default='outlier',
                         help='evaluation function used in testing')
+    parser.add_argument('--log_every', type=int, default=10,
+                        help='log every log_every iterations')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -110,7 +116,7 @@ def main():
     stereo.load(args.loadmodel)
 
     # Train
-    train = Train(trainImgLoader)
+    train = Train(trainImgLoader=trainImgLoader, logEvery=args.log_every)
     train(stereo=stereo, nEpochs=args.epochs)
 
     # Test

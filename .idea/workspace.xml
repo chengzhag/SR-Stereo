@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5af41d42-9f6a-4e3f-b5e4-a4d9632ca140" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/models/Stereo.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/Stereo.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train/Stereo_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train/Stereo_train.py" afterDir="false" />
     </list>
@@ -15,7 +14,7 @@
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/SR_Stereo$listCarlaKittiFiles.coverage" NAME="listCarlaKittiFiles Coverage Results" MODIFIED="1549550568234" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dataloader" />
     <SUITE FILE_PATH="coverage/SR_Stereo$writer.coverage" NAME="writer Coverage Results" MODIFIED="1549680113849" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/.PyCharm2018.3/system/remote_sources/2057826824/-1789016477/tensorboardX" />
-    <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_train.coverage" NAME="Stereo_train Coverage Results" MODIFIED="1549791650424" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
+    <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_train.coverage" NAME="Stereo_train Coverage Results" MODIFIED="1549792331003" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_eval.coverage" NAME="Stereo_eval Coverage Results" MODIFIED="1549787158399" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
   </component>
   <component name="DatabaseView">
@@ -51,8 +50,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/train/Stereo_train.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="190">
-                  <caret line="43" column="87" lean-forward="true" selection-start-line="43" selection-start-column="87" selection-end-line="43" selection-end-column="87" />
+                <state relative-caret-position="336">
+                  <caret line="54" column="32" lean-forward="true" selection-start-line="54" selection-start-column="32" selection-end-line="54" selection-end-column="32" />
                   <folding>
                     <element signature="e#0#37#0" expanded="true" />
                   </folding>
@@ -73,14 +72,23 @@
       </split-first>
       <split-second>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file pinned="false" current-in-tab="true">
+          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/models/Stereo.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="59">
-                  <caret line="26" column="67" selection-start-line="26" selection-start-column="67" selection-end-line="26" selection-end-column="67" />
+                <state relative-caret-position="393">
+                  <caret line="75" column="31" selection-start-line="75" selection-start-column="31" selection-end-line="75" selection-end-column="31" />
                   <folding>
                     <element signature="e#0#9#0" expanded="true" />
                   </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="true">
+            <entry file="file://$USER_HOME$/.PyCharm2018.3/system/remote_sources/2057826824/-1789016477/torch/nn/_reduction.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="354">
+                  <caret line="48" selection-start-line="48" selection-end-line="48" />
                 </state>
               </provider>
             </entry>
@@ -156,8 +164,8 @@
         <option value="$PROJECT_DIR$/models/PSMNet/stackhourglass.py" />
         <option value="$PROJECT_DIR$/models/PSMNet/submodule.py" />
         <option value="$PROJECT_DIR$/evaluation/Stereo_eval.py" />
-        <option value="$PROJECT_DIR$/train/Stereo_train.py" />
         <option value="$PROJECT_DIR$/models/Stereo.py" />
+        <option value="$PROJECT_DIR$/train/Stereo_train.py" />
       </list>
     </option>
   </component>
@@ -351,12 +359,12 @@
       <workItem from="1549698855397" duration="13004000" />
       <workItem from="1549721476059" duration="5270000" />
       <workItem from="1549764877868" duration="10510000" />
-      <workItem from="1549784429181" duration="6091000" />
+      <workItem from="1549784429181" duration="6882000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="80814000" />
+    <option name="totallyTimeSpent" value="81605000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -662,22 +670,29 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/train/Stereo_train.py">
+    <entry file="file://$PROJECT_DIR$/models/Stereo.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="190">
-          <caret line="43" column="87" lean-forward="true" selection-start-line="43" selection-start-column="87" selection-end-line="43" selection-end-column="87" />
+        <state relative-caret-position="393">
+          <caret line="75" column="31" selection-start-line="75" selection-start-column="31" selection-end-line="75" selection-end-column="31" />
           <folding>
-            <element signature="e#0#37#0" expanded="true" />
+            <element signature="e#0#9#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/Stereo.py">
+    <entry file="file://$USER_HOME$/.PyCharm2018.3/system/remote_sources/2057826824/-1789016477/torch/nn/_reduction.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="59">
-          <caret line="26" column="67" selection-start-line="26" selection-start-column="67" selection-end-line="26" selection-end-column="67" />
+        <state relative-caret-position="354">
+          <caret line="48" selection-start-line="48" selection-end-line="48" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train/Stereo_train.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="336">
+          <caret line="54" column="32" lean-forward="true" selection-start-line="54" selection-start-column="32" selection-end-line="54" selection-end-column="32" />
           <folding>
-            <element signature="e#0#9#0" expanded="true" />
+            <element signature="e#0#37#0" expanded="true" />
           </folding>
         </state>
       </provider>

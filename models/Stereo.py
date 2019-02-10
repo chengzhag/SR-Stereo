@@ -63,6 +63,8 @@ class PSMNet:
                 loss, ouput = _train(self._flip(imgR), self._flip(imgL), self._flip(dispR))
                 losses.append(loss)
                 ouputs.append(self._flip(ouput).cpu())
+            loss = sum(losses) / len(losses)
+            return loss, losses, ouputs
         else:
             if dispL is not None:
                 losses.append(_train(imgL, imgR, dispL))
@@ -70,10 +72,9 @@ class PSMNet:
             if dispR is not None:
                 # swap and flip input for right disparity map
                 losses.append(_train(self._flip(imgR), self._flip(imgL), self._flip(dispR)))
+            loss = sum(losses) / len(losses)
+            return loss, losses
 
-        loss = sum(losses) / len(losses)
-
-        return loss, losses, ouputs
 
     def predict(self, imgL, imgR, mode='both'):
         self.model.eval()
