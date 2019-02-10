@@ -52,7 +52,7 @@ class Test:
                 timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
 
                 scoresPairs = NameValues(self.evalFcn,
-                                         ('Avg', 'L', 'R', 'Total', 'Total', 'Total'),
+                                         ('Avg', 'L', 'R', 'Total', 'LTotal', 'RTotal'),
                                          [scoreAvg, scoreL, scoreR] + [score / batch_idx for score in totalTestScores])
                 print('it %d/%d, %sleft %.2fh' % (
                     batch_idx, len(self.testImgLoader),
