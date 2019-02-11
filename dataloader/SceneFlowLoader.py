@@ -1,12 +1,7 @@
-import os
-import torch
 import torch.utils.data as data
-import torch
-import torchvision.transforms as transforms
 import random
-from PIL import Image, ImageOps
+from PIL import Image
 from utils import preprocess
-from . import listSceneFlowFiles as lt
 from utils import python_pfm as pfm
 import numpy as np
 

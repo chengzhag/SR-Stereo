@@ -1,9 +1,5 @@
-import torch.utils.data as data
-
-from PIL import Image
 import os
 import os.path
-import numpy as np
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
