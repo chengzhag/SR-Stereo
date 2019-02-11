@@ -43,9 +43,9 @@ class PSMNet:
             output1 = torch.squeeze(output1, 1)
             output2 = torch.squeeze(output2, 1)
             output3 = torch.squeeze(output3, 1)
-            loss = 0.5 * F.smooth_l1_loss(output1[mask], disp_true[mask], size_average=True) + 0.7 * F.smooth_l1_loss(
-                output2[mask], disp_true[mask], size_average=True) + F.smooth_l1_loss(output3[mask], disp_true[mask],
-                                                                                      size_average=True)
+            loss = 0.5 * F.smooth_l1_loss(output1[mask], disp_true[mask], reduction='mean') + 0.7 * F.smooth_l1_loss(
+                output2[mask], disp_true[mask], reduction='mean') + F.smooth_l1_loss(output3[mask], disp_true[mask],
+                                                                                     reduction='mean')
 
             loss.backward()
             self.optimizer.step()

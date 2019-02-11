@@ -2,12 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5af41d42-9f6a-4e3f-b5e4-a4d9632ca140" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dataloader/KittiLoader.py" beforeDir="false" afterPath="$PROJECT_DIR$/dataloader/KittiLoader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dataloader/SceneFlowLoader.py" beforeDir="false" afterPath="$PROJECT_DIR$/dataloader/SceneFlowLoader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dataloader/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/dataloader/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/evaluation/Stereo_eval.py" beforeDir="false" afterPath="$PROJECT_DIR$/evaluation/Stereo_eval.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train/Stereo_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train/Stereo_train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/Stereo.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/Stereo.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -18,7 +13,7 @@
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/SR_Stereo$listCarlaKittiFiles.coverage" NAME="listCarlaKittiFiles Coverage Results" MODIFIED="1549550568234" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dataloader" />
     <SUITE FILE_PATH="coverage/SR_Stereo$writer.coverage" NAME="writer Coverage Results" MODIFIED="1549680113849" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/.PyCharm2018.3/system/remote_sources/2057826824/-1789016477/tensorboardX" />
-    <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_train.coverage" NAME="Stereo_train Coverage Results" MODIFIED="1549876422901" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
+    <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_train.coverage" NAME="Stereo_train Coverage Results" MODIFIED="1549876962098" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_eval.coverage" NAME="Stereo_eval Coverage Results" MODIFIED="1549876339344" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
   </component>
   <component name="DatabaseView">
@@ -36,7 +31,7 @@
     <select />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.41260746">
+    <splitter split-orientation="horizontal" split-proportion="0.52149">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file pinned="false" current-in-tab="false">
@@ -54,8 +49,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/train/Stereo_train.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="222">
-                  <caret line="107" column="104" selection-start-line="107" selection-start-column="104" selection-end-line="107" selection-end-column="104" />
+                <state relative-caret-position="211">
+                  <caret line="47" column="60" selection-start-line="47" selection-start-column="54" selection-end-line="47" selection-end-column="60" />
                   <folding>
                     <element signature="e#0#37#0" expanded="true" />
                   </folding>
@@ -76,11 +71,11 @@
       </split-first>
       <split-second>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file pinned="false" current-in-tab="false">
+          <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/models/Stereo.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-11">
-                  <caret line="138" column="24" selection-start-line="138" selection-start-column="24" selection-end-line="138" selection-end-column="24" />
+                <state relative-caret-position="284">
+                  <caret line="45" column="53" selection-start-line="45" selection-start-column="53" selection-end-line="45" selection-end-column="53" />
                   <folding>
                     <element signature="e#0#9#0" expanded="true" />
                   </folding>
@@ -88,10 +83,10 @@
               </provider>
             </entry>
           </file>
-          <file pinned="false" current-in-tab="true">
+          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/evaluation/Stereo_eval.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="203">
+                <state relative-caret-position="146">
                   <caret line="133" column="66" lean-forward="true" selection-start-line="133" selection-start-column="55" selection-end-line="133" selection-end-column="66" />
                   <folding>
                     <element signature="e#0#15#0" expanded="true" />
@@ -191,7 +186,6 @@
         <option value="$PROJECT_DIR$/models/PSMNet/basic.py" />
         <option value="$PROJECT_DIR$/models/PSMNet/stackhourglass.py" />
         <option value="$PROJECT_DIR$/models/PSMNet/submodule.py" />
-        <option value="$PROJECT_DIR$/models/Stereo.py" />
         <option value="$PROJECT_DIR$/dataloader/KITTILoader.py" />
         <option value="$PROJECT_DIR$/dataloader/listKitti2012Files.py" />
         <option value="$PROJECT_DIR$/dataloader/listCarlaKittiFiles.py" />
@@ -200,6 +194,7 @@
         <option value="$PROJECT_DIR$/dataloader/__init__.py" />
         <option value="$PROJECT_DIR$/evaluation/Stereo_eval.py" />
         <option value="$PROJECT_DIR$/train/Stereo_train.py" />
+        <option value="$PROJECT_DIR$/models/Stereo.py" />
       </list>
     </option>
   </component>
@@ -398,7 +393,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="94646000" />
+    <option name="totallyTimeSpent" value="95182000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -411,9 +406,8 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1454" height="934" extended-state="6" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.19555874" />
+      <window_info content_ui="combo" id="Project" order="0" weight="0.19555874" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -439,13 +433,13 @@
       <window_info anchor="right" id="Database" order="5" weight="0.3288889" />
     </layout>
     <layout-to-restore>
-      <window_info content_ui="combo" id="Project" order="0" weight="0.3051852" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.19555874" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.27182046" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.31546134" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.29925188" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.2680798" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.31421447" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.29800498" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32917705" />
@@ -455,7 +449,7 @@
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
       <window_info anchor="bottom" id="Terminal" order="11" />
       <window_info anchor="bottom" id="Python Console" order="12" weight="0.32917705" />
-      <window_info anchor="bottom" id="File Transfer" order="13" visible="true" weight="0.29722923" />
+      <window_info anchor="bottom" id="File Transfer" order="13" weight="0.29722923" />
       <window_info anchor="bottom" id="Concurrent Activities Diagram" order="14" weight="0.32917705" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -472,6 +466,17 @@
     <ignored-roots>
       <path value="$PROJECT_DIR$/datasets/carla_kitti" />
     </ignored-roots>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/models/Stereo.py</url>
+          <line>36</line>
+          <option name="timeStamp" value="9" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="evaluateExpression">
@@ -584,13 +589,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="165">
           <caret line="210" selection-start-line="210" selection-end-line="210" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/.PyCharm2018.3/system/remote_sources/2057826824/-1789016477/torch/nn/_reduction.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="228">
-          <caret line="32" column="27" selection-start-line="32" selection-start-column="15" selection-end-line="32" selection-end-column="27" />
         </state>
       </provider>
     </entry>
@@ -712,16 +710,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/Stereo.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-11">
-          <caret line="138" column="24" selection-start-line="138" selection-start-column="24" selection-end-line="138" selection-end-column="24" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/dataloader/KittiLoader.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="344">
@@ -749,9 +737,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$USER_HOME$/.PyCharm2018.3/system/remote_sources/2057826824/-1789016477/torch/nn/_reduction.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="241">
+          <caret line="48" selection-start-line="48" selection-end-line="48" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/evaluation/Stereo_eval.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="203">
+        <state relative-caret-position="146">
           <caret line="133" column="66" lean-forward="true" selection-start-line="133" selection-start-column="55" selection-end-line="133" selection-end-column="66" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
@@ -761,10 +756,20 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/train/Stereo_train.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="222">
-          <caret line="107" column="104" selection-start-line="107" selection-start-column="104" selection-end-line="107" selection-end-column="104" />
+        <state relative-caret-position="211">
+          <caret line="47" column="60" selection-start-line="47" selection-start-column="54" selection-end-line="47" selection-end-column="60" />
           <folding>
             <element signature="e#0#37#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/Stereo.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="284">
+          <caret line="45" column="53" selection-start-line="45" selection-start-column="53" selection-end-line="45" selection-end-column="53" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
           </folding>
         </state>
       </provider>
