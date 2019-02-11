@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5af41d42-9f6a-4e3f-b5e4-a4d9632ca140" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/models/Stereo.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/Stereo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dataloader/listCarlaKittiFiles.py" beforeDir="false" afterPath="$PROJECT_DIR$/dataloader/listCarlaKittiFiles.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -71,11 +71,11 @@
       </split-first>
       <split-second>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file pinned="false" current-in-tab="true">
+          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/models/Stereo.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="284">
-                  <caret line="45" column="53" selection-start-line="45" selection-start-column="53" selection-end-line="45" selection-end-column="53" />
+                <state relative-caret-position="56">
+                  <caret line="33" column="49" selection-start-line="33" selection-start-column="49" selection-end-line="33" selection-end-column="49" />
                   <folding>
                     <element signature="e#0#9#0" expanded="true" />
                   </folding>
@@ -98,17 +98,17 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/dataloader/__init__.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="95">
-                  <caret line="5" column="50" lean-forward="true" selection-start-line="5" selection-start-column="50" selection-end-line="5" selection-end-column="50" />
+                <state relative-caret-position="-95">
+                  <caret line="4" column="61" selection-start-line="4" selection-start-column="53" selection-end-line="4" selection-end-column="61" />
                 </state>
               </provider>
             </entry>
           </file>
-          <file pinned="false" current-in-tab="false">
+          <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/dataloader/listCarlaKittiFiles.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="988">
-                  <caret line="52" column="4" selection-start-line="52" selection-start-column="4" selection-end-line="52" selection-end-column="4" />
+                <state relative-caret-position="342">
+                  <caret line="33" column="35" selection-start-line="33" selection-start-column="35" selection-end-line="33" selection-end-column="35" />
                   <folding>
                     <element signature="e#0#9#0" expanded="true" />
                   </folding>
@@ -188,13 +188,13 @@
         <option value="$PROJECT_DIR$/models/PSMNet/submodule.py" />
         <option value="$PROJECT_DIR$/dataloader/KITTILoader.py" />
         <option value="$PROJECT_DIR$/dataloader/listKitti2012Files.py" />
-        <option value="$PROJECT_DIR$/dataloader/listCarlaKittiFiles.py" />
         <option value="$PROJECT_DIR$/dataloader/KittiLoader.py" />
         <option value="$PROJECT_DIR$/dataloader/SceneFlowLoader.py" />
         <option value="$PROJECT_DIR$/dataloader/__init__.py" />
         <option value="$PROJECT_DIR$/evaluation/Stereo_eval.py" />
         <option value="$PROJECT_DIR$/train/Stereo_train.py" />
         <option value="$PROJECT_DIR$/models/Stereo.py" />
+        <option value="$PROJECT_DIR$/dataloader/listCarlaKittiFiles.py" />
       </list>
     </option>
   </component>
@@ -393,7 +393,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="95182000" />
+    <option name="totallyTimeSpent" value="95452000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -406,6 +406,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1454" height="934" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" weight="0.19555874" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -466,17 +467,6 @@
     <ignored-roots>
       <path value="$PROJECT_DIR$/datasets/carla_kitti" />
     </ignored-roots>
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/models/Stereo.py</url>
-          <line>36</line>
-          <option name="timeStamp" value="9" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="evaluateExpression">
@@ -683,16 +673,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/dataloader/listCarlaKittiFiles.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="988">
-          <caret line="52" column="4" selection-start-line="52" selection-start-column="4" selection-end-line="52" selection-end-column="4" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/models/PSMNet/basic.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1577">
@@ -730,13 +710,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/dataloader/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="95">
-          <caret line="5" column="50" lean-forward="true" selection-start-line="5" selection-start-column="50" selection-end-line="5" selection-end-column="50" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/.PyCharm2018.3/system/remote_sources/2057826824/-1789016477/torch/nn/_reduction.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="241">
@@ -766,8 +739,25 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/models/Stereo.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="284">
-          <caret line="45" column="53" selection-start-line="45" selection-start-column="53" selection-end-line="45" selection-end-column="53" />
+        <state relative-caret-position="56">
+          <caret line="33" column="49" selection-start-line="33" selection-start-column="49" selection-end-line="33" selection-end-column="49" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dataloader/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-95">
+          <caret line="4" column="61" selection-start-line="4" selection-start-column="53" selection-end-line="4" selection-end-column="61" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dataloader/listCarlaKittiFiles.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="342">
+          <caret line="33" column="35" selection-start-line="33" selection-start-column="35" selection-end-line="33" selection-end-column="35" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>
