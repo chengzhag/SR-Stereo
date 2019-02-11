@@ -2,8 +2,6 @@ import argparse
 import time
 import torch
 import os
-from dataloader import listSceneFlowFile
-from dataloader import SceneFlowLoader
 from models import Stereo
 
 
@@ -133,19 +131,31 @@ def main():
                         help='random seed (default: 1)')
     parser.add_argument('--eval_fcn', type=str, default='outlier',
                         help='evaluation function used in testing')
+    parser.add_argument('--dataset', type=str, default='sceneflow',
+                        help='evaluation function used in testing')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
-    # TODO: Add code to test given model and different dataset
     torch.manual_seed(args.seed)
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
 
-    _, _, _, _, test_left_img, test_right_img, test_left_disp, test_right_disp = listSceneFlowFile.dataloader(
+    # TODO: Test different dataset evaluation
+    if args.dataset == 'sceneflow':
+        from dataloader import listSceneFlowFile as listFile
+        from dataloader import SceneFlowLoader as fileLoader
+    elif args.dataset == 'kitti2012':
+        from dataloader import KITTIloader2012 as listFile
+        from dataloader import KITTILoader as fileLoader
+    elif args.dataset == 'kitti2015':
+        from dataloader import KITTIloader2015 as listFile
+        from dataloader import KITTILoader as fileLoader
+
+    _, _, _, _, test_left_img, test_right_img, test_left_disp, test_right_disp = listFile.dataloader(
         args.datapath)
 
     testImgLoader = torch.utils.data.DataLoader(
-        SceneFlowLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
+        fileLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
         batch_size=11, shuffle=False, num_workers=8, drop_last=False)
 
     stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda)
