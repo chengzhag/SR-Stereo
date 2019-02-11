@@ -142,14 +142,14 @@ def main():
 
     # TODO: Test different dataset evaluation
     if args.dataset == 'sceneflow':
-        from dataloader import listSceneFlowFile as listFile
+        from dataloader import listSceneFlowFiles as listFile
         from dataloader import SceneFlowLoader as fileLoader
     elif args.dataset == 'kitti2012':
-        from dataloader import KITTIloader2012 as listFile
-        from dataloader import KITTILoader as fileLoader
+        from dataloader import listKitti2012Files as listFile
+        from dataloader import KittiLoader as fileLoader
     elif args.dataset == 'kitti2015':
-        from dataloader import KITTIloader2015 as listFile
-        from dataloader import KITTILoader as fileLoader
+        from dataloader import listKitti2015Files as listFile
+        from dataloader import KittiLoader as fileLoader
 
     _, _, _, _, test_left_img, test_right_img, test_left_disp, test_right_disp = listFile.dataloader(
         args.datapath)

@@ -2,7 +2,7 @@ from __future__ import print_function
 import argparse
 import torch.utils.data
 import time
-from dataloader import listSceneFlowFile
+from dataloader import listSceneFlowFiles
 from dataloader import SceneFlowLoader
 from models import Stereo
 from tensorboardX import SummaryWriter
@@ -104,7 +104,7 @@ def main():
         torch.cuda.manual_seed(args.seed)
 
     # Dataset
-    all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = listSceneFlowFile.dataloader(
+    all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = listSceneFlowFiles.dataloader(
         args.datapath)
 
     trainImgLoader = torch.utils.data.DataLoader(
