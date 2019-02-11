@@ -20,7 +20,7 @@ def disparity_loader(path):
 
 
 class myImageFloder(data.Dataset):
-    def __init__(self, left, right, left_disparity, training, loader=default_loader, dploader= disparity_loader):
+    def __init__(self, left, right, left_disparity, training, loader=default_loader, dploader= disparity_loader, trainCrop=(256, 512)):
  
         self.left = left
         self.right = right
@@ -28,6 +28,7 @@ class myImageFloder(data.Dataset):
         self.loader = loader
         self.dploader = dploader
         self.training = training
+        self.trainCrop = trainCrop
 
     def __getitem__(self, index):
         left  = self.left[index]
@@ -41,7 +42,7 @@ class myImageFloder(data.Dataset):
 
         if self.training:  
            w, h = left_img.size
-           th, tw = 256, 512
+           th, tw = self.trainCrop
  
            x1 = random.randint(0, w - tw)
            y1 = random.randint(0, h - th)

@@ -140,28 +140,15 @@ def main():
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
 
-    # TODO: Test different dataset evaluation
-    if args.dataset == 'sceneflow':
-        from dataloader import listSceneFlowFiles as listFile
-        from dataloader import SceneFlowLoader as fileLoader
-    elif args.dataset == 'kitti2012':
-        from dataloader import listKitti2012Files as listFile
-        from dataloader import KittiLoader as fileLoader
-    elif args.dataset == 'kitti2015':
-        from dataloader import listKitti2015Files as listFile
-        from dataloader import KittiLoader as fileLoader
+    # Dataset
+    import dataloader
+    _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset, batchSizes=(0, 11))
 
-    _, _, _, _, test_left_img, test_right_img, test_left_disp, test_right_disp = listFile.dataloader(
-        args.datapath)
-
-    testImgLoader = torch.utils.data.DataLoader(
-        fileLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
-        batch_size=11, shuffle=False, num_workers=8, drop_last=False)
-
+    # Load model
     stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda)
     stereo.load(args.loadmodel)
 
-    # TEST
+    # Test
     test = Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath)
     test(stereo=stereo)
     test.log()

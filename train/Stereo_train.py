@@ -104,16 +104,8 @@ def main():
         torch.cuda.manual_seed(args.seed)
 
     # Dataset
-    all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = listSceneFlowFiles.dataloader(
-        args.datapath)
-
-    trainImgLoader = torch.utils.data.DataLoader(
-        SceneFlowLoader.myImageFloder(all_left_img, all_right_img, all_left_disp, all_right_disp, True),
-        batch_size=12, shuffle=True, num_workers=8, drop_last=False)
-
-    testImgLoader = torch.utils.data.DataLoader(
-        SceneFlowLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
-        batch_size=11, shuffle=False, num_workers=8, drop_last=False)
+    import dataloader
+    trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset='sceneflow', batchSizes=(12, 11))
 
     # Load model
     stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage='Stereo_train')
