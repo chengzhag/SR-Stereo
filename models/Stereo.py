@@ -36,6 +36,7 @@ class PSMNet:
         def _train(imgL, imgR, disp_true):
             self.optimizer.zero_grad()
 
+            # TODO: different mask for different dataset?
             mask = disp_true < self.maxdisp
             mask.detach_()
 

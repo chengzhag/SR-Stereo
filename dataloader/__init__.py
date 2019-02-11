@@ -41,4 +41,15 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
         fileLoader.myImageFloder(*pathsTest, training=False, trainCrop=trainCrop, testCrop=testCrop),
         batch_size=batchSizes[1], shuffle=False, num_workers=8, drop_last=False) if batchSizes[1] > 0 else None
 
+    # For KITTI, evaluation should exclude zero disparity pixels. A flag kitti will be added to imgLoader.
+    def setKitti(kitti):
+        if trainImgLoader is not None:
+            trainImgLoader.kitti = kitti
+        if testImgLoader is not None:
+            testImgLoader.kitti = kitti
+    if dataset == 'kitti2012' or dataset == 'kitti2015':
+        setKitti(True)
+    else:
+        setKitti(False)
+        
     return trainImgLoader, testImgLoader

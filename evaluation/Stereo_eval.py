@@ -7,17 +7,15 @@ from models import Stereo
 
 # Testing for any stereo model including SR-Stereo
 class Test:
-    def __init__(self, testImgLoader, mode='both', evalFcn='outlier', kitti=False, datapath=None):
+    def __init__(self, testImgLoader, mode='both', evalFcn='outlier', datapath=None):
         self.testImgLoader = testImgLoader
-        self.mode = 'left' if kitti else mode
-        if kitti:
+        if testImgLoader.kitti:
             self.mode = 'left'
             print(
                 'Using dataset KITTI. Evaluation will exclude zero disparity pixels. And only left disparity map will be considered.')
         else:
             self.mode = mode
         self.evalFcn = evalFcn
-        self.kitti = kitti
         self.datapath = datapath
         self.localtime = None
         self.totalTestScores = None
@@ -49,7 +47,7 @@ class Test:
             totalTestScores = [0, 0, 0]
             tic = time.time()
             for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(self.testImgLoader, 1):
-                scoreAvg, [scoreL, scoreR] = stereo.test(imgL, imgR, dispL, dispR, type=self.evalFcn, kitti=self.kitti)
+                scoreAvg, [scoreL, scoreR] = stereo.test(imgL, imgR, dispL, dispR, type=self.evalFcn, kitti=self.testImgLoader.kitti)
                 totalTestScores = [total + batch for total, batch in zip(totalTestScores, (scoreAvg, scoreL, scoreR))]
                 timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
 
@@ -69,9 +67,9 @@ class Test:
             tic = time.time()
             for batch_idx, (imgL, imgR, dispGT) in enumerate(self.testImgLoader, 1):
                 if self.mode == 'left':
-                    score, _ = stereo.test(imgL, imgR, dispL=dispGT, type=self.evalFcn, kitti=self.kitti)
+                    score, _ = stereo.test(imgL, imgR, dispL=dispGT, type=self.evalFcn, kitti=self.testImgLoader.kitti)
                 else:
-                    score, _ = stereo.test(imgL, imgR, dispR=dispGT, type=self.evalFcn, kitti=self.kitti)
+                    score, _ = stereo.test(imgL, imgR, dispR=dispGT, type=self.evalFcn, kitti=self.testImgLoader.kitti)
                 totalTestScore += score
                 timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
 
@@ -151,12 +149,12 @@ def main():
     _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset, batchSizes=(0, 11))
 
     # Load model
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda)
+    stage, _ = os.path.splitext(os.path.basename(__file__))
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage=stage)
     stereo.load(args.loadmodel)
 
     # Test
-    test = Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn,
-                kitti=(args.dataset == 'kitti2012' or args.dataset == 'kitti2015'), datapath=args.datapath)
+    test = Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath)
     test(stereo=stereo)
     test.log()
 

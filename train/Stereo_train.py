@@ -2,8 +2,7 @@ from __future__ import print_function
 import argparse
 import torch.utils.data
 import time
-from dataloader import listSceneFlowFiles
-from dataloader import SceneFlowLoader
+import os
 from models import Stereo
 from tensorboardX import SummaryWriter
 from evaluation import Stereo_eval
@@ -47,10 +46,10 @@ class Train:
                 if self.logEvery > 0 and global_step % self.logEvery == 0:
                     lossAvg, [lossL, lossR], ouputs = stereo.train(imgL, imgR, dispL, dispR, output=True)
                     writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, global_step)
-                    writer.add_images('disp/dispL', disp2gray(dispL), batch_idx, global_step)
-                    writer.add_images('disp/dispR', disp2gray(dispR), batch_idx, global_step)
-                    writer.add_images('disp/ouputL', disp2gray(ouputs[0]), batch_idx, global_step)
-                    writer.add_images('disp/ouputR', disp2gray(ouputs[1]), batch_idx, global_step)
+                    writer.add_images('train/dispL', disp2gray(dispL), batch_idx, global_step)
+                    writer.add_images('train/dispR', disp2gray(dispR), batch_idx, global_step)
+                    writer.add_images('train/ouputL', disp2gray(ouputs[0]), batch_idx, global_step)
+                    writer.add_images('train/ouputR', disp2gray(ouputs[1]), batch_idx, global_step)
                 else:
                     lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR, output=False)
 
@@ -108,7 +107,8 @@ def main():
     trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset='sceneflow', batchSizes=(12, 11))
 
     # Load model
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage='Stereo_train')
+    stage, _ = os.path.splitext(os.path.basename(__file__))
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage=stage)
     stereo.load(args.loadmodel)
 
     # Train
