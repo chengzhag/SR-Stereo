@@ -1,11 +1,5 @@
 import os
 import os.path
-import argparse
-
-parser = argparse.ArgumentParser(description='CarlaKitti')
-parser.add_argument('--filepath', type=str, default='../datasets/carla_kitti/carla_kitti_sr_highquality',
-                    help='filepath to load')
-args = parser.parse_args()
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -50,7 +44,16 @@ def dataloader(filepath, trainProportion=0.8):
 
     return all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp
 
-
-if __name__ == '__main__':
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description='CarlaKitti')
+    parser.add_argument('--filepath', type=str, default='../datasets/carla_kitti/carla_kitti_sr_highquality',
+                        help='filepath to load')
+    args = parser.parse_args()
+    
     all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = dataloader(
         args.filepath)
+
+if __name__ == '__main__':
+    main()
+
