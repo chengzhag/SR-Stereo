@@ -18,7 +18,7 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
         raise Exception('No dataloader for dataset \'%s\'!' % dataset)
 
     paths = listFile.dataloader(datapath)
-    if dataset == 'sceneflow' or dataset == 'carla_kitti':
+    if dataset in ('sceneflow', 'carla_kitti'):
         # Datasets which have both disparity maps
         pathsTrain = paths[0:4]
         pathsTest = paths[4:8]
@@ -28,7 +28,7 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
         pathsTest = paths[3:6]
 
     # For KITTI, images have different resolutions. Crop will be needed.
-    if dataset == 'kitti2012' or dataset == 'kitti2015':
+    if dataset in ('kitti2012', 'kitti2015'):
         testCrop = True
     else:
         testCrop = False
@@ -47,9 +47,9 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
             trainImgLoader.kitti = kitti
         if testImgLoader is not None:
             testImgLoader.kitti = kitti
-    if dataset == 'kitti2012' or dataset == 'kitti2015':
+    if dataset in ('kitti2012', 'kitti2015'):
         setKitti(True)
     else:
         setKitti(False)
-        
+
     return trainImgLoader, testImgLoader
