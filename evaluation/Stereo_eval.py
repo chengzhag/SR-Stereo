@@ -9,7 +9,13 @@ from models import Stereo
 class Test:
     def __init__(self, testImgLoader, mode='both', evalFcn='outlier', kitti=False, datapath=None):
         self.testImgLoader = testImgLoader
-        self.mode = mode
+        self.mode = 'left' if kitti else mode
+        if kitti:
+            self.mode = 'left'
+            print(
+                'Using dataset KITTI. Evaluation will exclude zero disparity pixels. And only left disparity map will be considered.')
+        else:
+            self.mode = mode
         self.evalFcn = evalFcn
         self.kitti = kitti
         self.datapath = datapath
@@ -63,9 +69,9 @@ class Test:
             tic = time.time()
             for batch_idx, (imgL, imgR, dispGT) in enumerate(self.testImgLoader, 1):
                 if self.mode == 'left':
-                    score = stereo.test(imgL, imgR, dispL=dispGT, type=self.evalFcn, kitti=self.kitti)
+                    score, _ = stereo.test(imgL, imgR, dispL=dispGT, type=self.evalFcn, kitti=self.kitti)
                 else:
-                    score = stereo.test(imgL, imgR, dispR=dispGT, type=self.evalFcn, kitti=self.kitti)
+                    score, _ = stereo.test(imgL, imgR, dispR=dispGT, type=self.evalFcn, kitti=self.kitti)
                 totalTestScore += score
                 timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
 
@@ -76,7 +82,7 @@ class Test:
                 tic = time.time()
 
             totalTestScores = totalTestScore / batch_idx
-            self.testResults = NameValues(self.evalFcn, (''), (totalTestScores)).pairs
+            self.testResults = NameValues(self.evalFcn, ('',), (totalTestScores,)).pairs
 
         testTime = time.time() - tic
         print('Full testing time = %.2fh' % (testTime / 3600))
@@ -149,7 +155,8 @@ def main():
     stereo.load(args.loadmodel)
 
     # Test
-    test = Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath)
+    test = Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn,
+                kitti=(args.dataset == 'kitti2012' or args.dataset == 'kitti2015'), datapath=args.datapath)
     test(stereo=stereo)
     test.log()
 

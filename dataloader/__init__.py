@@ -1,5 +1,6 @@
 import torch
 
+
 def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSizes=(12, 11)):
     if dataset == 'sceneflow':
         from dataloader import listSceneFlowFiles as listFile
@@ -16,15 +17,28 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
     else:
         raise Exception('No dataloader for dataset \'%s\'!' % dataset)
 
-    all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = listFile.dataloader(
-        datapath)
+    paths = listFile.dataloader(datapath)
+    if dataset == 'sceneflow' or dataset == 'carla_kitti':
+        # Datasets which have both disparity maps
+        pathsTrain = paths[0:4]
+        pathsTest = paths[4:8]
+    else:
+        # Datasets which only have left disparity maps
+        pathsTrain = paths[0:3]
+        pathsTest = paths[3:6]
+
+    # For KITTI, images have different resolutions. Crop will be needed.
+    if dataset == 'kitti2012' or dataset == 'kitti2015':
+        testCrop = True
+    else:
+        testCrop = False
 
     trainImgLoader = torch.utils.data.DataLoader(
-            fileLoader.myImageFloder(all_left_img, all_right_img, all_left_disp, all_right_disp, True, trainCrop=trainCrop),
-            batch_size=batchSizes[0], shuffle=True, num_workers=8, drop_last=False) if batchSizes[0] > 0 else None
+        fileLoader.myImageFloder(*pathsTrain, training=True, trainCrop=trainCrop, testCrop=testCrop),
+        batch_size=batchSizes[0], shuffle=True, num_workers=8, drop_last=False) if batchSizes[0] > 0 else None
 
     testImgLoader = torch.utils.data.DataLoader(
-            fileLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False, trainCrop=trainCrop),
-            batch_size=batchSizes[1], shuffle=False, num_workers=8, drop_last=False) if batchSizes[1] > 0 else None
+        fileLoader.myImageFloder(*pathsTest, training=False, trainCrop=trainCrop, testCrop=testCrop),
+        batch_size=batchSizes[1], shuffle=False, num_workers=8, drop_last=False) if batchSizes[1] > 0 else None
 
     return trainImgLoader, testImgLoader

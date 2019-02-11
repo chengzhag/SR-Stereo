@@ -88,7 +88,7 @@ class PSMNet:
 
         with torch.no_grad():
             def pad(input):
-                inputPad = torch.zeros([N, C, HPad, WPad], dtype=input.dtype, device = 'cuda' if self.cuda else 'cpu')
+                inputPad = torch.zeros([N, C, HPad, WPad], dtype=input.dtype, device='cuda' if self.cuda else 'cpu')
                 inputPad[:, :, (HPad - H):, (WPad - W):] = input
                 return inputPad
 
@@ -118,7 +118,7 @@ class PSMNet:
             imgL, imgR = imgL.cuda(), imgR.cuda()
             dispL = dispL.cuda() if dispL is not None else None
             dispR = dispR.cuda() if dispR is not None else None
-            
+
         # for kitti dataset, only consider loss of none zero disparity pixels in gt
         scores = []
         for gt, mode in zip([dispL, dispR], ['left', 'right']):
@@ -140,7 +140,7 @@ class PSMNet:
 
     def load(self, checkpoint):
         if checkpoint is not None:
-            print('Loading checkpoint...')
+            print('Loading checkpoint from %s' % checkpoint)
             state_dict = torch.load(checkpoint)
             self.model.load_state_dict(state_dict['state_dict'])
             self.checkpoint = checkpoint
