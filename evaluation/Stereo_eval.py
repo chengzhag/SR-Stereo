@@ -49,46 +49,6 @@ class Test:
 
         self.testResults = scoresPairs.pairs
 
-        # if self.mode == 'both':
-        #     totalTestScores = [0, 0, 0]
-        #     tic = time.time()
-        #     for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(self.testImgLoader, 1):
-        #         scoreAvg, [scoreL, scoreR] = stereo.test(imgL, imgR, dispL, dispR, type=self.evalFcn,
-        #                                                  kitti=self.testImgLoader.kitti)
-        #         totalTestScores = [total + batch for total, batch in zip(totalTestScores, (scoreAvg, scoreL, scoreR))]
-        #         timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
-        #
-        #         scoresPairs = NameValues(self.evalFcn,
-        #                                  ('Avg', 'L', 'R', 'Total', 'LTotal', 'RTotal'),
-        #                                  [scoreAvg, scoreL, scoreR] + [score / batch_idx for score in totalTestScores])
-        #         print('it %d/%d, %sleft %.2fh' % (
-        #             batch_idx, len(self.testImgLoader),
-        #             scoresPairs.str(scoreUnit), timeLeft))
-        #         tic = time.time()
-        #
-        #     totalTestScores = [loss / batch_idx for loss in totalTestScores]
-        #     self.testResults = NameValues(self.evalFcn, ('Avg', 'L', 'R'), totalTestScores).pairs
-        #
-        # elif self.mode == 'left' or self.mode == 'right':
-        #     totalTestScore = 0
-        #     tic = time.time()
-        #     for batch_idx, (imgL, imgR, dispGT) in enumerate(self.testImgLoader, 1):
-        #         if self.mode == 'left':
-        #             score, _ = stereo.test(imgL, imgR, dispL=dispGT, type=self.evalFcn, kitti=self.testImgLoader.kitti)
-        #         else:
-        #             score, _ = stereo.test(imgL, imgR, dispR=dispGT, type=self.evalFcn, kitti=self.testImgLoader.kitti)
-        #         totalTestScore += score
-        #         timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
-        #
-        #         scoresPairs = NameValues(self.evalFcn, ('', 'Total'), (score, totalTestScore / batch_idx))
-        #         print('it %d/%d, %sleft %.2fh' % (
-        #             batch_idx, len(self.testImgLoader),
-        #             scoresPairs.str(scoreUnit), timeLeft))
-        #         tic = time.time()
-        #
-        #     totalTestScores = totalTestScore / batch_idx
-        #     self.testResults = NameValues(self.evalFcn, ('',), (totalTestScores,)).pairs
-
         testTime = time.time() - tic
         print('Full testing time = %.2fh' % (testTime / 3600))
         self.localtime = time.asctime(time.localtime(time.time()))

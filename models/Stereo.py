@@ -25,7 +25,7 @@ class PSMNet:
             self.model.cuda()
         self.checkpoint = None
 
-    def train(self, imgL, imgR, dispL=None, dispR=None, output=True):
+    def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
         self.model.train()
         self._assertDisp(dispL, dispR)
         if self.cuda:
@@ -36,8 +36,8 @@ class PSMNet:
         def _train(imgL, imgR, disp_true):
             self.optimizer.zero_grad()
 
-            # TODO: different mask for different dataset?
-            mask = disp_true < self.maxdisp
+            # for kitti dataset, only consider loss of none zero disparity pixels in gt
+            mask = (disp_true < self.maxdisp) & (disp_true > 0) if kitti else (disp_true < self.maxdisp)
             mask.detach_()
 
             output1, output2, output3 = self.model(imgL, imgR)
