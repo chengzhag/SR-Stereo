@@ -34,6 +34,7 @@ class Train:
 
             # iteration
             global_step = 1
+            totalTrainLoss = 0
             tic = time.time()
             for batch_idx, batch in enumerate(self.trainImgLoader, 1):
                 batch = [data if data.numel() else None for data in batch]
@@ -48,12 +49,7 @@ class Train:
                     lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
 
                 global_step += 1
-
-                try:
-                    totalTrainLoss = [(total + batch) if batch is not None else None for total, batch in
-                                       zip(totalTrainLoss, losses)]
-                except NameError:
-                    totalTrainLoss = losses
+                totalTrainLoss += sum(losses)/len(losses)
 
                 timeLeft = (time.time() - tic) / 3600 * ((nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
                 print('it %d/%d, %sleft %.2fh' % (
@@ -65,8 +61,6 @@ class Train:
             # save
             stereo.save(epoch=epoch, iteration=batch_idx,
                         trainLoss=totalTrainLoss / len(self.trainImgLoader))
-
-            del totalTrainLoss
 
         writer.close()
         print('Full training time = %.2fh' % ((time.time() - ticFull) / 3600))
