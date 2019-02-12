@@ -10,7 +10,7 @@ from utils import iteration
 class Test:
     def __init__(self, testImgLoader, mode='both', evalFcn='outlier', datapath=None):
         self.testImgLoader = testImgLoader
-        if testImgLoader.kitti:
+        if self.testImgLoader.kitti:
             self.mode = 'left'
             print(
                 'Using dataset KITTI. Evaluation will exclude zero disparity pixels. And only left disparity map will be considered.')
@@ -31,6 +31,7 @@ class Test:
         tic = time.time()
         for batch_idx, batch in enumerate(self.testImgLoader, 1):
             batch = [data if data.numel() else None for data in batch]
+            if self.mode == 'right': batch[2] = None
             scores = stereo.test(*batch, type=self.evalFcn, kitti=self.testImgLoader.kitti)
             try:
                 totalTestScores = [(total + batch) if batch is not None else None for total, batch in

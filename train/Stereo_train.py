@@ -22,7 +22,7 @@ class Train:
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr
 
-        # TRAIN
+        # Train
         ticFull = time.time()
         writer = SummaryWriter(stereo.logFolder)
 
