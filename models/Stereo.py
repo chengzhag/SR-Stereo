@@ -58,23 +58,23 @@ class PSMNet:
 
         losses = []
         if output:
-            ouputs = []
+            outputs = []
             if dispL is not None:
                 loss, ouput = _train(imgL, imgR, dispL)
                 losses.append(loss)
-                ouputs.append(ouput)
+                outputs.append(ouput)
             else:
-                ouputs.append(None)
+                outputs.append(None)
 
             if dispR is not None:
                 # swap and flip input for right disparity map
                 loss, ouput = _train(myUtils.flipLR(imgR), myUtils.flipLR(imgL), myUtils.flipLR(dispR))
                 losses.append(loss)
-                ouputs.append(myUtils.flipLR(ouput))
+                outputs.append(myUtils.flipLR(ouput))
             else:
-                ouputs.append(None)
+                outputs.append(None)
 
-            return losses, ouputs
+            return losses, outputs
         else:
             losses.append(_train(imgL, imgR, dispL) if dispL is not None else None)
             # swap and flip input for right disparity map
@@ -115,15 +115,18 @@ class PSMNet:
 
         # for kitti dataset, only consider loss of none zero disparity pixels in gt
         scores = []
+        outputs = []
         for gt, mode in zip([dispL, dispR], ['left', 'right']):
             if gt is None:
                 scores.append(None)
+                outputs.append(None)
                 continue
             output = self.predict(imgL, imgR, mode)
             mask = (gt < self.maxdisp) & (gt > 0) if kitti else (gt < self.maxdisp)
             scores.append(getattr(evalFcn, type)(gt[mask], output[mask]))
+            outputs.append(output)
 
-        return scores
+        return scores, outputs
 
     def load(self, checkpoint):
         if checkpoint is not None:

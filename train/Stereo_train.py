@@ -10,10 +10,10 @@ from utils import myUtils
 
 
 class Train:
-    def __init__(self, trainImgLoader, logEvery, ndisLog):
+    def __init__(self, trainImgLoader, logEvery=1, ndisLog=1):
         self.trainImgLoader = trainImgLoader
         self.logEvery = logEvery
-        self.ndisLog = max(ndisLog, 1)
+        self.ndisLog = max(ndisLog, 0)
 
     def __call__(self, stereo, nEpochs):
         def adjust_learning_rate(optimizer, epoch):
@@ -39,17 +39,22 @@ class Train:
             for batch_idx, batch in enumerate(self.trainImgLoader, 1):
                 batch = [data if data.numel() else None for data in batch]
                 if self.logEvery > 0 and global_step % self.logEvery == 0:
-                    losses, ouputs = stereo.train(*batch, output=True, kitti=self.trainImgLoader.kitti)
+
+                    losses, outputs = stereo.train(*batch, output=True, kitti=self.trainImgLoader.kitti)
+
                     lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
                     writer.add_scalars(stereo.stage + '/losses', lossesPairs.dic(), global_step)
-                    for disp, name in zip (batch[2:4] + ouputs, ('gtL', 'gtR', 'ouputL', 'ouputR')):
-                        myUtils.logFirstNdis(writer, stereo.stage, name, disp, stereo.maxdisp, global_step=global_step, n=1)
+                    for disp, name in zip(batch[2:4] + outputs, ('gtL', 'gtR', 'ouputL', 'ouputR')):
+                        myUtils.logFirstNdis(writer, stereo.stage, name, disp, stereo.maxdisp,
+                                             global_step=global_step, n=self.ndisLog)
                 else:
+
                     losses = stereo.train(*batch, output=False, kitti=self.trainImgLoader.kitti)
+
                     lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
 
                 global_step += 1
-                totalTrainLoss += sum(losses)/len(losses)
+                totalTrainLoss += sum(losses) / len(losses)
 
                 timeLeft = (time.time() - tic) / 3600 * ((nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
                 print('it %d/%d, %sleft %.2fh' % (
@@ -101,7 +106,8 @@ def main():
 
     # Dataset
     import dataloader
-    trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset, batchSizes=(12, 11))
+    trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
+                                                             batchSizes=(12, 11))
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))

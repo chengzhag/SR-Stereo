@@ -48,7 +48,7 @@ def assertDisp(dispL=None, dispR=None):
 # Log First n disparity maps into tensorboard
 # Log All disparity maps if n == 0
 def logFirstNdis(writer, stage, name, disp, maxdisp, global_step=None, n=0):
-    if disp is not None:
+    if disp is not None and n > 0:
         n = min(n, disp.size(0))
         disp = disp[:n, :, :]
         disp[disp > maxdisp] = maxdisp

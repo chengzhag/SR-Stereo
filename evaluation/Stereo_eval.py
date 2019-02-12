@@ -4,11 +4,12 @@ import torch
 import os
 from models import Stereo
 from utils import myUtils
+from tensorboardX import SummaryWriter
 
 
 # Testing for any stereo model including SR-Stereo
 class Test:
-    def __init__(self, testImgLoader, mode='both', evalFcn='outlier', datapath=None):
+    def __init__(self, testImgLoader, mode='both', evalFcn='outlier', datapath=None, logEvery=1, ndisLog=1):
         self.testImgLoader = testImgLoader
         if self.testImgLoader.kitti:
             self.mode = 'left'
@@ -22,17 +23,30 @@ class Test:
         self.totalTestScores = None
         self.testTime = None
         self.checkpoint = None
+        self.logEvery = logEvery
+        self.ndisLog = max(ndisLog, 0)
 
     def __call__(self, stereo):
         self.checkpoint = stereo.checkpoint
         scoreUnit = '%' if self.evalFcn == 'outlier' else ''
         tic = time.time()
         ticFull = time.time()
+        writer = SummaryWriter(stereo.logFolder)
 
         for batch_idx, batch in enumerate(self.testImgLoader, 1):
             batch = [data if data.numel() else None for data in batch]
             if self.mode == 'right': batch[2] = None
-            scores = stereo.test(*batch, type=self.evalFcn, kitti=self.testImgLoader.kitti)
+
+            scores, outputs = stereo.test(*batch, type=self.evalFcn, kitti=self.testImgLoader.kitti)
+
+            scoresPairs = myUtils.NameValues(scoreUnit, ('L', 'R'), scores)
+
+            if self.logEvery > 0 and batch_idx % self.logEvery == 0:
+                writer.add_scalars(stereo.stage + '/losses', scoresPairs.dic(), batch_idx)
+                for disp, name in zip(batch[2:4] + outputs, ('gtL', 'gtR', 'ouputL', 'ouputR')):
+                    myUtils.logFirstNdis(writer, stereo.stage, name, disp, stereo.maxdisp,
+                                         global_step=batch_idx, n=self.ndisLog)
+
             try:
                 totalTestScores = [(total + batch) if batch is not None else None for total, batch in
                                    zip(totalTestScores, scores)]
@@ -40,9 +54,9 @@ class Test:
                 totalTestScores = scores
             timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
             scoresPairs = myUtils.NameValues(self.evalFcn,
-                                             ('L', 'R', 'LTotal', 'RTotal'),
-                                             scores + [(score / batch_idx) if score is not None else None for score in
-                                               totalTestScores])
+                                             ('LTotal', 'RTotal'),
+                                             [(score / batch_idx) if score is not None else None for score in
+                                                       totalTestScores])
             print('it %d/%d, %sleft %.2fh' % (
                 batch_idx, len(self.testImgLoader),
                 scoresPairs.str(scoreUnit), timeLeft))
@@ -101,6 +115,10 @@ def main():
                         help='random seed (default: 1)')
     parser.add_argument('--eval_fcn', type=str, default='outlier',
                         help='evaluation function used in testing')
+    parser.add_argument('--log_every', type=int, default=1,
+                        help='log every log_every iterations')
+    parser.add_argument('--ndis_log', type=int, default=1,
+                        help='number of disparity maps to log')
     parser.add_argument('--dataset', type=str, default='sceneflow',
                         help='evaluation function used in testing')
     args = parser.parse_args()
@@ -120,7 +138,8 @@ def main():
     stereo.load(args.loadmodel)
 
     # Test
-    test = Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath)
+    test = Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath,
+                logEvery=args.log_every, ndisLog=args.ndis_log)
     test(stereo=stereo)
     test.log()
 
