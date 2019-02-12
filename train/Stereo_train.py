@@ -47,15 +47,15 @@ class Train:
                 if self.logEvery > 0 and global_step % self.logEvery == 0:
                     losses, ouputs = stereo.train(*batch, output=True, kitti=self.trainImgLoader.kitti)
                     lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
-                    writer.add_scalars('train/losses', lossesPairs.dic(), global_step)
+                    writer.add_scalars(stereo.stage + '/losses', lossesPairs.dic(), global_step)
                     if batch[2] is not None:
-                        writer.add_images('train/images/gtL', disp2gray(batch[2]), global_step=global_step)
+                        writer.add_images(stereo.stage + '/images/gtL', disp2gray(batch[2]), global_step=global_step)
                     if batch[3] is not None:
-                        writer.add_images('train/images/gtR', disp2gray(batch[3]), global_step=global_step)
+                        writer.add_images(stereo.stage + '/images/gtR', disp2gray(batch[3]), global_step=global_step)
                     if ouputs[0] is not None:
-                        writer.add_images('train/images/ouputL', disp2gray(ouputs[0]), global_step=global_step)
+                        writer.add_images(stereo.stage + '/images/ouputL', disp2gray(ouputs[0]), global_step=global_step)
                     if ouputs[1] is not None:
-                        writer.add_images('train/images/ouputR', disp2gray(ouputs[1]), global_step=global_step)
+                        writer.add_images(stereo.stage + '/images/ouputR', disp2gray(ouputs[1]), global_step=global_step)
                 else:
                     losses = stereo.train(*batch, output=False, kitti=self.trainImgLoader.kitti)
                     lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)

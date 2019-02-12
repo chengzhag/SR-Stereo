@@ -25,10 +25,10 @@ class Test:
 
     def __call__(self, stereo):
         self.checkpoint = stereo.checkpoint
-        tic = time.time()
-
         scoreUnit = '%' if self.evalFcn == 'outlier' else ''
         tic = time.time()
+        ticFull = time.time()
+
         for batch_idx, batch in enumerate(self.testImgLoader, 1):
             batch = [data if data.numel() else None for data in batch]
             if self.mode == 'right': batch[2] = None
@@ -48,14 +48,12 @@ class Test:
                 scoresPairs.str(scoreUnit), timeLeft))
             tic = time.time()
 
+        self.testTime = time.time() - ticFull
+        print('Full testing time = %.2fh' % (self.testTime / 3600))
         self.testResults = scoresPairs.pairs
-
-        testTime = time.time() - tic
-        print('Full testing time = %.2fh' % (testTime / 3600))
         self.localtime = time.asctime(time.localtime(time.time()))
         self.totalTestScores = totalTestScores
-        self.testTime = testTime
-        return totalTestScores, testTime
+        return totalTestScores
 
     # log file will be saved to where chkpoint file is
     def log(self, epoch=None, it=None, additionalValue=()):
