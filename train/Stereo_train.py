@@ -75,10 +75,11 @@ class Train:
                 tic = time.time()
 
             print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / len(self.trainImgLoader)))
-
             # save
             stereo.save(epoch=epoch, iteration=batch_idx,
                         trainLoss=totalTrainLoss / len(self.trainImgLoader))
+
+            del totalTrainLoss
 
         writer.close()
         print('Full training time = %.2fh' % ((time.time() - ticFull) / 3600))
