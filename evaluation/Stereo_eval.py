@@ -41,7 +41,8 @@ class Test:
             if self.mode == 'right': batch[2] = None
 
             scores, outputs = stereo.test(*batch, type=self.evalFcn, kitti=self.testImgLoader.kitti)
-
+            outputs = [output.cpu() for output in outputs]
+            
             scoresPairs = myUtils.NameValues(self.evalFcn, ('L', 'R'), scores)
 
             if self.logEvery > 0 and batch_idx % self.logEvery == 0:

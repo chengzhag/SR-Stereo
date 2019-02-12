@@ -41,6 +41,7 @@ class Train:
                 if self.logEvery > 0 and global_step % self.logEvery == 0:
 
                     losses, outputs = stereo.train(*batch, output=True, kitti=self.trainImgLoader.kitti)
+                    outputs = [output.cpu() for output in outputs]
 
                     lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
                     for name, value in lossesPairs.pairs():
