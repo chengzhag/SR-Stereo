@@ -6,6 +6,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 from models.PSMNet import *
 from evaluation import evalFcn
+from utils import myUtils
 
 
 class PSMNet:
@@ -27,7 +28,7 @@ class PSMNet:
 
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
         self.model.train()
-        self._assertDisp(dispL, dispR)
+        myUtils.assertDisp(dispL, dispR)
         if self.cuda:
             imgL, imgR = imgL.cuda(), imgR.cuda()
             dispL = dispL.cuda() if dispL is not None else None
@@ -67,9 +68,9 @@ class PSMNet:
 
             if dispR is not None:
                 # swap and flip input for right disparity map
-                loss, ouput = _train(self._flip(imgR), self._flip(imgL), self._flip(dispR))
+                loss, ouput = _train(myUtils.flipLR(imgR), myUtils.flipLR(imgL), myUtils.flipLR(dispR))
                 losses.append(loss)
-                ouputs.append(self._flip(ouput))
+                ouputs.append(myUtils.flipLR(ouput))
             else:
                 ouputs.append(None)
 
@@ -77,34 +78,24 @@ class PSMNet:
         else:
             losses.append(_train(imgL, imgR, dispL) if dispL is not None else None)
             # swap and flip input for right disparity map
-            losses.append(_train(self._flip(imgR), self._flip(imgL), self._flip(dispR)) if dispR is not None else None)
+            losses.append(_train(myUtils.flipLR(imgR), myUtils.flipLR(imgL),
+                                 myUtils.flipLR(dispR)) if dispR is not None else None)
 
             return losses
 
     def predict(self, imgL, imgR, mode='both'):
         self.model.eval()
 
-        N, C, H, W = imgL.size()
-        HPad = ((H - 1) // self.multiple + 1) * self.multiple
-        WPad = ((W - 1) // self.multiple + 1) * self.multiple
+        autoPad = myUtils.AutoPad(imgL, self.multiple)
 
         with torch.no_grad():
-            def pad(input):
-                inputPad = torch.zeros([N, C, HPad, WPad], dtype=input.dtype, device='cuda' if self.cuda else 'cpu')
-                inputPad[:, :, (HPad - H):, (WPad - W):] = input
-                return inputPad
-
-            def unpad(output):
-                output = output[:, (HPad - H):, (WPad - W):]
-                return output
-
             def predictL():
-                return unpad(self.model(imgL, imgR))
+                return autoPad.unpad(self.model(imgL, imgR))
 
             def predictR():
-                return unpad(self._flip(self.model(self._flip(imgR), self._flip(imgL))))
+                return autoPad.unpad(myUtils.flipLR(self.model(myUtils.flipLR(imgR), myUtils.flipLR(imgL))))
 
-            imgL, imgR = pad(imgL), pad(imgR)
+            imgL, imgR = autoPad.pad(imgL, self.cuda), autoPad.pad(imgR, self.cuda)
             if mode == 'left':
                 return predictL()
             elif mode == 'right':
@@ -115,7 +106,7 @@ class PSMNet:
                 raise Exception('No mode \'%s\'!' % mode)
 
     def test(self, imgL, imgR, dispL=None, dispR=None, type='l1', kitti=False):
-        self._assertDisp(dispL, dispR)
+        myUtils.assertDisp(dispL, dispR)
 
         if self.cuda:
             imgL, imgR = imgL.cuda(), imgR.cuda()
@@ -133,13 +124,6 @@ class PSMNet:
             scores.append(getattr(evalFcn, type)(gt[mask], output[mask]))
 
         return scores
-
-    def _flip(self, im):
-        return im.flip(-1)
-
-    def _assertDisp(self, dispL=None, dispR=None):
-        if (dispL is None or dispL.numel() == 0) and (dispR is None or dispR.numel() == 0):
-            raise Exception('No disp input!')
 
     def load(self, checkpoint):
         if checkpoint is not None:

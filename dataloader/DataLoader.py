@@ -4,7 +4,6 @@ from PIL import Image
 import numpy as np
 from utils import preprocess
 from utils import python_pfm as pfm
-import torch
 
 
 def rgbLoader(path):
@@ -20,6 +19,7 @@ def grayLoader(path):
 
 
 class myImageFloder(data.Dataset):
+    # trainCrop = (W, H)
     def __init__(self, inputLdirs, inputRdirs, gtLdirs=None, gtRdirs=None, training=False,
                  trainCrop=(512, 256), kitti=False):
         self.inputLdirs = inputLdirs

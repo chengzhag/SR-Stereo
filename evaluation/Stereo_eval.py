@@ -3,7 +3,7 @@ import time
 import torch
 import os
 from models import Stereo
-from utils import iteration
+from utils import myUtils
 
 
 # Testing for any stereo model including SR-Stereo
@@ -39,9 +39,9 @@ class Test:
             except NameError:
                 totalTestScores = scores
             timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
-            scoresPairs = iteration.NameValues(self.evalFcn,
-                                     ('L', 'R', 'LTotal', 'RTotal'),
-                                     scores + [(score / batch_idx) if score is not None else None for score in
+            scoresPairs = myUtils.NameValues(self.evalFcn,
+                                             ('L', 'R', 'LTotal', 'RTotal'),
+                                             scores + [(score / batch_idx) if score is not None else None for score in
                                                totalTestScores])
             print('it %d/%d, %sleft %.2fh' % (
                 batch_idx, len(self.testImgLoader),
