@@ -10,12 +10,15 @@ from utils import myUtils
 
 
 class Train:
-    def __init__(self, trainImgLoader, logEvery, ndisLog):
+    def __init__(self, trainImgLoader, logEvery=1, ndisLog=1):
         self.trainImgLoader = trainImgLoader
         self.logEvery = logEvery
-        self.ndisLog = max(ndisLog, 1)
+        self.ndisLog = max(ndisLog, 0)
+        self.stereo = None
 
     def __call__(self, stereo, nEpochs):
+        self.stereo = stereo
+
         def adjust_learning_rate(optimizer, epoch):
             lr = 0.001
             print(lr)
@@ -26,51 +29,41 @@ class Train:
         ticFull = time.time()
         writer = SummaryWriter(stereo.logFolder)
 
-        def disp2gray(disp):
-            ndisLog = min(self.ndisLog, disp.size(0))
-            disp = disp[:ndisLog, :, :]
-            disp[disp > stereo.maxdisp] = stereo.maxdisp
-            disp = disp / stereo.maxdisp
-            return disp.unsqueeze(1).repeat(1, 3, 1, 1)
-
         epoch = None
         batch_idx = None
+        global_step = 0
         for epoch in range(1, nEpochs + 1):
             print('This is %d-th epoch' % (epoch))
             adjust_learning_rate(stereo.optimizer, epoch)
 
             # iteration
-            global_step = 1
+            totalTrainLoss = 0
             tic = time.time()
             for batch_idx, batch in enumerate(self.trainImgLoader, 1):
                 batch = [data if data.numel() else None for data in batch]
-                if self.logEvery > 0 and global_step % self.logEvery == 0:
-                    losses, ouputs = stereo.train(*batch, output=True, kitti=self.trainImgLoader.kitti)
-                    lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
-                    writer.add_scalars(stereo.stage + '/losses', lossesPairs.dic(), global_step)
-                    if batch[2] is not None:
-                        writer.add_images(stereo.stage + '/images/gtL', disp2gray(batch[2]), global_step=global_step)
-                    if batch[3] is not None:
-                        writer.add_images(stereo.stage + '/images/gtR', disp2gray(batch[3]), global_step=global_step)
-                    if ouputs[0] is not None:
-                        writer.add_images(stereo.stage + '/images/ouputL', disp2gray(ouputs[0]), global_step=global_step)
-                    if ouputs[1] is not None:
-                        writer.add_images(stereo.stage + '/images/ouputR', disp2gray(ouputs[1]), global_step=global_step)
-                else:
-                    losses = stereo.train(*batch, output=False, kitti=self.trainImgLoader.kitti)
-                    lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
-
                 global_step += 1
 
-                try:
-                    totalTrainLoss = [(total + batch) if batch is not None else None for total, batch in
-                                       zip(totalTrainLoss, losses)]
-                except NameError:
-                    totalTrainLoss = losses
+                if self.logEvery > 0 and global_step % self.logEvery == 0:
+
+                    losses, outputs = stereo.train(*batch, output=True, kitti=self.trainImgLoader.kitti)
+
+                    lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
+                    for name, value in lossesPairs.pairs():
+                        writer.add_scalar(stereo.stage + '/trainLosses/' + name, value, global_step)
+                    for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), batch[2:4] + outputs):
+                        myUtils.logFirstNdis(writer, stereo.stage + '/trainImages/' + name, disp, stereo.maxdisp,
+                                             global_step=global_step, n=self.ndisLog)
+                else:
+
+                    losses = stereo.train(*batch, output=False, kitti=self.trainImgLoader.kitti)
+
+                    lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
+
+                totalTrainLoss += sum(losses) / len(losses)
 
                 timeLeft = (time.time() - tic) / 3600 * ((nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
                 print('it %d/%d, %sleft %.2fh' % (
-                    batch_idx, len(self.trainImgLoader) * nEpochs,
+                    global_step, len(self.trainImgLoader) * nEpochs,
                     lossesPairs.str(''), timeLeft))
                 tic = time.time()
 
@@ -78,8 +71,6 @@ class Train:
             # save
             stereo.save(epoch=epoch, iteration=batch_idx,
                         trainLoss=totalTrainLoss / len(self.trainImgLoader))
-
-            del totalTrainLoss
 
         writer.close()
         print('Full training time = %.2fh' % ((time.time() - ticFull) / 3600))
@@ -120,7 +111,8 @@ def main():
 
     # Dataset
     import dataloader
-    trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset, batchSizes=(12, 11))
+    trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
+                                                             batchSizes=(12, 11))
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
@@ -132,7 +124,8 @@ def main():
     train(stereo=stereo, nEpochs=args.epochs)
 
     # Test
-    test = Stereo_eval.Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath)
+    test = Stereo_eval.Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath,
+                ndisLog=args.ndis_log)
     test(stereo=stereo)
     test.log()
 
