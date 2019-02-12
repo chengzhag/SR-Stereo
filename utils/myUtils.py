@@ -44,3 +44,17 @@ def flipLR(im):
 def assertDisp(dispL=None, dispR=None):
     if (dispL is None or dispL.numel() == 0) and (dispR is None or dispR.numel() == 0):
         raise Exception('No disp input!')
+
+# Log First n disparity maps into tensorboard
+# Log All disparity maps if n == 0
+def logFirstNdis(writer, stage, name, disp, maxdisp, global_step=None, n=0):
+    if disp is not None:
+        n = min(n, disp.size(0))
+        disp = disp[:n, :, :]
+        disp[disp > maxdisp] = maxdisp
+        disp = disp / maxdisp
+        disp = gray2rgb(disp)
+        writer.add_images(stage + '/images/' + name, disp, global_step=global_step)
+
+def gray2rgb(im):
+    return im.unsqueeze(1).repeat(1, 3, 1, 1)

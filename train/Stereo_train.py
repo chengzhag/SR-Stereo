@@ -26,13 +26,6 @@ class Train:
         ticFull = time.time()
         writer = SummaryWriter(stereo.logFolder)
 
-        def disp2gray(disp):
-            ndisLog = min(self.ndisLog, disp.size(0))
-            disp = disp[:ndisLog, :, :]
-            disp[disp > stereo.maxdisp] = stereo.maxdisp
-            disp = disp / stereo.maxdisp
-            return disp.unsqueeze(1).repeat(1, 3, 1, 1)
-
         epoch = None
         batch_idx = None
         for epoch in range(1, nEpochs + 1):
@@ -48,14 +41,8 @@ class Train:
                     losses, ouputs = stereo.train(*batch, output=True, kitti=self.trainImgLoader.kitti)
                     lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
                     writer.add_scalars(stereo.stage + '/losses', lossesPairs.dic(), global_step)
-                    if batch[2] is not None:
-                        writer.add_images(stereo.stage + '/images/gtL', disp2gray(batch[2]), global_step=global_step)
-                    if batch[3] is not None:
-                        writer.add_images(stereo.stage + '/images/gtR', disp2gray(batch[3]), global_step=global_step)
-                    if ouputs[0] is not None:
-                        writer.add_images(stereo.stage + '/images/ouputL', disp2gray(ouputs[0]), global_step=global_step)
-                    if ouputs[1] is not None:
-                        writer.add_images(stereo.stage + '/images/ouputR', disp2gray(ouputs[1]), global_step=global_step)
+                    for disp, name in zip (batch[2:4] + ouputs, ('gtL', 'gtR', 'ouputL', 'ouputR')):
+                        myUtils.logFirstNdis(writer, stereo.stage, name, disp, stereo.maxdisp, global_step=global_step, n=1)
                 else:
                     losses = stereo.train(*batch, output=False, kitti=self.trainImgLoader.kitti)
                     lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
