@@ -1,9 +1,8 @@
 import torch.utils.data as data
 import random
-from PIL import Image
-from utils import preprocess
-from utils import python_pfm as pfm
+from PIL import Image, ImageOps
 import numpy as np
+from utils import preprocess
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -20,34 +19,30 @@ def default_loader(path):
 
 
 def disparity_loader(path):
-    return pfm.readPFM(path)
+    return Image.open(path)
 
 
 class myImageFloder(data.Dataset):
-    def __init__(self, left, right, left_disparity, right_disparity, training, loader=default_loader,
-                 dploader=disparity_loader, trainCrop=(256, 512), testCrop=False):
+    def __init__(self, left, right, left_disparity, training, loader=default_loader, dploader=disparity_loader,
+                 trainCrop=(256, 512), testCrop=False):
 
         self.left = left
         self.right = right
         self.disp_L = left_disparity
-        self.disp_R = right_disparity
         self.loader = loader
         self.dploader = dploader
         self.training = training
         self.trainCrop = trainCrop
+        self.testCrop = testCrop
 
     def __getitem__(self, index):
         left = self.left[index]
         right = self.right[index]
         disp_L = self.disp_L[index]
-        disp_R = self.disp_R[index]
 
         left_img = self.loader(left)
         right_img = self.loader(right)
-        dataL, scaleL = self.dploader(disp_L)
-        dataR, scaleR = self.dploader(disp_R)
-        dataL = np.ascontiguousarray(dataL, dtype=np.float32)
-        dataR = np.ascontiguousarray(dataR, dtype=np.float32)
+        dataL = self.dploader(disp_L)
 
         if self.training:
             w, h = left_img.size
@@ -59,23 +54,28 @@ class myImageFloder(data.Dataset):
             left_img = left_img.crop((x1, y1, x1 + tw, y1 + th))
             right_img = right_img.crop((x1, y1, x1 + tw, y1 + th))
 
+            dataL = np.ascontiguousarray(dataL, dtype=np.float32) / 256
             dataL = dataL[y1:y1 + th, x1:x1 + tw]
-            dataR = dataR[y1:y1 + th, x1:x1 + tw]
 
             processed = preprocess.get_transform(augment=False)
             left_img = processed(left_img)
             right_img = processed(right_img)
 
-            return left_img, right_img, dataL, dataR
+            return left_img, right_img, dataL
         else:
-            # w, h = left_img.size
-            # left_img = left_img.crop((w-960, h-544, w, h))
-            # right_img = right_img.crop((w-960, h-544, w, h))
+            if self.testCrop:
+                w, h = left_img.size
+                left_img = left_img.crop((w - 1232, h - 368, w, h))
+                right_img = right_img.crop((w - 1232, h - 368, w, h))
+                dataL = dataL.crop((w - 1232, h - 368, w, h))
+
+            dataL = np.ascontiguousarray(dataL, dtype=np.float32) / 256
+
             processed = preprocess.get_transform(augment=False)
             left_img = processed(left_img)
             right_img = processed(right_img)
 
-            return left_img, right_img, dataL, dataR
+            return left_img, right_img, dataL
 
     def __len__(self):
         return len(self.left)

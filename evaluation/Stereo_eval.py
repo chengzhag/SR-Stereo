@@ -2,18 +2,21 @@ import argparse
 import time
 import torch
 import os
-from dataloader import listSceneFlowFile
-from dataloader import SceneFlowLoader
 from models import Stereo
+from utils import myUtils
 
 
 # Testing for any stereo model including SR-Stereo
 class Test:
-    def __init__(self, testImgLoader, mode='both', evalFcn='outlier', kitti=False, datapath=None):
+    def __init__(self, testImgLoader, mode='both', evalFcn='outlier', datapath=None):
         self.testImgLoader = testImgLoader
-        self.mode = mode
+        if self.testImgLoader.kitti:
+            self.mode = 'left'
+            print(
+                'Using dataset KITTI. Evaluation will exclude zero disparity pixels. And only left disparity map will be considered.')
+        else:
+            self.mode = mode
         self.evalFcn = evalFcn
-        self.kitti = kitti
         self.datapath = datapath
         self.localtime = None
         self.totalTestScores = None
@@ -22,70 +25,35 @@ class Test:
 
     def __call__(self, stereo):
         self.checkpoint = stereo.checkpoint
-        tic = time.time()
-
-        class NameValues:
-            def __init__(self, prefix, suffixes, values):
-                self.pairs = []
-                for suffix, value in zip(suffixes, values):
-                    self.pairs.append((prefix + suffix, value))
-
-            def str(self, unit=''):
-                scale = 1
-                if unit == '%':
-                    scale = 100
-                str = ''
-                for name, value in self.pairs:
-                    str += '%s: %.2f%s, ' % (name, value * scale, unit)
-                return str
-
         scoreUnit = '%' if self.evalFcn == 'outlier' else ''
+        tic = time.time()
+        ticFull = time.time()
 
-        if self.mode == 'both':
-            totalTestScores = [0, 0, 0]
+        for batch_idx, batch in enumerate(self.testImgLoader, 1):
+            batch = [data if data.numel() else None for data in batch]
+            if self.mode == 'right': batch[2] = None
+            scores = stereo.test(*batch, type=self.evalFcn, kitti=self.testImgLoader.kitti)
+            try:
+                totalTestScores = [(total + batch) if batch is not None else None for total, batch in
+                                   zip(totalTestScores, scores)]
+            except NameError:
+                totalTestScores = scores
+            timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
+            scoresPairs = myUtils.NameValues(self.evalFcn,
+                                             ('L', 'R', 'LTotal', 'RTotal'),
+                                             scores + [(score / batch_idx) if score is not None else None for score in
+                                               totalTestScores])
+            print('it %d/%d, %sleft %.2fh' % (
+                batch_idx, len(self.testImgLoader),
+                scoresPairs.str(scoreUnit), timeLeft))
             tic = time.time()
-            for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(self.testImgLoader, 1):
-                scoreAvg, [scoreL, scoreR] = stereo.test(imgL, imgR, dispL, dispR, type=self.evalFcn, kitti=self.kitti)
-                totalTestScores = [total + batch for total, batch in zip(totalTestScores, (scoreAvg, scoreL, scoreR))]
-                timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
 
-                scoresPairs = NameValues(self.evalFcn,
-                                         ('Avg', 'L', 'R', 'Total', 'LTotal', 'RTotal'),
-                                         [scoreAvg, scoreL, scoreR] + [score / batch_idx for score in totalTestScores])
-                print('it %d/%d, %sleft %.2fh' % (
-                    batch_idx, len(self.testImgLoader),
-                    scoresPairs.str(scoreUnit), timeLeft))
-                tic = time.time()
-
-            totalTestScores = [loss / batch_idx for loss in totalTestScores]
-            self.testResults = NameValues(self.evalFcn, ('Avg', 'L', 'R'), totalTestScores).pairs
-
-        elif self.mode == 'left' or self.mode == 'right':
-            totalTestScore = 0
-            tic = time.time()
-            for batch_idx, (imgL, imgR, dispGT) in enumerate(self.testImgLoader, 1):
-                if self.mode == 'left':
-                    score = stereo.test(imgL, imgR, dispL=dispGT, type=self.evalFcn, kitti=self.kitti)
-                else:
-                    score = stereo.test(imgL, imgR, dispR=dispGT, type=self.evalFcn, kitti=self.kitti)
-                totalTestScore += score
-                timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
-
-                scoresPairs = NameValues(self.evalFcn, ('', 'Total'), (score, totalTestScore / batch_idx))
-                print('it %d/%d, %sleft %.2fh' % (
-                    batch_idx, len(self.testImgLoader),
-                    scoresPairs.str(scoreUnit), timeLeft))
-                tic = time.time()
-
-            totalTestScores = totalTestScore / batch_idx
-            self.testResults = NameValues(self.evalFcn, (''), (totalTestScores)).pairs
-
-        testTime = time.time() - tic
-        print('Full testing time = %.2fh' % (testTime / 3600))
+        self.testTime = time.time() - ticFull
+        print('Full testing time = %.2fh' % (self.testTime / 3600))
+        self.testResults = scoresPairs.pairs
         self.localtime = time.asctime(time.localtime(time.time()))
         self.totalTestScores = totalTestScores
-        self.testTime = testTime
-        return totalTestScores, testTime
+        return totalTestScores
 
     # log file will be saved to where chkpoint file is
     def log(self, epoch=None, it=None, additionalValue=()):
@@ -133,25 +101,25 @@ def main():
                         help='random seed (default: 1)')
     parser.add_argument('--eval_fcn', type=str, default='outlier',
                         help='evaluation function used in testing')
+    parser.add_argument('--dataset', type=str, default='sceneflow',
+                        help='evaluation function used in testing')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
-    # TODO: Add code to test given model and different dataset
     torch.manual_seed(args.seed)
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
 
-    _, _, _, _, test_left_img, test_right_img, test_left_disp, test_right_disp = listSceneFlowFile.dataloader(
-        args.datapath)
+    # Dataset
+    import dataloader
+    _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset, batchSizes=(0, 11))
 
-    testImgLoader = torch.utils.data.DataLoader(
-        SceneFlowLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
-        batch_size=11, shuffle=False, num_workers=8, drop_last=False)
-
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda)
+    # Load model
+    stage, _ = os.path.splitext(os.path.basename(__file__))
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage=stage)
     stereo.load(args.loadmodel)
 
-    # TEST
+    # Test
     test = Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath)
     test(stereo=stereo)
     test.log()

@@ -1,11 +1,5 @@
 import os
 import os.path
-import argparse
-
-parser = argparse.ArgumentParser(description='CarlaKitti')
-parser.add_argument('--filepath', type=str, default='../datasets/carla_kitti/carla_kitti_sr_highquality',
-                    help='filepath to load')
-args = parser.parse_args()
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -37,7 +31,7 @@ def dataloader(filepath, trainProportion=0.8):
     test_right_disp = []
 
     for i, episode in enumerate(episodes):
-        if i + 1 <= 0.8 * len(episodes):
+        if i + 1 <= trainProportion * len(episodes):
             all_left_img += (_scanImages(filepath, episode, 'Camera2RGB'))
             all_right_img += (_scanImages(filepath, episode, 'Camera3RGB'))
             all_left_disp += (_scanImages(filepath, episode, 'Camera2Depth'))
@@ -50,7 +44,16 @@ def dataloader(filepath, trainProportion=0.8):
 
     return all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp
 
-
-if __name__ == '__main__':
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description='CarlaKitti')
+    parser.add_argument('--filepath', type=str, default='../datasets/carla_kitti/carla_kitti_sr_highquality',
+                        help='filepath to load')
+    args = parser.parse_args()
+    
     all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = dataloader(
         args.filepath)
+
+if __name__ == '__main__':
+    main()
+

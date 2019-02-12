@@ -2,11 +2,11 @@ from __future__ import print_function
 import argparse
 import torch.utils.data
 import time
-from dataloader import listSceneFlowFile
-from dataloader import SceneFlowLoader
+import os
 from models import Stereo
 from tensorboardX import SummaryWriter
 from evaluation import Stereo_eval
+from utils import myUtils
 
 
 class Train:
@@ -22,7 +22,7 @@ class Train:
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr
 
-        # TRAIN
+        # Train
         ticFull = time.time()
         writer = SummaryWriter(stereo.logFolder)
 
@@ -37,36 +37,49 @@ class Train:
         batch_idx = None
         for epoch in range(1, nEpochs + 1):
             print('This is %d-th epoch' % (epoch))
-            totalTrainLoss = 0
             adjust_learning_rate(stereo.optimizer, epoch)
 
             # iteration
             global_step = 1
             tic = time.time()
-            for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(self.trainImgLoader, 1):
+            for batch_idx, batch in enumerate(self.trainImgLoader, 1):
+                batch = [data if data.numel() else None for data in batch]
                 if self.logEvery > 0 and global_step % self.logEvery == 0:
-                    lossAvg, [lossL, lossR], ouputs = stereo.train(imgL, imgR, dispL, dispR, output=True)
-                    writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, global_step)
-                    writer.add_images('disp/dispL', disp2gray(dispL), batch_idx, global_step)
-                    writer.add_images('disp/dispR', disp2gray(dispR), batch_idx, global_step)
-                    writer.add_images('disp/ouputL', disp2gray(ouputs[0]), batch_idx, global_step)
-                    writer.add_images('disp/ouputR', disp2gray(ouputs[1]), batch_idx, global_step)
+                    losses, ouputs = stereo.train(*batch, output=True, kitti=self.trainImgLoader.kitti)
+                    lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
+                    writer.add_scalars(stereo.stage + '/losses', lossesPairs.dic(), global_step)
+                    if batch[2] is not None:
+                        writer.add_images(stereo.stage + '/images/gtL', disp2gray(batch[2]), global_step=global_step)
+                    if batch[3] is not None:
+                        writer.add_images(stereo.stage + '/images/gtR', disp2gray(batch[3]), global_step=global_step)
+                    if ouputs[0] is not None:
+                        writer.add_images(stereo.stage + '/images/ouputL', disp2gray(ouputs[0]), global_step=global_step)
+                    if ouputs[1] is not None:
+                        writer.add_images(stereo.stage + '/images/ouputR', disp2gray(ouputs[1]), global_step=global_step)
                 else:
-                    lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR, output=False)
+                    losses = stereo.train(*batch, output=False, kitti=self.trainImgLoader.kitti)
+                    lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
 
                 global_step += 1
 
-                totalTrainLoss += lossAvg
+                try:
+                    totalTrainLoss = [(total + batch) if batch is not None else None for total, batch in
+                                       zip(totalTrainLoss, losses)]
+                except NameError:
+                    totalTrainLoss = losses
+
                 timeLeft = (time.time() - tic) / 3600 * ((nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
-                print('it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, left %.2fh' % (
-                    batch_idx, len(self.trainImgLoader) * nEpochs, lossAvg, lossL, lossR, timeLeft))
+                print('it %d/%d, %sleft %.2fh' % (
+                    batch_idx, len(self.trainImgLoader) * nEpochs,
+                    lossesPairs.str(''), timeLeft))
                 tic = time.time()
 
             print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / len(self.trainImgLoader)))
-
             # save
             stereo.save(epoch=epoch, iteration=batch_idx,
                         trainLoss=totalTrainLoss / len(self.trainImgLoader))
+
+            del totalTrainLoss
 
         writer.close()
         print('Full training time = %.2fh' % ((time.time() - ticFull) / 3600))
@@ -96,6 +109,8 @@ def main():
                         help='log every log_every iterations')
     parser.add_argument('--ndis_log', type=int, default=1,
                         help='number of disparity maps to log')
+    parser.add_argument('--dataset', type=str, default='sceneflow',
+                        help='evaluation function used in testing')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -104,19 +119,12 @@ def main():
         torch.cuda.manual_seed(args.seed)
 
     # Dataset
-    all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = listSceneFlowFile.dataloader(
-        args.datapath)
-
-    trainImgLoader = torch.utils.data.DataLoader(
-        SceneFlowLoader.myImageFloder(all_left_img, all_right_img, all_left_disp, all_right_disp, True),
-        batch_size=12, shuffle=True, num_workers=8, drop_last=False)
-
-    testImgLoader = torch.utils.data.DataLoader(
-        SceneFlowLoader.myImageFloder(test_left_img, test_right_img, test_left_disp, test_right_disp, False),
-        batch_size=11, shuffle=False, num_workers=8, drop_last=False)
+    import dataloader
+    trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset, batchSizes=(12, 11))
 
     # Load model
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage='Stereo_train')
+    stage, _ = os.path.splitext(os.path.basename(__file__))
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage=stage)
     stereo.load(args.loadmodel)
 
     # Train
