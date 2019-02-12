@@ -42,12 +42,13 @@ class Test:
 
             scores, outputs = stereo.test(*batch, type=self.evalFcn, kitti=self.testImgLoader.kitti)
 
-            scoresPairs = myUtils.NameValues(scoreUnit, ('L', 'R'), scores)
+            scoresPairs = myUtils.NameValues(self.evalFcn, ('L', 'R'), scores)
 
             if self.logEvery > 0 and batch_idx % self.logEvery == 0:
-                writer.add_scalars(stereo.stage + '/losses', scoresPairs.dic(), batch_idx)
-                for disp, name in zip(batch[2:4] + outputs, ('gtL', 'gtR', 'ouputL', 'ouputR')):
-                    myUtils.logFirstNdis(writer, stereo.stage, name, disp, stereo.maxdisp,
+                for name, value in scoresPairs.pairs():
+                    writer.add_scalar(stereo.stage + '/testLosses/' + name, value, batch_idx)
+                for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), batch[2:4] + outputs):
+                    myUtils.logFirstNdis(writer, stereo.stage + '/testImages/' + name, disp, stereo.maxdisp,
                                          global_step=batch_idx, n=self.ndisLog)
 
             try:
@@ -67,7 +68,7 @@ class Test:
 
         self.testTime = time.time() - ticFull
         print('Full testing time = %.2fh' % (self.testTime / 3600))
-        self.testResults = scoresPairs.pairs
+        self.testResults = scoresPairs.pairs()
         self.localtime = time.asctime(time.localtime(time.time()))
         self.totalTestScores = totalTestScores
         return totalTestScores

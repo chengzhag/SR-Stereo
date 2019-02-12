@@ -43,9 +43,10 @@ class Train:
                     losses, outputs = stereo.train(*batch, output=True, kitti=self.trainImgLoader.kitti)
 
                     lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
-                    writer.add_scalars(stereo.stage + '/losses', lossesPairs.dic(), global_step)
-                    for disp, name in zip(batch[2:4] + outputs, ('gtL', 'gtR', 'ouputL', 'ouputR')):
-                        myUtils.logFirstNdis(writer, stereo.stage, name, disp, stereo.maxdisp,
+                    for name, value in lossesPairs.pairs():
+                        writer.add_scalar(stereo.stage + '/trainLosses/' + name, value, global_step)
+                    for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), batch[2:4] + outputs):
+                        myUtils.logFirstNdis(writer, stereo.stage + '/trainImages/' + name, disp, stereo.maxdisp,
                                              global_step=global_step, n=self.ndisLog)
                 else:
 
