@@ -68,7 +68,7 @@ class myImageFloder(data.Dataset):
 
             return left_img, right_img, dataL, dataR
         else:
-            w, h = left_img.size
+            # w, h = left_img.size
             # left_img = left_img.crop((w-960, h-544, w, h))
             # right_img = right_img.crop((w-960, h-544, w, h))
             processed = preprocess.get_transform(augment=False)

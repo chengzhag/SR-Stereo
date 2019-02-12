@@ -30,4 +30,4 @@ def dataloader(filepath):
   right_val = [filepath+right_fold+img for img in val]
   disp_val = [filepath+disp_noc+img for img in val]
 
-  return left_train, right_train, disp_train, left_val, right_val, disp_val
+  return left_train, right_train, disp_train, None, left_val, right_val, disp_val, None

@@ -115,6 +115,9 @@ class PSMNet:
 
     def test(self, imgL, imgR, dispL=None, dispR=None, type='l1', kitti=False):
         self._assertDisp(dispL, dispR)
+        dispL = dispL if dispL.numel() else None
+        dispR = dispR if dispR.numel() else None
+
         if self.cuda:
             imgL, imgR = imgL.cuda(), imgR.cuda()
             dispL = dispL.cuda() if dispL is not None else None
@@ -124,19 +127,19 @@ class PSMNet:
         scores = []
         for gt, mode in zip([dispL, dispR], ['left', 'right']):
             if gt is None:
+                scores.append(None)
                 continue
             output = self.predict(imgL, imgR, mode)
             mask = (gt < self.maxdisp) & (gt > 0) if kitti else (gt < self.maxdisp)
             scores.append(getattr(evalFcn, type)(gt[mask], output[mask]))
 
-        scoreAvg = sum(scores) / len(scores)
-        return scoreAvg, scores
+        return scores
 
     def _flip(self, im):
         return im.flip(-1)
 
     def _assertDisp(self, dispL=None, dispR=None):
-        if dispL is None and dispR is None:
+        if (dispL is None or dispL.numel() == 0) and (dispR is None or dispR.numel() == 0):
             raise Exception('No disp input!')
 
     def load(self, checkpoint):
