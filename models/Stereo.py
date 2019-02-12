@@ -28,6 +28,8 @@ class PSMNet:
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True):
         self.model.train()
         self._assertDisp(dispL, dispR)
+        dispL = dispL if dispL.numel() else None
+        dispR = dispR if dispR.numel() else None
         if self.cuda:
             imgL, imgR = imgL.cuda(), imgR.cuda()
             dispL = dispL.cuda() if dispL is not None else None
@@ -62,23 +64,24 @@ class PSMNet:
                 loss, ouput = _train(imgL, imgR, dispL)
                 losses.append(loss)
                 ouputs.append(ouput)
+            else:
+                ouputs.append(None)
 
             if dispR is not None:
                 # swap and flip input for right disparity map
                 loss, ouput = _train(self._flip(imgR), self._flip(imgL), self._flip(dispR))
                 losses.append(loss)
                 ouputs.append(self._flip(ouput))
-            loss = sum(losses) / len(losses)
-            return loss, losses, ouputs
-        else:
-            if dispL is not None:
-                losses.append(_train(imgL, imgR, dispL))
+            else:
+                ouputs.append(None)
 
-            if dispR is not None:
-                # swap and flip input for right disparity map
-                losses.append(_train(self._flip(imgR), self._flip(imgL), self._flip(dispR)))
-            loss = sum(losses) / len(losses)
-            return loss, losses
+            return losses, ouputs
+        else:
+            losses.append(_train(imgL, imgR, dispL) if dispL is not None else None)
+            # swap and flip input for right disparity map
+            losses.append(_train(self._flip(imgR), self._flip(imgL), self._flip(dispR)) if dispR is not None else None)
+
+            return losses
 
     def predict(self, imgL, imgR, mode='both'):
         self.model.eval()
@@ -115,8 +118,6 @@ class PSMNet:
 
     def test(self, imgL, imgR, dispL=None, dispR=None, type='l1', kitti=False):
         self._assertDisp(dispL, dispR)
-        dispL = dispL if dispL.numel() else None
-        dispR = dispR if dispR.numel() else None
 
         if self.cuda:
             imgL, imgR = imgL.cuda(), imgR.cuda()

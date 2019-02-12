@@ -54,8 +54,11 @@ class myImageFloder(data.Dataset):
             inputL = inputL.crop((x1, y1, x1 + wCrop, y1 + hCrop))
             inputR = inputR.crop((x1, y1, x1 + wCrop, y1 + hCrop))
 
-            gtL = gtL.crop((x1, y1, x1 + wCrop, y1 + hCrop)) if gtL is not None else None
-            gtR = gtR.crop((x1, y1, x1 + wCrop, y1 + hCrop)) if gtR is not None else None
+            gtL = gtL[y1:y1 + hCrop, x1:x1 + wCrop] if gtL is not None else None
+            gtR = gtR[y1:y1 + hCrop, x1:x1 + wCrop] if gtR is not None else None
+
+            # gtL = gtL.crop((x1, y1, x1 + wCrop, y1 + hCrop)) if gtL is not None else None
+            # gtR = gtR.crop((x1, y1, x1 + wCrop, y1 + hCrop)) if gtR is not None else None
 
         else:
             if self.testCrop is not None:

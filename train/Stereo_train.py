@@ -6,6 +6,7 @@ import os
 from models import Stereo
 from tensorboardX import SummaryWriter
 from evaluation import Stereo_eval
+from utils import iteration
 
 
 class Train:
@@ -36,29 +37,37 @@ class Train:
         batch_idx = None
         for epoch in range(1, nEpochs + 1):
             print('This is %d-th epoch' % (epoch))
-            totalTrainLoss = 0
             adjust_learning_rate(stereo.optimizer, epoch)
 
             # iteration
             global_step = 1
             tic = time.time()
-            for batch_idx, (imgL, imgR, dispL, dispR) in enumerate(self.trainImgLoader, 1):
+            for batch_idx, batch in enumerate(self.trainImgLoader, 1):
+                batch = [data if data.numel() else None for data in batch]
                 if self.logEvery > 0 and global_step % self.logEvery == 0:
-                    lossAvg, [lossL, lossR], ouputs = stereo.train(imgL, imgR, dispL, dispR, output=True)
-                    writer.add_scalars('loss', {'lossAvg': lossAvg, 'lossL': lossL, 'lossR': lossR}, global_step)
-                    writer.add_images('train/dispL', disp2gray(dispL), batch_idx, global_step)
-                    writer.add_images('train/dispR', disp2gray(dispR), batch_idx, global_step)
-                    writer.add_images('train/ouputL', disp2gray(ouputs[0]), batch_idx, global_step)
-                    writer.add_images('train/ouputR', disp2gray(ouputs[1]), batch_idx, global_step)
+                    losses, ouputs = stereo.train(*batch, output=True)
+                    lossesPairs = iteration.NameValues('loss', ('L', 'R'), losses)
+                    writer.add_scalars('train/losses', lossesPairs.dic(), global_step)
+                    if batch[2] is not None: writer.add_images('train/images/gtL', disp2gray(batch[2]), batch_idx, global_step)
+                    if batch[3] is not None: writer.add_images('train/images/gtR', disp2gray(batch[3]), batch_idx, global_step)
+                    if ouputs[0] is not None: writer.add_images('train/images/ouputL', disp2gray(ouputs[0]), batch_idx, global_step)
+                    if ouputs[1] is not None: writer.add_images('train/images/ouputR', disp2gray(ouputs[1]), batch_idx, global_step)
                 else:
-                    lossAvg, [lossL, lossR] = stereo.train(imgL, imgR, dispL, dispR, output=False)
+                    losses = stereo.train(*batch, output=False)
+                    lossesPairs = iteration.NameValues('loss', ('L', 'R'), losses)
 
                 global_step += 1
 
-                totalTrainLoss += lossAvg
+                try:
+                    totalTrainLoss = [(total + batch) if batch is not None else None for total, batch in
+                                       zip(totalTrainLoss, losses)]
+                except NameError:
+                    totalTrainLoss = losses
+
                 timeLeft = (time.time() - tic) / 3600 * ((nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
-                print('it %d/%d, lossAvg %.2f, lossL %.2f, lossR %.2f, left %.2fh' % (
-                    batch_idx, len(self.trainImgLoader) * nEpochs, lossAvg, lossL, lossR, timeLeft))
+                print('it %d/%d, %sleft %.2fh' % (
+                    batch_idx, len(self.trainImgLoader) * nEpochs,
+                    lossesPairs.str(''), timeLeft))
                 tic = time.time()
 
             print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / len(self.trainImgLoader)))
@@ -95,6 +104,8 @@ def main():
                         help='log every log_every iterations')
     parser.add_argument('--ndis_log', type=int, default=1,
                         help='number of disparity maps to log')
+    parser.add_argument('--dataset', type=str, default='sceneflow',
+                        help='evaluation function used in testing')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -104,7 +115,7 @@ def main():
 
     # Dataset
     import dataloader
-    trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset='sceneflow', batchSizes=(12, 11))
+    trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset, batchSizes=(12, 11))
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))

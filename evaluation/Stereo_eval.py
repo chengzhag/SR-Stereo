@@ -3,6 +3,7 @@ import time
 import torch
 import os
 from models import Stereo
+from utils import iteration
 
 
 # Testing for any stereo model including SR-Stereo
@@ -26,25 +27,10 @@ class Test:
         self.checkpoint = stereo.checkpoint
         tic = time.time()
 
-        class NameValues:
-            def __init__(self, prefix, suffixes, values):
-                self.pairs = []
-                for suffix, value in zip(suffixes, values):
-                    if value is not None:
-                        self.pairs.append((prefix + suffix, value))
-
-            def str(self, unit=''):
-                scale = 1
-                if unit == '%':
-                    scale = 100
-                str = ''
-                for name, value in self.pairs:
-                    str += '%s: %.2f%s, ' % (name, value * scale, unit)
-                return str
-
         scoreUnit = '%' if self.evalFcn == 'outlier' else ''
         tic = time.time()
         for batch_idx, batch in enumerate(self.testImgLoader, 1):
+            batch = [data if data.numel() else None for data in batch]
             scores = stereo.test(*batch, type=self.evalFcn, kitti=self.testImgLoader.kitti)
             try:
                 totalTestScores = [(total + batch) if batch is not None else None for total, batch in
@@ -52,7 +38,7 @@ class Test:
             except NameError:
                 totalTestScores = scores
             timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
-            scoresPairs = NameValues(self.evalFcn,
+            scoresPairs = iteration.NameValues(self.evalFcn,
                                      ('L', 'R', 'LTotal', 'RTotal'),
                                      scores + [(score / batch_idx) if score is not None else None for score in
                                                totalTestScores])
