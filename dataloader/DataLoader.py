@@ -54,11 +54,13 @@ class myImageFloder(data.Dataset):
             inputL = inputL.crop((x1, y1, x1 + wCrop, y1 + hCrop))
             inputR = inputR.crop((x1, y1, x1 + wCrop, y1 + hCrop))
 
-            gtL = gtL[y1:y1 + hCrop, x1:x1 + wCrop] if gtL is not None else None
-            gtR = gtR[y1:y1 + hCrop, x1:x1 + wCrop] if gtR is not None else None
+            try:
+                gtL = gtL.crop((x1, y1, x1 + wCrop, y1 + hCrop)) if gtL is not None else None
+                gtR = gtR.crop((x1, y1, x1 + wCrop, y1 + hCrop)) if gtR is not None else None
+            except AttributeError:
+                gtL = gtL[y1:y1 + hCrop, x1:x1 + wCrop] if gtL is not None else None
+                gtR = gtR[y1:y1 + hCrop, x1:x1 + wCrop] if gtR is not None else None
 
-            # gtL = gtL.crop((x1, y1, x1 + wCrop, y1 + hCrop)) if gtL is not None else None
-            # gtR = gtR.crop((x1, y1, x1 + wCrop, y1 + hCrop)) if gtR is not None else None
 
         else:
             if self.testCrop is not None:
@@ -66,8 +68,12 @@ class myImageFloder(data.Dataset):
                 wCrop, hCrop = self.testCrop
                 inputL = inputL.crop((w - wCrop, h - hCrop, w, h))
                 inputR = inputR.crop((w - wCrop, h - hCrop, w, h))
-                gtL = gtL.crop((w - wCrop, h - hCrop, w, h)) if gtL is not None else None
-                gtR = gtR.crop((w - wCrop, h - hCrop, w, h)) if gtR is not None else None
+                try:
+                    gtL = gtL.crop((w - wCrop, h - hCrop, w, h)) if gtL is not None else None
+                    gtR = gtR.crop((w - wCrop, h - hCrop, w, h)) if gtR is not None else None
+                except AttributeError:
+                    gtL = gtL[h:h + hCrop, w:w + wCrop] if gtL is not None else None
+                    gtR = gtR[h:h + hCrop, w:w + wCrop] if gtR is not None else None
 
         processed = preprocess.get_transform(augment=False)
         inputL = processed(inputL)

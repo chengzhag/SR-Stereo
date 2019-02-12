@@ -28,8 +28,6 @@ class PSMNet:
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True):
         self.model.train()
         self._assertDisp(dispL, dispR)
-        dispL = dispL if dispL.numel() else None
-        dispR = dispR if dispR.numel() else None
         if self.cuda:
             imgL, imgR = imgL.cuda(), imgR.cuda()
             dispL = dispL.cuda() if dispL is not None else None
