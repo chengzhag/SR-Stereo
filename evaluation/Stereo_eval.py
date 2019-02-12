@@ -9,7 +9,7 @@ from tensorboardX import SummaryWriter
 
 # Testing for any stereo model including SR-Stereo
 class Test:
-    def __init__(self, testImgLoader, mode='both', evalFcn='outlier', datapath=None, logEvery=1, ndisLog=1):
+    def __init__(self, testImgLoader, mode='both', evalFcn='outlier', datapath=None, ndisLog=1):
         self.testImgLoader = testImgLoader
         if self.testImgLoader.kitti:
             self.mode = 'left'
@@ -22,35 +22,26 @@ class Test:
         self.localtime = None
         self.totalTestScores = None
         self.testTime = None
-        self.checkpoint = None
-        self.logEvery = logEvery
         self.ndisLog = max(ndisLog, 0)
+        self.imgs = []
+        self.stereo = None
 
     def __call__(self, stereo):
-        self.checkpoint = stereo.checkpoint
+        self.stereo = stereo
         scoreUnit = '%' if self.evalFcn == 'outlier' else ''
         tic = time.time()
         ticFull = time.time()
-        # save Tensorboard logs to where checkpoint is.
-        chkpointFolder, _ = os.path.split(self.checkpoint)
-        logFolder = os.path.join(chkpointFolder, 'logs')
-        writer = SummaryWriter(logFolder)
 
         for batch_idx, batch in enumerate(self.testImgLoader, 1):
             batch = [data if data.numel() else None for data in batch]
             if self.mode == 'right': batch[2] = None
 
-            scores, outputs = stereo.test(*batch, type=self.evalFcn, kitti=self.testImgLoader.kitti)
-            outputs = [output.cpu() for output in outputs]
-            
-            scoresPairs = myUtils.NameValues(self.evalFcn, ('L', 'R'), scores)
+            if batch_idx == 1:
+                scores, outputs = stereo.test(*batch, type=self.evalFcn, output=True, kitti=self.testImgLoader.kitti)
+                self.imgs = batch[2:4] + outputs
+            else:
+                scores = stereo.test(*batch, type=self.evalFcn, output=False, kitti=self.testImgLoader.kitti)
 
-            if self.logEvery > 0 and batch_idx % self.logEvery == 0:
-                for name, value in scoresPairs.pairs():
-                    writer.add_scalar(stereo.stage + '/testLosses/' + name, value, batch_idx)
-                for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), batch[2:4] + outputs):
-                    myUtils.logFirstNdis(writer, stereo.stage + '/testImages/' + name, disp, stereo.maxdisp,
-                                         global_step=batch_idx, n=self.ndisLog)
 
             try:
                 totalTestScores = [(total + batch) if batch is not None else None for total, batch in
@@ -59,24 +50,27 @@ class Test:
                 totalTestScores = scores
             timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
             scoresPairs = myUtils.NameValues(self.evalFcn,
-                                             ('LTotal', 'RTotal'),
-                                             [(score / batch_idx) if score is not None else None for score in
+                                             ('L', 'R', 'LTotal', 'RTotal'),
+                                             scores + [(score / batch_idx) if score is not None else None for score in
                                                        totalTestScores])
             print('it %d/%d, %sleft %.2fh' % (
                 batch_idx, len(self.testImgLoader),
                 scoresPairs.str(scoreUnit), timeLeft))
             tic = time.time()
 
+        scoresPairs = myUtils.NameValues(self.evalFcn, ('LTotal', 'RTotal'),
+                                         [(score / batch_idx) if score is not None else None
+                                          for score in totalTestScores])
+
         self.testTime = time.time() - ticFull
         print('Full testing time = %.2fh' % (self.testTime / 3600))
         self.testResults = scoresPairs.pairs()
         self.localtime = time.asctime(time.localtime(time.time()))
-        self.totalTestScores = totalTestScores
         return totalTestScores
 
     # log file will be saved to where chkpoint file is
-    def log(self, epoch=None, it=None, additionalValue=()):
-        chkpointFolder, _ = os.path.split(self.checkpoint)
+    def log(self, epoch=None, it=None, global_step=None, additionalValue=()):
+        chkpointFolder, _ = os.path.split(self.stereo.checkpoint)
         logDir = os.path.join(chkpointFolder, 'test_results.txt')
         with open(logDir, "a") as log:
             pass
@@ -90,11 +84,12 @@ class Test:
             log.seek(0)
             log.write('---------------------- %s ----------------------\n' % self.localtime)
             baseInfos = (('data', self.datapath),
-                         ('checkpoint', self.checkpoint),
+                         ('checkpoint', self.stereo.checkpoint),
                          ('test_type', self.evalFcn),
                          ('test_time', self.testTime),
                          ('epoch', epoch),
-                         ('iteration', it)
+                         ('iteration', it),
+                         ('global_step', global_step)
                          )
             for pairs in (baseInfos, self.testResults, additionalValue):
                 for (name, value) in pairs:
@@ -102,6 +97,16 @@ class Test:
                 log.write('\n')
 
             log.write(logOld)
+
+        # save Tensorboard logs to where checkpoint is.
+        logFolder = os.path.join(chkpointFolder, 'logs')
+        writer = SummaryWriter(logFolder)
+        for name, value in self.testResults:
+            writer.add_scalar(self.stereo.stage + '/testLosses/' + name, value, global_step)
+        for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), self.imgs):
+            myUtils.logFirstNdis(writer, self.stereo.stage + '/testImages/' + name, disp, self.stereo.maxdisp,
+                                 global_step=global_step, n=self.ndisLog)
+        writer.close()
 
 
 def main():
@@ -120,8 +125,6 @@ def main():
                         help='random seed (default: 1)')
     parser.add_argument('--eval_fcn', type=str, default='outlier',
                         help='evaluation function used in testing')
-    parser.add_argument('--log_every', type=int, default=1,
-                        help='log every log_every iterations')
     parser.add_argument('--ndis_log', type=int, default=1,
                         help='number of disparity maps to log')
     parser.add_argument('--dataset', type=str, default='sceneflow',
@@ -144,7 +147,7 @@ def main():
 
     # Test
     test = Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath,
-                logEvery=args.log_every, ndisLog=args.ndis_log)
+                ndisLog=args.ndis_log)
     test(stereo=stereo)
     test.log()
 

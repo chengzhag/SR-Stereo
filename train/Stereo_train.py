@@ -14,8 +14,11 @@ class Train:
         self.trainImgLoader = trainImgLoader
         self.logEvery = logEvery
         self.ndisLog = max(ndisLog, 0)
+        self.stereo = None
 
     def __call__(self, stereo, nEpochs):
+        self.stereo = stereo
+
         def adjust_learning_rate(optimizer, epoch):
             lr = 0.001
             print(lr)
@@ -28,20 +31,21 @@ class Train:
 
         epoch = None
         batch_idx = None
+        global_step = 0
         for epoch in range(1, nEpochs + 1):
             print('This is %d-th epoch' % (epoch))
             adjust_learning_rate(stereo.optimizer, epoch)
 
             # iteration
-            global_step = 1
             totalTrainLoss = 0
             tic = time.time()
             for batch_idx, batch in enumerate(self.trainImgLoader, 1):
                 batch = [data if data.numel() else None for data in batch]
+                global_step += 1
+
                 if self.logEvery > 0 and global_step % self.logEvery == 0:
 
                     losses, outputs = stereo.train(*batch, output=True, kitti=self.trainImgLoader.kitti)
-                    outputs = [output.cpu() for output in outputs]
 
                     lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
                     for name, value in lossesPairs.pairs():
@@ -55,12 +59,11 @@ class Train:
 
                     lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
 
-                global_step += 1
                 totalTrainLoss += sum(losses) / len(losses)
 
                 timeLeft = (time.time() - tic) / 3600 * ((nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
                 print('it %d/%d, %sleft %.2fh' % (
-                    batch_idx, len(self.trainImgLoader) * nEpochs,
+                    global_step, len(self.trainImgLoader) * nEpochs,
                     lossesPairs.str(''), timeLeft))
                 tic = time.time()
 
@@ -121,7 +124,8 @@ def main():
     train(stereo=stereo, nEpochs=args.epochs)
 
     # Test
-    test = Stereo_eval.Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath)
+    test = Stereo_eval.Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath,
+                ndisLog=args.ndis_log)
     test(stereo=stereo)
     test.log()
 

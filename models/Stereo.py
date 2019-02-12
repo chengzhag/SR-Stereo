@@ -60,17 +60,17 @@ class PSMNet:
         if output:
             outputs = []
             if dispL is not None:
-                loss, ouput = _train(imgL, imgR, dispL)
+                loss, dispOut = _train(imgL, imgR, dispL)
                 losses.append(loss)
-                outputs.append(ouput)
+                outputs.append(dispOut.cpu())
             else:
                 outputs.append(None)
 
             if dispR is not None:
                 # swap and flip input for right disparity map
-                loss, ouput = _train(myUtils.flipLR(imgR), myUtils.flipLR(imgL), myUtils.flipLR(dispR))
+                loss, dispOut = _train(myUtils.flipLR(imgR), myUtils.flipLR(imgL), myUtils.flipLR(dispR))
                 losses.append(loss)
-                outputs.append(myUtils.flipLR(ouput))
+                outputs.append(myUtils.flipLR(dispOut).cpu())
             else:
                 outputs.append(None)
 
@@ -105,7 +105,7 @@ class PSMNet:
             else:
                 raise Exception('No mode \'%s\'!' % mode)
 
-    def test(self, imgL, imgR, dispL=None, dispR=None, type='l1', kitti=False):
+    def test(self, imgL, imgR, dispL=None, dispR=None, type='l1', output=False, kitti=False):
         myUtils.assertDisp(dispL, dispR)
 
         if self.cuda:
@@ -121,12 +121,16 @@ class PSMNet:
                 scores.append(None)
                 outputs.append(None)
                 continue
-            output = self.predict(imgL, imgR, mode)
+            dispOut = self.predict(imgL, imgR, mode)
             mask = (gt < self.maxdisp) & (gt > 0) if kitti else (gt < self.maxdisp)
-            scores.append(getattr(evalFcn, type)(gt[mask], output[mask]))
-            outputs.append(output)
+            scores.append(getattr(evalFcn, type)(gt[mask], dispOut[mask]))
+            if output:
+                outputs.append(dispOut.cpu())
 
-        return scores, outputs
+        if output:
+            return scores, outputs
+        else:
+            return scores
 
     def load(self, checkpoint):
         if checkpoint is not None:
