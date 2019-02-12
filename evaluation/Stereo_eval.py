@@ -31,7 +31,10 @@ class Test:
         scoreUnit = '%' if self.evalFcn == 'outlier' else ''
         tic = time.time()
         ticFull = time.time()
-        writer = SummaryWriter(stereo.logFolder)
+        # save Tensorboard logs to where checkpoint is.
+        chkpointFolder, _ = os.path.split(self.checkpoint)
+        logFolder = os.path.join(chkpointFolder, 'logs')
+        writer = SummaryWriter(logFolder)
 
         for batch_idx, batch in enumerate(self.testImgLoader, 1):
             batch = [data if data.numel() else None for data in batch]
