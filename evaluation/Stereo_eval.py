@@ -70,8 +70,7 @@ class Test:
 
     # log file will be saved to where chkpoint file is
     def log(self, epoch=None, it=None, global_step=None, additionalValue=()):
-        chkpointFolder, _ = os.path.split(self.stereo.checkpoint)
-        logDir = os.path.join(chkpointFolder, 'test_results.txt')
+        logDir = os.path.join(self.stereo.checkpointFolder, 'test_results.txt')
         with open(logDir, "a") as log:
             pass
         with open(logDir, "r+") as log:
@@ -84,7 +83,7 @@ class Test:
             log.seek(0)
             log.write('---------------------- %s ----------------------\n' % self.localtime)
             baseInfos = (('data', self.datapath),
-                         ('checkpoint', self.stereo.checkpoint),
+                         ('checkpoint', self.stereo.checkpointDir),
                          ('test_type', self.evalFcn),
                          ('test_time', self.testTime),
                          ('epoch', epoch),
@@ -99,8 +98,7 @@ class Test:
             log.write(logOld)
 
         # save Tensorboard logs to where checkpoint is.
-        logFolder = os.path.join(chkpointFolder, 'logs')
-        writer = SummaryWriter(logFolder)
+        writer = SummaryWriter(self.stereo.logFolder)
         for name, value in self.testResults:
             writer.add_scalar(self.stereo.stage + '/testLosses/' + name, value, global_step)
         for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), self.imgs):
@@ -138,7 +136,7 @@ def main():
 
     # Dataset
     import dataloader
-    _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset, batchSizes=(0, 11))
+    _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset, batchSizes=(0, 6))
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))

@@ -13,9 +13,6 @@ class PSMNet:
     def __init__(self, maxdisp=192, cuda=True, stage='unnamed'):
         self.stage = stage
         self.startTime = time.localtime(time.time())
-        self.saveFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) + self.__class__.__name__
-        self.saveFolder = os.path.join('logs', stage, self.saveFolderName)
-        self.logFolder = os.path.join(self.saveFolder, 'logs')
         self.model = stackhourglass(maxdisp)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
         self.maxdisp = maxdisp
@@ -24,9 +21,16 @@ class PSMNet:
         if cuda:
             self.model = nn.DataParallel(self.model)
             self.model.cuda()
-        self.checkpoint = None
+
+        self.saveFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) + self.__class__.__name__
+        self.saveFolder = os.path.join('logs', stage, self.saveFolderName)
+        self.logFolder = None
+        self.checkpointDir = None
+        self.checkpointFolder = None
 
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
+        # When training, log files should be saved to saveFolder.
+        self.logFolder = os.path.join(self.saveFolder, 'logs')
         self.model.train()
         myUtils.assertDisp(dispL, dispR)
         if self.cuda:
@@ -132,12 +136,19 @@ class PSMNet:
         else:
             return scores
 
-    def load(self, checkpoint):
-        if checkpoint is not None:
-            print('Loading checkpoint from %s' % checkpoint)
-            state_dict = torch.load(checkpoint)
+    def load(self, checkpointDir):
+        if checkpointDir is not None:
+            print('Loading checkpoint from %s' % checkpointDir)
+            state_dict = torch.load(checkpointDir)
             self.model.load_state_dict(state_dict['state_dict'])
-            self.checkpoint = checkpoint
+
+            # update checkpointDir
+            self.checkpointDir = checkpointDir
+            self.checkpointFolder, _ = os.path.split(self.checkpointDir)
+            # When testing, log files should be saved to checkpointFolder.
+            # Here checkpointFolder is setted as default logging folder.
+            self.logFolder = os.path.join(self.checkpointFolder, 'logs')
+
             print('Loading complete! Number of model parameters: %d' % self.nParams())
         else:
             raise Exception('checkpoint dir is None!')
@@ -146,7 +157,11 @@ class PSMNet:
         return sum([p.data.nelement() for p in self.model.parameters()])
 
     def save(self, epoch, iteration, trainLoss):
-        self.checkpoint = os.path.join(self.saveFolder, 'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
+        # update checkpointDir
+        self.checkpointDir = os.path.join(self.saveFolder, 'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
+        self.checkpointFolder = self.saveFolder
+        self.logFolder = os.path.join(self.checkpointFolder, 'logs')
+
         if not os.path.exists(self.saveFolder):
             os.makedirs(self.saveFolder)
         torch.save({
@@ -154,5 +169,5 @@ class PSMNet:
             'iteration': iteration,
             'state_dict': self.model.state_dict(),
             'train_loss': trainLoss,
-        }, self.checkpoint)
-        return self.checkpoint
+        }, self.checkpointDir)
+        return self.checkpointDir

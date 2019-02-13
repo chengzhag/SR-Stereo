@@ -49,6 +49,7 @@ class Train:
 
                     losses, outputs = stereo.train(*batch, output=True, kitti=self.trainImgLoader.kitti)
 
+                    # save Tensorboard logs to where checkpoint is.
                     lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
                     writer = SummaryWriter(stereo.logFolder)
                     for name, value in lossesPairs.pairs():
@@ -122,7 +123,7 @@ def main():
     # Dataset
     import dataloader
     trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
-                                                             batchSizes=(12, 11))
+                                                             batchSizes=(6, 6))
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
