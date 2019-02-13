@@ -66,6 +66,22 @@ And rename the folder as: "driving_frames_cleanpass", "driving_disparity", "monk
 
 ### Stereo_train.py
 
-- Firstly Stereo net is finetuned from the pretrained weights on datasets with both disparity maps. 
-- The dataset is defaultly loaded from ../datasets. 
-- Change current directory to project root folder and run the following Example: ```PYTHONPATH=./ python train/Stereo_train.py```
+- Use this code to train or finetune Stereo net.
+- Change current directory to project root folder and run the code with following environment setting: ```PYTHONPATH=./ python train/Stereo_train.py ...```. 
+- First step of the project is to finetune Stereo net with carla_kitti dataset with both disparity maps:
+```Python
+# TODO: Added example to finetune Stereo module.
+```
+
+## Evaluation
+
+### Stereo_eval.py
+
+- Use this code to evaluate Stereo net or SR-Stereo net.
+- Change current directory to project root folder and run the code with following environment setting: ```PYTHONPATH=./ python train/Stereo_train.py ...```. 
+
+# Task list
+- [x] Refactor training and testing code of PSMNet
+- [ ] Add training code for PSMNet on carla_kitti dataset. Test result with different resolutions.
+- [ ] Add SR code
+- [ ] Add SR-Stereo code
