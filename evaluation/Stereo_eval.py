@@ -127,6 +127,8 @@ def main():
                         help='number of disparity maps to log')
     parser.add_argument('--dataset', type=str, default='sceneflow',
                         help='evaluation function used in testing')
+    parser.add_argument('--scale', type=float, default=1,
+                        help='scaling applied to data during loading')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -136,7 +138,8 @@ def main():
 
     # Dataset
     import dataloader
-    _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset, batchSizes=(0, 6))
+    _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
+                                                batchSizes=(0, 6), scale=args.scale)
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
