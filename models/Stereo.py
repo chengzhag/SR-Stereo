@@ -162,8 +162,7 @@ class PSMNet:
         self.checkpointFolder = self.saveFolder
         self.logFolder = os.path.join(self.checkpointFolder, 'logs')
 
-        if not os.path.exists(self.saveFolder):
-            os.makedirs(self.saveFolder)
+        myUtils.checkDir(self.saveFolder)
         torch.save({
             'epoch': epoch,
             'iteration': iteration,

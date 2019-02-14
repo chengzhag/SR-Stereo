@@ -21,7 +21,7 @@ def grayLoader(path):
 class myImageFloder(data.Dataset):
     # trainCrop = (W, H)
     def __init__(self, inputLdirs, inputRdirs, gtLdirs=None, gtRdirs=None, training=False,
-                 trainCrop=(512, 256), kitti=False, scale=1):
+                 trainCrop=(512, 256), kitti=False, scale=1, raw=False):
         self.inputLdirs = inputLdirs
         self.inputRdirs = inputRdirs
         self.gtLdirs = gtLdirs
@@ -33,6 +33,7 @@ class myImageFloder(data.Dataset):
         self.testCrop = (1232, 368) if kitti else None
         self.dispScale = 256 if kitti else 1
         self.scale = scale
+        self.raw =raw
 
     def __getitem__(self, index):
         def scale(im):
@@ -47,6 +48,9 @@ class myImageFloder(data.Dataset):
         gtRdir = self.gtRdirs[index] if self.gtRdirs is not None else None
         gtL = scale(Image.fromarray(self.gtLoader(gtLdir))) if gtLdir is not None else None
         gtR = scale(Image.fromarray(self.gtLoader(gtRdir))) if gtRdir is not None else None
+
+        if self.raw:
+            return inputL, inputR, gtL, gtR
 
         if self.training:
             w, h = inputL.size

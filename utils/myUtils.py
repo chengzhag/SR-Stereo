@@ -1,4 +1,5 @@
 import torch
+import os
 
 class NameValues:
     def __init__(self, prefix, suffixes, values):
@@ -61,3 +62,7 @@ def logFirstNdis(writer, name, disp, maxdisp, global_step=None, n=0):
 
 def gray2rgb(im):
     return im.unsqueeze(1).repeat(1, 3, 1, 1)
+
+def checkDir(dir):
+    if not os.path.exists(dir):
+        os.makedirs(dir)
