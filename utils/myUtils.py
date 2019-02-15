@@ -88,8 +88,10 @@ def getBasicParser():
                         help='number of disparity maps to log')
     parser.add_argument('--dataset', type=str, default='sceneflow',
                         help='evaluation function used in testing')
-    parser.add_argument('--scale', type=float, default=1,
+    parser.add_argument('--load_scale', type=float, default=1,
                         help='scaling applied to data during loading')
+    parser.add_argument('--crop_scale', type=float, default=None,
+                        help='scaling applied to data during croping')
     parser.add_argument('--batchsize_train', type=int, default=6,
                         help='training batch size')
     parser.add_argument('--batchsize_test', type=int, default=6,
