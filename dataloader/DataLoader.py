@@ -48,8 +48,15 @@ class myImageFloder(data.Dataset):
 
         gtLdir = self.gtLdirs[index] if self.gtLdirs is not None else None
         gtRdir = self.gtRdirs[index] if self.gtRdirs is not None else None
-        gtL = scale(Image.fromarray(self.gtLoader(gtLdir))) if gtLdir is not None else None
-        gtR = scale(Image.fromarray(self.gtLoader(gtRdir))) if gtRdir is not None else None
+        gtL = self.gtLoader(gtLdir) if gtLdir is not None else None
+        gtR = self.gtLoader(gtRdir) if gtRdir is not None else None
+        if type(gtL) == np.ndarray or type(gtR) == np.ndarray:
+            gtL = scale(Image.fromarray(gtL)) if gtLdir is not None else None
+            gtR = scale(Image.fromarray(gtR)) if gtRdir is not None else None
+        else:
+            gtL = scale(gtL) if gtLdir is not None else None
+            gtR = scale(gtR) if gtRdir is not None else None
+
 
         if self.raw:
             return inputL, inputR, gtL, gtR
