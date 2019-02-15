@@ -30,7 +30,7 @@ class myImageFloder(data.Dataset):
         self.gtLoader = grayLoader if kitti else pfmLoader
         self.training = training
         self.trainCrop = trainCrop
-        self.testCrop = (1232, 368) if kitti else None
+        self.testCrop = (round(1232 * loadScale), round(368 * loadScale)) if kitti else None
         self.dispScale = 256 if kitti else 1
         self.loadScale = loadScale
         self.cropScale = self.loadScale if cropScale is None else cropScale
