@@ -139,7 +139,7 @@ def main():
     # Dataset
     import dataloader
     _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
-                                                batchSizes=(0, 6), scale=args.scale)
+                                                batchSizes=(0, 6), loadScale=args.scale)
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))

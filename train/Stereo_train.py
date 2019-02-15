@@ -95,7 +95,7 @@ def main():
                         help='datapath')
     parser.add_argument('--epochs', type=int, default=10,
                         help='number of epochs to train')
-    parser.add_argument('--loadmodel', default='logs/pretrained/PSMNet_pretrained_sceneflow.tar',
+    parser.add_argument('--loadmodel', default=None,
                         help='load model')
     parser.add_argument('--no_cuda', action='store_true', default=False,
                         help='enables CUDA training')
@@ -125,12 +125,13 @@ def main():
     # Dataset
     import dataloader
     trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
-                                                             batchSizes=(6, 6), scale=args.scale)
+                                                             batchSizes=(6, 6), loadScale=args.scale)
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
     stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage=stage)
-    stereo.load(args.loadmodel)
+    if args.loadmodel is not None:
+        stereo.load(args.loadmodel)
 
     # Train
     test = Stereo_eval.Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath,
