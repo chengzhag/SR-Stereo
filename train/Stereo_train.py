@@ -64,6 +64,7 @@ class Train:
 
                     lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
 
+                losses = [0 if loss is None else loss for loss in losses]
                 totalTrainLoss += sum(losses) / len(losses)
 
                 timeLeft = (time.time() - tic) / 3600 * ((nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)

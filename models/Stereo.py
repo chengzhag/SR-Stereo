@@ -68,6 +68,7 @@ class PSMNet:
                 losses.append(loss)
                 outputs.append(dispOut.cpu())
             else:
+                losses.append(None)
                 outputs.append(None)
 
             if dispR is not None:
@@ -76,6 +77,7 @@ class PSMNet:
                 losses.append(loss)
                 outputs.append(myUtils.flipLR(dispOut).cpu())
             else:
+                losses.append(None)
                 outputs.append(None)
 
             return losses, outputs
