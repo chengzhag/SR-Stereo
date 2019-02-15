@@ -80,6 +80,19 @@ And rename the folder as: "driving_frames_cleanpass", "driving_disparity", "monk
 - Use this code to evaluate Stereo net or SR-Stereo net.
 - Change current directory to project root folder and run the code with following environment setting: ```PYTHONPATH=./ python train/Stereo_train.py ...```. 
 
+# Reproducing
+
+## Baselines
+
+### half-scale PSMNet
+```Bash
+CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python train/Stereo_train.py ... --maxdisp 96 --datapath ../datasets/sceneflow/ --epochs 10 --test_every 2 --log_every 10 --load_scale 0.5 --batchsize_train 32 --batchsize_test 32
+```
+- To remove testing, set batchsize_test to 0
+- To test after the final epoch, set test_every to 0
+- Checkpoints will be logged after every epoch
+- Set batchsize according to your GPUs. Note: When using two GPUs, 8274MB GPU memory is used for each GPU with batchsize set to 32
+
 # Task list
 - [x] Refactor training and testing code of PSMNet
 - [ ] Add training code for PSMNet on carla_kitti dataset. Test result with different resolutions.
