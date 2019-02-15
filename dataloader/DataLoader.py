@@ -88,8 +88,8 @@ class myImageFloder(data.Dataset):
         inputL = processed(inputL)
         inputR = processed(inputR)
 
-        gtL = np.ascontiguousarray(gtL, dtype=np.float32) / self.dispScale if gtL is not None else np.array([])
-        gtR = np.ascontiguousarray(gtR, dtype=np.float32) / self.dispScale if gtR is not None else np.array([])
+        gtL = np.ascontiguousarray(gtL, dtype=np.float32) / self.dispScale * self.loadScale if gtL is not None else np.array([])
+        gtR = np.ascontiguousarray(gtR, dtype=np.float32) / self.dispScale * self.loadScale if gtR is not None else np.array([])
 
         return inputL, inputR, gtL, gtR
 
