@@ -10,22 +10,17 @@ from utils import myUtils
 
 
 class Train:
-    def __init__(self, trainImgLoader, logEvery=1, testEvery=1, ndisLog=1, Test=None):
+    def __init__(self, trainImgLoader, logEvery=1, testEvery=1, ndisLog=1, Test=None, lr=[0.001]):
         self.trainImgLoader = trainImgLoader
         self.logEvery = logEvery
         self.testEvery = testEvery
         self.ndisLog = max(ndisLog, 0)
         self.stereo = None
         self.test = Test
+        self.lr = lr
 
     def __call__(self, stereo, nEpochs):
         self.stereo = stereo
-
-        def adjust_learning_rate(optimizer, epoch):
-            lr = 0.001
-            print(lr)
-            for param_group in optimizer.param_groups:
-                param_group['lr'] = lr
 
         # Train
         ticFull = time.time()
@@ -35,7 +30,7 @@ class Train:
         global_step = 0
         for epoch in range(1, nEpochs + 1):
             print('This is %d-th epoch' % (epoch))
-            adjust_learning_rate(stereo.optimizer, epoch)
+            lrNow = myUtils.adjustLearningRate(stereo.optimizer, epoch, self.lr)
 
             # iteration
             totalTrainLoss = 0
@@ -52,7 +47,7 @@ class Train:
                     # save Tensorboard logs to where checkpoint is.
                     lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
                     writer = SummaryWriter(stereo.logFolder)
-                    for name, value in lossesPairs.pairs():
+                    for name, value in lossesPairs.pairs() + [('lr', lrNow), ]:
                         writer.add_scalar(stereo.stage + '/trainLosses/' + name, value, global_step)
                     for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), batch[2:4] + outputs):
                         myUtils.logFirstNdis(writer, stereo.stage + '/trainImages/' + name, disp, stereo.maxdisp,
@@ -96,6 +91,8 @@ def main():
                         help='test every test_every epochs. set to 0 to stop testing')
     parser.add_argument('--epochs', type=int, default=10,
                         help='number of epochs to train')
+    parser.add_argument('--lr', type=float, default=[0.001], help='', nargs='+')
+
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -119,7 +116,7 @@ def main():
     test = Stereo_eval.Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath,
                             ndisLog=args.ndis_log)
     train = Train(trainImgLoader=trainImgLoader, logEvery=args.log_every, testEvery=args.test_every,
-                  ndisLog=args.ndis_log, Test=test)
+                  ndisLog=args.ndis_log, Test=test, lr=args.lr)
     train(stereo=stereo, nEpochs=args.epochs)
 
 

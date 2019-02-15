@@ -97,3 +97,22 @@ def getBasicParser():
     parser.add_argument('--batchsize_test', type=int, default=6,
                         help='testing batch size')
     return parser
+
+
+def adjustLearningRate(optimizer, epoch, lr):
+    if len(lr) % 2 == 0:
+        raise Exception('lr setting should be like \'0.001 300 0.0001 \'')
+    nThres = len(lr) // 2 + 1
+    for iThres in range(nThres):
+        lrThres = lr[2 * iThres]
+        if iThres < nThres - 1:
+            epochThres = lr[2 * iThres + 1]
+            if epoch <= epochThres:
+                lr = lrThres
+                break
+        else:
+            lr = lrThres
+    print('lr = %f' % lr)
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+    return lr
