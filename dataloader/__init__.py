@@ -1,6 +1,6 @@
 import torch
 
-
+# cropScale: defaultly set to loadScale to remain ratio between loaded image and cropped image
 def getDataLoader(datapath, dataset='sceneflow', trainCrop=(512, 256), batchSizes=(12, 11), loadScale=1, cropScale=None):
     if dataset == 'sceneflow':
         from dataloader import listSceneFlowFiles as listFile

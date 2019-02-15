@@ -1,5 +1,6 @@
 import torch
 import os
+import argparse
 
 class NameValues:
     def __init__(self, prefix, suffixes, values):
@@ -66,3 +67,31 @@ def gray2rgb(im):
 def checkDir(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
+
+def getBasicParser():
+    parser = argparse.ArgumentParser(description='Stereo')
+    parser.add_argument('--maxdisp', type=int, default=192,
+                        help='maxium disparity')
+    parser.add_argument('--model', default='PSMNet',
+                        help='select model')
+    parser.add_argument('--datapath', default='../datasets/sceneflow/',
+                        help='datapath')
+    parser.add_argument('--loadmodel', default=None,
+                        help='load model')
+    parser.add_argument('--no_cuda', action='store_true', default=False,
+                        help='enables CUDA training')
+    parser.add_argument('--seed', type=int, default=1, metavar='S',
+                        help='random seed (default: 1)')
+    parser.add_argument('--eval_fcn', type=str, default='l1',
+                        help='evaluation function used in testing')
+    parser.add_argument('--ndis_log', type=int, default=1,
+                        help='number of disparity maps to log')
+    parser.add_argument('--dataset', type=str, default='sceneflow',
+                        help='evaluation function used in testing')
+    parser.add_argument('--scale', type=float, default=1,
+                        help='scaling applied to data during loading')
+    parser.add_argument('--batchsize_train', type=int, default=6,
+                        help='training batch size')
+    parser.add_argument('--batchsize_test', type=int, default=6,
+                        help='testing batch size')
+    return parser

@@ -86,39 +86,13 @@ class Train:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Stereo')
-    parser.add_argument('--maxdisp', type=int, default=192,
-                        help='maxium disparity')
-    parser.add_argument('--model', default='PSMNet',
-                        help='select model')
-    parser.add_argument('--datapath', default='../datasets/sceneflow/',
-                        help='datapath')
-    parser.add_argument('--epochs', type=int, default=10,
-                        help='number of epochs to train')
-    parser.add_argument('--loadmodel', default=None,
-                        help='load model')
-    parser.add_argument('--no_cuda', action='store_true', default=False,
-                        help='enables CUDA training')
-    parser.add_argument('--seed', type=int, default=1, metavar='S',
-                        help='random seed (default: 1)')
-    parser.add_argument('--both_disparity', type=bool, default=True,
-                        help='if train on disparity maps from both views')
-    parser.add_argument('--eval_fcn', type=str, default='outlier',
-                        help='evaluation function used in testing')
+    parser = myUtils.getBasicParser()
+    # parser.add_argument('--both_disparity', type=bool, default=True,
+    #                     help='if train on disparity maps from both views')
     parser.add_argument('--log_every', type=int, default=10,
                         help='log every log_every iterations. set to 0 to stop logging')
     parser.add_argument('--test_every', type=int, default=1,
                         help='test every test_every epochs. set to 0 to stop testing')
-    parser.add_argument('--ndis_log', type=int, default=1,
-                        help='number of disparity maps to log')
-    parser.add_argument('--dataset', type=str, default='sceneflow',
-                        help='evaluation function used in testing')
-    parser.add_argument('--scale', type=float, default=1,
-                        help='scaling applied to data during loading')
-    parser.add_argument('--batchsize_train', type=int, default=6,
-                        help='training batch size')
-    parser.add_argument('--batchsize_test', type=int, default=6,
-                        help='testing batch size')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -129,7 +103,8 @@ def main():
     # Dataset
     import dataloader
     trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
-                                                             batchSizes=(args.batchsize_train, args.batchsize_test), loadScale=args.scale)
+                                                             batchSizes=(args.batchsize_train, args.batchsize_test),
+                                                             loadScale=args.scale)
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
