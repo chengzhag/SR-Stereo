@@ -82,6 +82,7 @@ class Test:
             log.seek(0)
             log.write('---------------------- %s ----------------------\n' % self.localtime)
             baseInfos = (('data', self.datapath),
+                         ('load_scale', self.testImgLoader.loadScale),
                          ('checkpoint', self.stereo.checkpointDir),
                          ('test_type', self.evalFcn),
                          ('test_time', self.testTime),
@@ -123,7 +124,8 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage=stage)
+    stereo = getattr(Stereo, args.model)(loadScale=testImgLoader.loadScale, cropScale=testImgLoader.cropScale,
+                                         maxdisp=args.maxdisp, cuda=args.cuda, stage=stage)
     stereo.load(args.loadmodel)
 
     # Test

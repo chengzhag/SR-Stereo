@@ -108,7 +108,8 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage=stage)
+    stereo = getattr(Stereo, args.model)(loadScale=trainImgLoader.loadScale, cropScale=trainImgLoader.cropScale,
+                                         maxdisp=args.maxdisp, cuda=args.cuda, stage=stage)
     if args.loadmodel is not None:
         stereo.load(args.loadmodel)
 

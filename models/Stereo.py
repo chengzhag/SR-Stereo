@@ -10,7 +10,7 @@ from utils import myUtils
 
 
 class PSMNet:
-    def __init__(self, maxdisp=192, cuda=True, stage='unnamed'):
+    def __init__(self, loadScale, cropScale, maxdisp=192, cuda=True, stage='unnamed'):
         self.stage = stage
         self.startTime = time.localtime(time.time())
         self.model = stackhourglass(maxdisp)
@@ -22,7 +22,7 @@ class PSMNet:
             self.model = nn.DataParallel(self.model)
             self.model.cuda()
 
-        self.saveFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) + self.__class__.__name__
+        self.saveFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) + self.__class__.__name__ + ('_%.0f_%.0f' % (loadScale * 10, cropScale * 10))
         self.saveFolder = os.path.join('logs', stage, self.saveFolderName)
         self.logFolder = None
         self.checkpointDir = None
