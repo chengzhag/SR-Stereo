@@ -93,6 +93,8 @@ def main():
                         help='log every log_every iterations. set to 0 to stop logging')
     parser.add_argument('--test_every', type=int, default=1,
                         help='test every test_every epochs. set to 0 to stop testing')
+    parser.add_argument('--epochs', type=int, default=10,
+                        help='number of epochs to train')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
