@@ -115,6 +115,10 @@ def main():
                         help='evaluation function used in testing')
     parser.add_argument('--scale', type=float, default=1,
                         help='scaling applied to data during loading')
+    parser.add_argument('--batchsize_train', type=int, default=6,
+                        help='training batch size')
+    parser.add_argument('--batchsize_test', type=int, default=6,
+                        help='testing batch size')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -125,7 +129,7 @@ def main():
     # Dataset
     import dataloader
     trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
-                                                             batchSizes=(6, 6), loadScale=args.scale)
+                                                             batchSizes=(args.batchsize_train, args.batchsize_test), loadScale=args.scale)
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
