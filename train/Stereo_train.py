@@ -21,7 +21,6 @@ class Train:
 
     def __call__(self, stereo, nEpochs):
         self.stereo = stereo
-        scoreUnit = '%' if self.evalFcn == 'outlier' else ''
 
         # Train
         ticFull = time.time()
@@ -60,7 +59,7 @@ class Train:
 
                     lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
 
-                losses = [0 if loss is None else loss for loss in losses]
+                losses = [loss for loss in losses if loss is not None]
                 totalTrainLoss += sum(losses) / len(losses)
 
                 timeLeft = (time.time() - tic) / 3600 * ((nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
@@ -78,6 +77,7 @@ class Train:
                 or (self.testEvery == 0 and epoch == nEpochs)) \
                     and self.test is not None:
                 testScores = self.test(stereo=stereo)
+                testScores = [score for score in testScores if score is not None]
                 testScore = sum(testScores) / len(testScores)
                 try:
                     if testScore <= minTestScore:
@@ -88,7 +88,7 @@ class Train:
                     minTestScoreEpoch = epoch
                 testReaults = myUtils.NameValues(
                     '', ('minTestScore', 'minTestScoreEpoch'), (minTestScore, minTestScoreEpoch))
-                print('Training status: %s' % testReaults.str(scoreUnit))
+                print('Training status: %s' % testReaults.str(''))
                 self.test.log(epoch=epoch, it=batch_idx, global_step=global_step, additionalValue=testReaults.pairs())
 
         print('Full training time = %.2fh' % ((time.time() - ticFull) / 3600))
