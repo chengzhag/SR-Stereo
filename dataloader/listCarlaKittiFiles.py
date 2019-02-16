@@ -60,7 +60,7 @@ def main():
                         help='filepath to load')
     parser.add_argument('--savepath', type=str, default='../datasets/carla_kitti/carla_kitti_sr_highquality_png',
                         help='filepath to save')
-    parser.add_argument('--nsample_save', type=int, default=1,
+    parser.add_argument('--nsample_save', type=int, default=5,
                         help='save n samples as png images')
     args = parser.parse_args()
     
