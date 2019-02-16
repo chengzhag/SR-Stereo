@@ -10,7 +10,7 @@ from utils import myUtils
 
 
 class PSMNet:
-    def __init__(self, maxdisp=192, cuda=True, stage='unnamed'):
+    def __init__(self, loadScale, cropScale, maxdisp=192, cuda=True, stage='unnamed'):
         self.stage = stage
         self.startTime = time.localtime(time.time())
         self.model = stackhourglass(maxdisp)
@@ -22,7 +22,7 @@ class PSMNet:
             self.model = nn.DataParallel(self.model)
             self.model.cuda()
 
-        self.saveFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) + self.__class__.__name__
+        self.saveFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) + self.__class__.__name__ + ('_%.0f_%.0f' % (loadScale * 10, cropScale * 10))
         self.saveFolder = os.path.join('logs', stage, self.saveFolderName)
         self.logFolder = None
         self.checkpointDir = None
@@ -42,7 +42,7 @@ class PSMNet:
             self.optimizer.zero_grad()
 
             # for kitti dataset, only consider loss of none zero disparity pixels in gt
-            mask = (disp_true < self.maxdisp) & (disp_true > 0) if kitti else (disp_true < self.maxdisp)
+            mask = (disp_true > 0) if kitti else (disp_true < self.maxdisp)
             mask.detach_()
 
             output1, output2, output3 = self.model(imgL, imgR)
@@ -68,6 +68,7 @@ class PSMNet:
                 losses.append(loss)
                 outputs.append(dispOut.cpu())
             else:
+                losses.append(None)
                 outputs.append(None)
 
             if dispR is not None:
@@ -76,6 +77,7 @@ class PSMNet:
                 losses.append(loss)
                 outputs.append(myUtils.flipLR(dispOut).cpu())
             else:
+                losses.append(None)
                 outputs.append(None)
 
             return losses, outputs
@@ -126,10 +128,14 @@ class PSMNet:
                 outputs.append(None)
                 continue
             dispOut = self.predict(imgL, imgR, mode)
-            mask = (gt < self.maxdisp) & (gt > 0) if kitti else (gt < self.maxdisp)
-            scores.append(getattr(evalFcn, type)(gt[mask], dispOut[mask]))
             if output:
                 outputs.append(dispOut.cpu())
+            if kitti:
+                mask = gt > 0
+                dispOut = dispOut[mask]
+                gt = gt[mask]
+            scores.append(getattr(evalFcn, type)(gt, dispOut))
+
 
         if output:
             return scores, outputs
@@ -162,8 +168,7 @@ class PSMNet:
         self.checkpointFolder = self.saveFolder
         self.logFolder = os.path.join(self.checkpointFolder, 'logs')
 
-        if not os.path.exists(self.saveFolder):
-            os.makedirs(self.saveFolder)
+        myUtils.checkDir(self.saveFolder)
         torch.save({
             'epoch': epoch,
             'iteration': iteration,

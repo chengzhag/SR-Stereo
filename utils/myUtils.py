@@ -1,4 +1,6 @@
 import torch
+import os
+import argparse
 
 class NameValues:
     def __init__(self, prefix, suffixes, values):
@@ -8,12 +10,9 @@ class NameValues:
                 self._pairs.append((prefix + suffix, value))
 
     def str(self, unit=''):
-        scale = 1
-        if unit == '%':
-            scale = 100
         str = ''
         for name, value in self._pairs:
-            str += '%s: %.2f%s, ' % (name, value * scale, unit)
+            str += '%s: %.2f%s, ' % (name, value, unit)
         return str
 
     def dic(self):
@@ -55,9 +54,63 @@ def logFirstNdis(writer, name, disp, maxdisp, global_step=None, n=0):
         n = min(n, disp.size(0))
         disp = disp[:n, :, :]
         disp[disp > maxdisp] = maxdisp
+        disp[disp < 0] = 0
         disp = disp / maxdisp
         disp = gray2rgb(disp)
         writer.add_images(name, disp, global_step=global_step)
 
 def gray2rgb(im):
     return im.unsqueeze(1).repeat(1, 3, 1, 1)
+
+def checkDir(dir):
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
+def getBasicParser():
+    parser = argparse.ArgumentParser(description='Stereo')
+    parser.add_argument('--maxdisp', type=int, default=192,
+                        help='maxium disparity')
+    parser.add_argument('--model', default='PSMNet',
+                        help='select model')
+    parser.add_argument('--datapath', default='../datasets/sceneflow/',
+                        help='datapath')
+    parser.add_argument('--loadmodel', default=None,
+                        help='load model')
+    parser.add_argument('--no_cuda', action='store_true', default=False,
+                        help='enables CUDA training')
+    parser.add_argument('--seed', type=int, default=1, metavar='S',
+                        help='random seed (default: 1)')
+    parser.add_argument('--eval_fcn', type=str, default='l1',
+                        help='evaluation function used in testing')
+    parser.add_argument('--ndis_log', type=int, default=1,
+                        help='number of disparity maps to log')
+    parser.add_argument('--dataset', type=str, default='sceneflow',
+                        help='evaluation function used in testing')
+    parser.add_argument('--load_scale', type=float, default=1,
+                        help='scaling applied to data during loading')
+    parser.add_argument('--crop_scale', type=float, default=None,
+                        help='scaling applied to data during croping')
+    parser.add_argument('--batchsize_train', type=int, default=6,
+                        help='training batch size')
+    parser.add_argument('--batchsize_test', type=int, default=6,
+                        help='testing batch size')
+    return parser
+
+
+def adjustLearningRate(optimizer, epoch, lr):
+    if len(lr) % 2 == 0:
+        raise Exception('lr setting should be like \'0.001 300 0.0001 \'')
+    nThres = len(lr) // 2 + 1
+    for iThres in range(nThres):
+        lrThres = lr[2 * iThres]
+        if iThres < nThres - 1:
+            epochThres = lr[2 * iThres + 1]
+            if epoch <= epochThres:
+                lr = lrThres
+                break
+        else:
+            lr = lrThres
+    print('lr = %f' % lr)
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+    return lr

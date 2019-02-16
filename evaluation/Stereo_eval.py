@@ -42,7 +42,6 @@ class Test:
             else:
                 scores = stereo.test(*batch, type=self.evalFcn, output=False, kitti=self.testImgLoader.kitti)
 
-
             try:
                 totalTestScores = [(total + batch) if batch is not None else None for total, batch in
                                    zip(totalTestScores, scores)]
@@ -51,16 +50,16 @@ class Test:
             timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
             scoresPairs = myUtils.NameValues(self.evalFcn,
                                              ('L', 'R', 'LTotal', 'RTotal'),
-                                             scores + [(score / batch_idx) if score is not None else None for score in
-                                                       totalTestScores])
+                                             scores + [(score / batch_idx) if score is not None else None
+                                                       for score in totalTestScores])
             print('it %d/%d, %sleft %.2fh' % (
                 batch_idx, len(self.testImgLoader),
                 scoresPairs.str(scoreUnit), timeLeft))
             tic = time.time()
 
-        scoresPairs = myUtils.NameValues(self.evalFcn, ('LTotal', 'RTotal'),
-                                         [(score / batch_idx) if score is not None else None
-                                          for score in totalTestScores])
+        totalTestScores = [(score / batch_idx) if score is not None else None
+                                          for score in totalTestScores]
+        scoresPairs = myUtils.NameValues(self.evalFcn, ('LTotal', 'RTotal'), totalTestScores)
 
         self.testTime = time.time() - ticFull
         print('Full testing time = %.2fh' % (self.testTime / 3600))
@@ -83,6 +82,7 @@ class Test:
             log.seek(0)
             log.write('---------------------- %s ----------------------\n' % self.localtime)
             baseInfos = (('data', self.datapath),
+                         ('load_scale', self.testImgLoader.loadScale),
                          ('checkpoint', self.stereo.checkpointDir),
                          ('test_type', self.evalFcn),
                          ('test_time', self.testTime),
@@ -108,25 +108,7 @@ class Test:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Stereo')
-    parser.add_argument('--maxdisp', type=int, default=192,
-                        help='maxium disparity')
-    parser.add_argument('--model', default='PSMNet',
-                        help='select model')
-    parser.add_argument('--datapath', default='../datasets/sceneflow/',
-                        help='datapath')
-    parser.add_argument('--loadmodel', default='logs/pretrained/PSMNet_pretrained_sceneflow.tar',
-                        help='load model')
-    parser.add_argument('--no_cuda', action='store_true', default=False,
-                        help='enables CUDA training')
-    parser.add_argument('--seed', type=int, default=1, metavar='S',
-                        help='random seed (default: 1)')
-    parser.add_argument('--eval_fcn', type=str, default='outlier',
-                        help='evaluation function used in testing')
-    parser.add_argument('--ndis_log', type=int, default=1,
-                        help='number of disparity maps to log')
-    parser.add_argument('--dataset', type=str, default='sceneflow',
-                        help='evaluation function used in testing')
+    parser = myUtils.getBasicParser()
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -136,11 +118,14 @@ def main():
 
     # Dataset
     import dataloader
-    _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset, batchSizes=(0, 6))
+    _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
+                                                batchSizes=(args.batchsize_train, args.batchsize_test),
+                                                loadScale=args.load_scale, cropScale=args.crop_scale)
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage=stage)
+    stereo = getattr(Stereo, args.model)(loadScale=testImgLoader.loadScale, cropScale=testImgLoader.cropScale,
+                                         maxdisp=args.maxdisp, cuda=args.cuda, stage=stage)
     stereo.load(args.loadmodel)
 
     # Test

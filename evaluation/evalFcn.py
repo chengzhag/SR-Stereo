@@ -16,4 +16,4 @@ def outlier(gt, output, npx=3, acc=0.05):
     dErr = torch.abs(gt - output)
     nTotal = float(torch.numel(gt))
     nWrong = float(torch.sum((dErr > npx) & ((dErr / gt) > acc)).item())
-    return nWrong / nTotal
+    return nWrong / nTotal * 100
