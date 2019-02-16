@@ -42,7 +42,7 @@ class PSMNet:
             self.optimizer.zero_grad()
 
             # for kitti dataset, only consider loss of none zero disparity pixels in gt
-            mask = (disp_true < self.maxdisp) & (disp_true > 0) if kitti else (disp_true < self.maxdisp)
+            mask = (disp_true > 0) if kitti else (disp_true < self.maxdisp)
             mask.detach_()
 
             output1, output2, output3 = self.model(imgL, imgR)
