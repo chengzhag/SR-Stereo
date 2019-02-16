@@ -90,7 +90,7 @@ And rename the folder as: "driving_frames_cleanpass", "driving_disparity", "monk
 
 1. train PSMNet with sceneflow dataset:
     ```Bash
-    CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python train/Stereo_train.py --maxdisp 96 --datapath ../datasets/sceneflow/ --dataset sceneflow --epochs 10 --log_every 50 --test_every 0 --load_scale 0.5 --batchsize_train 32 --batchsize_test 32 --lr 0.001 --eval_fcn l1
+    CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python train/Stereo_train.py --maxdisp 96 --datapath ../datasets/sceneflow/ --dataset sceneflow --epochs 10 --log_every 50 --test_every 0 --load_scale 0.5 --batchsize_train 32 --batchsize_test 32 --lr 0.001 --eval_fcn outlier
     ```
     - To train without testing, set batchsize_test to 0 or set test_every to -1.
     - To test after the final epoch, set test_every to 0.
@@ -99,7 +99,7 @@ And rename the folder as: "driving_frames_cleanpass", "driving_disparity", "monk
 
 1. finetune with kitti dataset:
     ```Bash
-    CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python train/Stereo_train.py --maxdisp 96 --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --epochs 300 --log_every 10 --test_every 1 --load_scale 0.5 --batchsize_train 32 --batchsize_test 32 --lr 0.001 200 0.0001 --eval_fcn l1 --loadmodel logs/Stereo_train/[TRAINING_DATE]_PSMNet/checkpoint_9.tar
+    CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python train/Stereo_train.py --maxdisp 96 --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --epochs 300 --log_every 10 --test_every 1 --load_scale 0.5 --batchsize_train 32 --batchsize_test 32 --lr 0.001 200 0.0001 --eval_fcn outlier --loadmodel logs/Stereo_train/[TRAINING_DATE]_PSMNet/checkpoint_10.tar
     ```
     - Hints same as above.
 

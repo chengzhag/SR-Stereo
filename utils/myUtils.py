@@ -57,6 +57,7 @@ def logFirstNdis(writer, name, disp, maxdisp, global_step=None, n=0):
         n = min(n, disp.size(0))
         disp = disp[:n, :, :]
         disp[disp > maxdisp] = maxdisp
+        disp[disp < 0] = 0
         disp = disp / maxdisp
         disp = gray2rgb(disp)
         writer.add_images(name, disp, global_step=global_step)

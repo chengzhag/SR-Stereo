@@ -128,10 +128,12 @@ class PSMNet:
                 outputs.append(None)
                 continue
             dispOut = self.predict(imgL, imgR, mode)
-            mask = (gt < self.maxdisp) & (gt > 0) if kitti else (gt < self.maxdisp)
-            scores.append(getattr(evalFcn, type)(gt[mask], dispOut[mask]))
             if output:
                 outputs.append(dispOut.cpu())
+            gt = gt[gt > 0] if kitti else gt
+            dispOut = dispOut[gt > 0] if kitti else dispOut
+            scores.append(getattr(evalFcn, type)(gt, dispOut))
+
 
         if output:
             return scores, outputs

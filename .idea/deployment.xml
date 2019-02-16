@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="kc110_server_zerotier">
+  <component name="PublishConfigData" autoUpload="Always" serverName="kc110_server_frp">
     <serverData>
       <paths name="kc110_server_95">
         <serverdata>
@@ -12,7 +12,7 @@
       <paths name="kc110_server_frp">
         <serverdata>
           <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/media/omnisky/zc/SR-Stereo/SR-Stereo" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
