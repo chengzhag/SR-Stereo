@@ -50,16 +50,16 @@ class Test:
             timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
             scoresPairs = myUtils.NameValues(self.evalFcn,
                                              ('L', 'R', 'LTotal', 'RTotal'),
-                                             scores + [(score / batch_idx) if score is not None else None for score in
-                                                       totalTestScores])
+                                             scores + [(score / batch_idx) if score is not None else None
+                                                       for score in totalTestScores])
             print('it %d/%d, %sleft %.2fh' % (
                 batch_idx, len(self.testImgLoader),
                 scoresPairs.str(scoreUnit), timeLeft))
             tic = time.time()
 
-        scoresPairs = myUtils.NameValues(self.evalFcn, ('LTotal', 'RTotal'),
-                                         [(score / batch_idx) if score is not None else None
-                                          for score in totalTestScores])
+        totalTestScores = [(score / batch_idx) if score is not None else None
+                                          for score in totalTestScores]
+        scoresPairs = myUtils.NameValues(self.evalFcn, ('LTotal', 'RTotal'), totalTestScores)
 
         self.testTime = time.time() - ticFull
         print('Full testing time = %.2fh' % (self.testTime / 3600))

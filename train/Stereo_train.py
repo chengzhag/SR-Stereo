@@ -21,6 +21,7 @@ class Train:
 
     def __call__(self, stereo, nEpochs):
         self.stereo = stereo
+        scoreUnit = '%' if self.evalFcn == 'outlier' else ''
 
         # Train
         ticFull = time.time()
@@ -76,8 +77,19 @@ class Train:
             if ((epoch % self.testEvery == 0 and self.testEvery > 0)
                 or (self.testEvery == 0 and epoch == nEpochs)) \
                     and self.test is not None:
-                self.test(stereo=stereo)
-                self.test.log(epoch=epoch, it=batch_idx, global_step=global_step)
+                testScores = self.test(stereo=stereo)
+                testScore = sum(testScores) / len(testScores)
+                try:
+                    if testScore <= minTestScore:
+                        minTestScore = testScore
+                        minTestScoreEpoch = epoch
+                except NameError:
+                    minTestScore = testScore
+                    minTestScoreEpoch = epoch
+                testReaults = myUtils.NameValues(
+                    '', ('minTestScore', 'minTestScoreEpoch'), (minTestScore, minTestScoreEpoch))
+                print('Training status: %s' % testReaults.str(scoreUnit))
+                self.test.log(epoch=epoch, it=batch_idx, global_step=global_step, additionalValue=testReaults.pairs())
 
         print('Full training time = %.2fh' % ((time.time() - ticFull) / 3600))
 

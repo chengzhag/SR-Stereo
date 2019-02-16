@@ -10,12 +10,9 @@ class NameValues:
                 self._pairs.append((prefix + suffix, value))
 
     def str(self, unit=''):
-        scale = 1
-        if unit == '%':
-            scale = 100
         str = ''
         for name, value in self._pairs:
-            str += '%s: %.2f%s, ' % (name, value * scale, unit)
+            str += '%s: %.2f%s, ' % (name, value, unit)
         return str
 
     def dic(self):
