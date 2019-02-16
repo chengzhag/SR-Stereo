@@ -36,27 +36,27 @@ class myImageFloder(data.Dataset):
         self.cropScale = cropScale
         self.trainCrop = (round(trainCrop[0] * self.cropScale), round(trainCrop[1] * self.cropScale))
         self.raw =raw
+        self.dispScaleType = Image.NEAREST if kitti else Image.ANTIALIAS
 
     def __getitem__(self, index):
-        def scale(im):
+        def scale(im, method):
             w, h = im.size
-            return im.resize((round(w * self.loadScale), round(h * self.loadScale)), Image.ANTIALIAS)
+            return im.resize((round(w * self.loadScale), round(h * self.loadScale)), method)
         inputLdir = self.inputLdirs[index]
         inputRdir = self.inputRdirs[index]
-        inputL = scale(self.inputLoader(inputLdir))
-        inputR = scale(self.inputLoader(inputRdir))
+        inputL = scale(self.inputLoader(inputLdir), Image.ANTIALIAS)
+        inputR = scale(self.inputLoader(inputRdir), Image.ANTIALIAS)
 
         gtLdir = self.gtLdirs[index] if self.gtLdirs is not None else None
         gtRdir = self.gtRdirs[index] if self.gtRdirs is not None else None
         gtL = self.gtLoader(gtLdir) if gtLdir is not None else None
         gtR = self.gtLoader(gtRdir) if gtRdir is not None else None
         if type(gtL) == np.ndarray or type(gtR) == np.ndarray:
-            gtL = scale(Image.fromarray(gtL)) if gtLdir is not None else None
-            gtR = scale(Image.fromarray(gtR)) if gtRdir is not None else None
-        else:
-            gtL = scale(gtL) if gtLdir is not None else None
-            gtR = scale(gtR) if gtRdir is not None else None
+            gtL = Image.fromarray(gtL) if gtLdir is not None else None
+            gtR = Image.fromarray(gtR) if gtRdir is not None else None
 
+        gtL = scale(gtL, self.dispScaleType) if gtLdir is not None else None
+        gtR = scale(gtR, self.dispScaleType) if gtRdir is not None else None
 
         if self.raw:
             return inputL, inputR, gtL, gtR
