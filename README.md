@@ -68,10 +68,6 @@ And rename the folder as: "driving_frames_cleanpass", "driving_disparity", "monk
 
 - Use this code to train or finetune Stereo net.
 - Change current directory to project root folder and run the code with following environment setting: ```PYTHONPATH=./ python train/Stereo_train.py ...```. 
-- First step of the project is to finetune Stereo net with carla_kitti dataset with both disparity maps:
-```Python
-# TODO: Added example to finetune Stereo module.
-```
 
 ## Evaluation
 
@@ -79,6 +75,43 @@ And rename the folder as: "driving_frames_cleanpass", "driving_disparity", "monk
 
 - Use this code to evaluate Stereo net or SR-Stereo net.
 - Change current directory to project root folder and run the code with following environment setting: ```PYTHONPATH=./ python train/Stereo_train.py ...```. 
+
+# Reproducing
+
+## SR-PSMNet
+- First step of the project is to finetune Stereo net with carla_kitti dataset with both disparity maps:
+```Python
+# TODO: Added example to finetune Stereo module.
+```
+
+## Baselines
+
+### half-scale PSMNet
+
+1. Train PSMNet with sceneflow dataset:
+    ```Bash
+    CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python train/Stereo_train.py --maxdisp 96 --datapath ../datasets/sceneflow/ --dataset sceneflow --epochs 10 --log_every 50 --test_every 0 --load_scale 0.5 --batchsize_train 32 --batchsize_test 32 --lr 0.001 --eval_fcn outlier
+    ```
+    - To train without testing, set batchsize_test to 0 or set test_every to -1.
+    - To test after the final epoch, set test_every to 0.
+    - Checkpoints will be logged after every epoch to automatically named folder.
+    - Set batchsize according to your GPUs. Note: When using two GPUs, 8274MB GPU memory is used for each GPU with batchsize set to 32.
+
+1. Evaluate with sceneflow dataset:
+    ```Bash
+    CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python evaluation/Stereo_eval.py --maxdisp 96 --datapath ../datasets/sceneflow/ --dataset sceneflow --load_scale 0.5 --batchsize_train 32 --batchsize_test 32 --eval_fcn outlier --loadmodel logs/Stereo_train/[TRAINING_DATE]_PSMNet_5_5/checkpoint_epoch_10_it_[ITERATION].tar
+    ```
+
+1. Finetune with kitti dataset:
+    ```Bash
+    CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python train/Stereo_train.py --maxdisp 96 --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --epochs 300 --log_every 10 --test_every 1 --load_scale 0.5 --batchsize_train 32 --batchsize_test 32 --lr 0.001 200 0.0001 --eval_fcn outlier --loadmodel logs/Stereo_train/[TRAINING_DATE]_PSMNet_5_5/checkpoint_epoch_10_it_[ITERATION].tar
+    ```
+    - Hints same as above.
+
+1. Evaluate with kitti dataset:
+    ```Bash
+    CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python evaluation/Stereo_eval.py --maxdisp 96 --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --load_scale 0.5 --batchsize_train 32 --batchsize_test 32 --eval_fcn outlier --loadmodel logs/Stereo_train/[TRAINING_DATE]_PSMNet_5_5/checkpoint_epoch_300_it_[ITERATION].tar
+    ```
 
 # Task list
 - [x] Refactor training and testing code of PSMNet
