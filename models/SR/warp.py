@@ -138,7 +138,7 @@ def main():
                                                  loadScale=args.load_scale, cropScale=args.crop_scale, mode='raw')
 
     logFolder = [folder for folder in args.datapath.split('/') if folder != '']
-    logFolder[-1] += '_warpTest'
+    logFolder[-1] += '_moduleTest'
     writer = SummaryWriter(os.path.join(*logFolder))
 
     for iSample, sample in enumerate(testImgLoader, 1):
@@ -147,7 +147,7 @@ def main():
         _, _, imglw, imgrw = warp(*sample)
 
         for name, im  in zip(('inputL', 'inputR', 'gtL', 'gtR', 'warpL', 'warpR'), sample + [imglw, imgrw]):
-            myUtils.logFirstNdis(writer, 'moduleTesting/' + name, im,
+            myUtils.logFirstNdis(writer, 'warp/' + name, im,
                                  args.maxdisp if im is not None and im.dim() == 3 else 255,
                                  global_step=iSample, n=args.nsample_save)
 

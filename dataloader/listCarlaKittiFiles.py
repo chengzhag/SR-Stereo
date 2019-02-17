@@ -49,40 +49,42 @@ def dataloader(filepath, trainProportion=0.8):
 
 def main():
     import argparse
-    import random
-    from dataloader.DataLoader import myImageFloder
-    from torchvision import transforms
-    from PIL import Image
+    from tensorboardX import SummaryWriter
+    import torch
     from utils import myUtils
 
     parser = argparse.ArgumentParser(description='CarlaKitti')
+    parser.add_argument('--seed', type=int, default=1, metavar='S',
+                        help='random seed (default: 1)')
     parser.add_argument('--datapath', type=str, default='../datasets/carla_kitti/carla_kitti_sr_highquality',
                         help='filepath to load')
-    parser.add_argument('--savepath', type=str, default='../datasets/carla_kitti/carla_kitti_sr_highquality_sample',
-                        help='filepath to save')
+    parser.add_argument('--load_scale', type=float, default=1,
+                        help='scaling applied to data during loading')
     parser.add_argument('--nsample_save', type=int, default=5,
                         help='save n samples as png images')
     args = parser.parse_args()
-    
-    all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = dataloader(
-        args.datapath)
 
+    torch.manual_seed(args.seed)
 
-    for train, test in zip((all_left_img, all_right_img, all_left_disp, all_right_disp), (test_left_img, test_right_img, test_left_disp, test_right_disp)):
-        train += test
+    # Dataset
+    import dataloader
+    trainImgLoader, _ = dataloader.getDataLoader(datapath=args.datapath, dataset='carla_kitti',
+                                                batchSizes=(1, 0),
+                                                loadScale=args.load_scale, mode='raw')
 
-    allImgLoader = myImageFloder(all_left_img, all_right_img, all_left_disp, all_right_disp, training=False, kitti=False, mode='PIL')
+    logFolder = [folder for folder in args.datapath.split('/') if folder != '']
+    logFolder[-1] += '_moduleTest'
+    writer = SummaryWriter(os.path.join(*logFolder))
 
-    folderDirs = []
-    for path in (all_left_img, all_right_img, all_left_disp, all_right_disp):
-        folderDir, _ = os.path.split(path[0])
-        folderDirs.append(os.path.join(args.savepath, folderDir.split('/')[-1]))
-        myUtils.checkDir(folderDirs[-1])
+    for iSample, sample in enumerate(trainImgLoader, 1):
+        for name, im in zip(('inputL', 'inputR', 'gtL', 'gtR'), sample):
+            myUtils.logFirstNdis(writer, 'listCarlaKittiFiles/' + name, im,
+                                 args.maxdisp if im is not None and im.dim() == 3 else 255,
+                                 global_step=iSample, n=args.nsample_save)
+        if iSample >= args.nsample_save:
+            break
 
-    for isample, index in enumerate(random.sample(range(len(all_left_img)), args.nsample_save)):
-        ims = allImgLoader[index]
-        for im, folder in zip(ims, folderDirs):
-            im.save(os.path.join(folder, '%05d.tiff' % isample))
+    writer.close()
 
 if __name__ == '__main__':
     main()
