@@ -47,20 +47,24 @@ def assertDisp(dispL=None, dispR=None):
     if (dispL is None or dispL.numel() == 0) and (dispR is None or dispR.numel() == 0):
         raise Exception('No disp input!')
 
-# Log First n disparity maps into tensorboard
-# Log All disparity maps if n == 0
-def logFirstNdis(writer, name, disp, maxdisp, global_step=None, n=0):
-    if disp is not None and n > 0:
-        n = min(n, disp.size(0))
-        disp = disp[:n, :, :]
-        disp[disp > maxdisp] = maxdisp
-        disp[disp < 0] = 0
-        disp = disp / maxdisp
-        disp = gray2rgb(disp)
-        writer.add_images(name, disp, global_step=global_step)
+# Log First n ims into tensorboard
+# Log All ims if n == 0
+def logFirstNdis(writer, name, im, range, global_step=None, n=0):
+    if im is not None:
+        n = min(n, im.size(0))
+        if n > 0:
+            im = im[:n]
+        if im.dim() == 3 or (im.dim() == 4 and im.size(1) == 1):
+            im[im > range] = range
+            im[im < 0] = 0
+            im = im / range
+            im = gray2rgb(im)
+        writer.add_images(name, im, global_step=global_step)
 
 def gray2rgb(im):
-    return im.unsqueeze(1).repeat(1, 3, 1, 1)
+    if im.dim() == 3:
+        im = im.unsqueeze(1)
+    return im.repeat(1, 3, 1, 1)
 
 def checkDir(dir):
     if not os.path.exists(dir):

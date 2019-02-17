@@ -71,7 +71,7 @@ def main():
     for train, test in zip((all_left_img, all_right_img, all_left_disp, all_right_disp), (test_left_img, test_right_img, test_left_disp, test_right_disp)):
         train += test
 
-    allImgLoader = myImageFloder(all_left_img, all_right_img, all_left_disp, all_right_disp, training=False, kitti=False, raw=True)
+    allImgLoader = myImageFloder(all_left_img, all_right_img, all_left_disp, all_right_disp, training=False, kitti=False, mode='PIL')
 
     folderDirs = []
     for path in (all_left_img, all_right_img, all_left_disp, all_right_disp):

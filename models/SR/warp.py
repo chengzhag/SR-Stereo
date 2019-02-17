@@ -101,6 +101,8 @@ def warp(left, right, displ, dispr):
 
 def main():
     from utils import myUtils
+    from tensorboardX import SummaryWriter
+    import os
     import argparse
     parser = argparse.ArgumentParser(description='warp')
     parser.add_argument('--maxdisp', type=int, default=192,
@@ -131,17 +133,28 @@ def main():
 
     # Dataset
     import dataloader
-    trainImgLoader, _ = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
-                                                 batchSizes=(1, 0),
-                                                 loadScale=args.load_scale, cropScale=args.crop_scale)
+    _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
+                                                 batchSizes=(0, 1),
+                                                 loadScale=args.load_scale, cropScale=args.crop_scale, mode='raw')
 
-    for iSample, sample in enumerate(trainImgLoader, 1):
+    logFolder = [folder for folder in args.datapath.split('/') if folder != '']
+    logFolder[-1] += '_warpTest'
+    writer = SummaryWriter(os.path.join(*logFolder))
+
+    for iSample, sample in enumerate(testImgLoader, 1):
         if args.cuda:
             sample = [s.cuda() for s in sample]
-        sample = [s.unsqueeze(1) if s.dim()==3 else s for s in sample]
         _, _, imglw, imgrw = warp(*sample)
+
+        for name, im  in zip(('inputL', 'inputR', 'gtL', 'gtR', 'warpL', 'warpR'), sample + [imglw, imgrw]):
+            myUtils.logFirstNdis(writer, 'moduleTesting/' + name, im,
+                                 args.maxdisp if im is not None and im.dim() == 3 else 255,
+                                 global_step=iSample, n=args.nsample_save)
+
         if iSample >= args.nsample_save:
             break
+
+    writer.close()
 
 
 if __name__ == '__main__':

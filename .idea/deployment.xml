@@ -12,7 +12,7 @@
       <paths name="kc110_server_frp">
         <serverdata>
           <mappings>
-            <mapping deploy="/media/omnisky/zc/SR-Stereo/SR-Stereo" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/media/omnisky/zc/SR-Stereo/SR-Stereo" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>
