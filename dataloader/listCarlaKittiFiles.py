@@ -52,8 +52,11 @@ def main():
     from tensorboardX import SummaryWriter
     import torch
     from utils import myUtils
+    import dataloader
 
     parser = argparse.ArgumentParser(description='CarlaKitti')
+    parser.add_argument('--maxdisp', type=int, default=192,
+                        help='maxium disparity')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
     parser.add_argument('--datapath', type=str, default='../datasets/carla_kitti/carla_kitti_sr_highquality',
@@ -67,10 +70,9 @@ def main():
     torch.manual_seed(args.seed)
 
     # Dataset
-    import dataloader
     trainImgLoader, _ = dataloader.getDataLoader(datapath=args.datapath, dataset='carla_kitti',
                                                 batchSizes=(1, 0),
-                                                loadScale=args.load_scale, mode='raw')
+                                                loadScale=args.load_scale, mode='scaled')
 
     logFolder = [folder for folder in args.datapath.split('/') if folder != '']
     logFolder[-1] += '_moduleTest'

@@ -6,6 +6,9 @@ import gc
 
 
 def warp(left, right, displ, dispr):
+    if displ.dim() == 3: displ = displ.unsqueeze(0)
+    if dispr.dim() == 3: dispr = dispr.unsqueeze(0)
+
     # pdb.set_trace()
     b, c, h, w = left.size()
     y0, x0 = np.mgrid[0:h, 0:w]
@@ -77,22 +80,6 @@ def warp(left, right, displ, dispr):
     outimgl = torch.cat([left, imglw, maskl], 1)
     outimgr = torch.cat([right, imgrw, maskr], 1)
 
-    '''
-    make_dir('./results')
-    imglw=torch.squeeze(imglw,0).permute(1,2,0)
-    imgrw=torch.squeeze(imgrw,0).permute(1,2,0)
-    imgL0=torch.squeeze(imgfusionl,0).permute(1,2,0)
-    imgR0=torch.squeeze(imgfusionr,0).permute(1,2,0)
-    imglw=imglw.cpu().detach().numpy().astype('uint8')
-    imgrw=imgrw.cpu().detach().numpy().astype('uint8')
-    imgL0=imgL0.cpu().detach().numpy().astype('uint8')
-    imgR0=imgR0.cpu().detach().numpy().astype('uint8')
-    #make_dir('./results')
-    skimage.io.imsave('./results/'+namel[0].split('/')[-4]+namel[0].split('/')[-3]+"lw"+namel[0].split('/')[-1],imglw)
-    skimage.io.imsave('./results/'+namel[0].split('/')[-4]+namel[0].split('/')[-3]+"rw"+namel[0].split('/')[-1],imgrw)
-    skimage.io.imsave('./results/'+namel[0].split('/')[-4]+namel[0].split('/')[-3]+"lf"+namel[0].split('/')[-1],imgL0)
-    skimage.io.imsave('./results/'+namel[0].split('/')[-4]+namel[0].split('/')[-3]+"rf"+namel[0].split('/')[-1],imgR0)
-    '''
     for x in list(locals()):
         del locals()[x]
     gc.collect()
@@ -119,8 +106,6 @@ def main():
                         help='evaluation function used in testing')
     parser.add_argument('--load_scale', type=float, default=1,
                         help='scaling applied to data during loading')
-    parser.add_argument('--crop_scale', type=float, default=None,
-                        help='scaling applied to data during croping')
     parser.add_argument('--nsample_save', type=int, default=5,
                         help='save n samples as png images')
 
@@ -135,7 +120,7 @@ def main():
     import dataloader
     _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
                                                  batchSizes=(0, 1),
-                                                 loadScale=args.load_scale, cropScale=args.crop_scale, mode='raw')
+                                                 loadScale=args.load_scale, mode='scaled')
 
     logFolder = [folder for folder in args.datapath.split('/') if folder != '']
     logFolder[-1] += '_moduleTest'
