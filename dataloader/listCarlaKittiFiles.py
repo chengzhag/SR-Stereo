@@ -56,16 +56,16 @@ def main():
     from utils import myUtils
 
     parser = argparse.ArgumentParser(description='CarlaKitti')
-    parser.add_argument('--filepath', type=str, default='../datasets/carla_kitti/carla_kitti_sr_highquality',
+    parser.add_argument('--datapath', type=str, default='../datasets/carla_kitti/carla_kitti_sr_highquality',
                         help='filepath to load')
-    parser.add_argument('--savepath', type=str, default='../datasets/carla_kitti/carla_kitti_sr_highquality_png',
+    parser.add_argument('--savepath', type=str, default='../datasets/carla_kitti/carla_kitti_sr_highquality_sample',
                         help='filepath to save')
     parser.add_argument('--nsample_save', type=int, default=5,
                         help='save n samples as png images')
     args = parser.parse_args()
     
     all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp = dataloader(
-        args.filepath)
+        args.datapath)
 
 
     for train, test in zip((all_left_img, all_right_img, all_left_disp, all_right_disp), (test_left_img, test_right_img, test_left_disp, test_right_disp)):
