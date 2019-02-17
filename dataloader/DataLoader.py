@@ -36,7 +36,6 @@ class myImageFloder(data.Dataset):
         self.cropScale = cropScale
         self.trainCrop = (round(trainCrop[0] * self.cropScale), round(trainCrop[1] * self.cropScale))
         self.raw =raw
-        self.dispScaleType = Image.NEAREST if kitti else Image.ANTIALIAS
 
     def __getitem__(self, index):
         def scale(im, method):
@@ -55,8 +54,8 @@ class myImageFloder(data.Dataset):
             gtL = Image.fromarray(gtL) if gtLdir is not None else None
             gtR = Image.fromarray(gtR) if gtRdir is not None else None
 
-        gtL = scale(gtL, self.dispScaleType) if gtLdir is not None else None
-        gtR = scale(gtR, self.dispScaleType) if gtRdir is not None else None
+        gtL = scale(gtL, Image.NEAREST) if gtLdir is not None else None
+        gtR = scale(gtR, Image.NEAREST) if gtRdir is not None else None
 
         if self.raw:
             return inputL, inputR, gtL, gtR
