@@ -94,9 +94,9 @@ def getBasicParser():
                         help='scaling applied to data during loading')
     parser.add_argument('--crop_scale', type=float, default=None,
                         help='scaling applied to data during croping')
-    parser.add_argument('--batchsize_train', type=int, default=6,
+    parser.add_argument('--batchsize_train', type=int, default=3,
                         help='training batch size')
-    parser.add_argument('--batchsize_test', type=int, default=6,
+    parser.add_argument('--batchsize_test', type=int, default=3,
                         help='testing batch size')
     return parser
 
