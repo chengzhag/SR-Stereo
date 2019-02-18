@@ -69,7 +69,6 @@ class myImageFloder(data.Dataset):
 
         if self.mode == 'PIL':
             pass
-
         elif self.mode == 'scaled':
             inputL, inputR = [transforms.ToTensor()(im) if im is not None else None
                               for im in (inputL, inputR)]
@@ -86,7 +85,6 @@ class myImageFloder(data.Dataset):
 
                 gtL = gtL.crop((x1, y1, x1 + wCrop, y1 + hCrop)) if gtL is not None else None
                 gtR = gtR.crop((x1, y1, x1 + wCrop, y1 + hCrop)) if gtR is not None else None
-
             else:
                 if self.testCrop is not None:
                     w, h = inputL.size
@@ -100,7 +98,6 @@ class myImageFloder(data.Dataset):
             processed = preprocess.get_transform(augment=False)
             inputL = processed(inputL)
             inputR = processed(inputR)
-
         else:
             raise Exception('No mode %s!' % self.mode)
 
