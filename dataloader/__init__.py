@@ -24,13 +24,19 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(512, 256), batchSize
     kitti = dataset in ('kitti2012', 'kitti2015')
 
     cropScale = loadScale if cropScale is None else cropScale
+
+    if mode == 'submission':
+        mode = 'normal'
+        status = 'submission'
+    else:
+        status = None
     trainImgLoader = torch.utils.data.DataLoader(
-        fileLoader.myImageFloder(*pathsTrain, training=True, trainCrop=trainCrop,
-                                 kitti=kitti, loadScale=loadScale ,cropScale=cropScale, mode=mode),
+        fileLoader.myImageFloder(*pathsTrain, status='testing', trainCrop=trainCrop,
+                                 kitti=kitti, loadScale=loadScale, cropScale=cropScale, mode=mode),
         batch_size=batchSizes[0], shuffle=True, num_workers=8, drop_last=False) if batchSizes[0] > 0 else None
 
     testImgLoader = torch.utils.data.DataLoader(
-        fileLoader.myImageFloder(*pathsTest, training=False, trainCrop=trainCrop,
+        fileLoader.myImageFloder(*pathsTest, status='training' if status is None else status, trainCrop=trainCrop,
                                  kitti=kitti, loadScale=loadScale, cropScale=cropScale, mode=mode),
         batch_size=batchSizes[1], shuffle=False, num_workers=8, drop_last=False) if batchSizes[1] > 0 else None
 

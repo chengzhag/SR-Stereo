@@ -6,13 +6,15 @@ import os
 from models import Stereo
 from utils import myUtils
 from tensorboardX import SummaryWriter
+import skimage
+import skimage.io
+import skimage.transform
 
 
 # Submission for any stereo model including SR-Stereo
 class Submission:
-    def __init__(self, subImgLoader, mode='both'):
+    def __init__(self, subImgLoader):
         self.subImgLoader = subImgLoader
-        self.mode = myUtils.assertMode(subImgLoader.kitti, mode)
         self.stereo = None
 
     def __call__(self, stereo):
@@ -21,6 +23,12 @@ class Submission:
         ticFull = time.time()
         for batch_idx, batch in enumerate(self.subImgLoader, 1):
             batch = [data if data.numel() else None for data in batch]
+            dispOut = self.stereo.predict(*batch[0:2], mode='left')
+            dispOut = dispOut.squeeze()
+            dispOut = dispOut.data.cpu().numpy()
+            # skimage.io.imsave('submission/' + test_left_img.split('/')[-1], (dispOut * 256).astype('uint16'))
+
+
 
 def main():
     parser = argparse.ArgumentParser(description='Stereo')
@@ -46,7 +54,7 @@ def main():
     if args.subtype == 'eval':
         batchSizes = (0, 1)
     _, imgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
-                                                batchSizes=batchSizes, mode='normal')
+                                                batchSizes=batchSizes, mode='submission')
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))

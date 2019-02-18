@@ -21,15 +21,16 @@ def grayLoader(path):
 
 class myImageFloder(data.Dataset):
     # trainCrop = (W, H)
-    def __init__(self, inputLdirs, inputRdirs, gtLdirs=None, gtRdirs=None, training=False,
+    def __init__(self, inputLdirs, inputRdirs, gtLdirs=None, gtRdirs=None, status='testing',
                  trainCrop=(512, 256), kitti=False, loadScale=1, cropScale=1, mode='normal'):
         self.inputLdirs = inputLdirs
         self.inputRdirs = inputRdirs
-        self.gtLdirs = gtLdirs
-        self.gtRdirs = gtRdirs
+        self.status = status
+        # in submission, only input images are needed
+        self.gtLdirs = gtLdirs if self.status != 'submission' else None
+        self.gtRdirs = gtRdirs if self.status != 'submission' else None
         self.inputLoader = rgbLoader
         self.gtLoader = grayLoader if kitti else pfmLoader
-        self.training = training
         self.trainCrop = trainCrop
         self.testCrop = (round(1232 * loadScale), round(368 * loadScale)) if kitti else None
         self.dispScale = 256 if kitti else 1
@@ -73,7 +74,8 @@ class myImageFloder(data.Dataset):
             inputL, inputR = [transforms.ToTensor()(im) if im is not None else None
                               for im in (inputL, inputR)]
         elif self.mode == 'normal':
-            if self.training:
+            if self.status == 'training':
+                # random crop
                 w, h = inputL.size
                 wCrop, hCrop = self.trainCrop
 
@@ -85,8 +87,9 @@ class myImageFloder(data.Dataset):
 
                 gtL = gtL.crop((x1, y1, x1 + wCrop, y1 + hCrop)) if gtL is not None else None
                 gtR = gtR.crop((x1, y1, x1 + wCrop, y1 + hCrop)) if gtR is not None else None
-            else:
+            elif self.status == 'testing':
                 if self.testCrop is not None:
+                    # crop to the same size
                     w, h = inputL.size
                     wCrop, hCrop = self.testCrop
                     inputL = inputL.crop((w - wCrop, h - hCrop, w, h))
@@ -94,6 +97,11 @@ class myImageFloder(data.Dataset):
 
                     gtL = gtL.crop((w - wCrop, h - hCrop, w, h)) if gtL is not None else None
                     gtR = gtR.crop((w - wCrop, h - hCrop, w, h)) if gtR is not None else None
+            elif self.status == 'submission':
+                # do no crop
+                pass
+            else:
+                raise Exception('No stats \'%s\'' % self.status)
 
             processed = preprocess.get_transform(augment=False)
             inputL = processed(inputL)
