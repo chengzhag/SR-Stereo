@@ -1,7 +1,8 @@
 import torch
 
 # cropScale: defaultly set to loadScale to remain ratio between loaded image and cropped image
-def getDataLoader(datapath, dataset='sceneflow', trainCrop=(512, 256), batchSizes=(12, 11), loadScale=1, cropScale=None):
+def getDataLoader(datapath, dataset='sceneflow', trainCrop=(512, 256), batchSizes=(12, 11),
+                  loadScale=1, cropScale=None, mode='normal'):
     if dataset == 'sceneflow':
         from dataloader import listSceneFlowFiles as listFile
     elif dataset == 'kitti2012':
@@ -25,12 +26,12 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(512, 256), batchSize
     cropScale = loadScale if cropScale is None else cropScale
     trainImgLoader = torch.utils.data.DataLoader(
         fileLoader.myImageFloder(*pathsTrain, training=True, trainCrop=trainCrop,
-                                 kitti=kitti, loadScale=loadScale ,cropScale=cropScale),
+                                 kitti=kitti, loadScale=loadScale ,cropScale=cropScale, mode=mode),
         batch_size=batchSizes[0], shuffle=True, num_workers=8, drop_last=False) if batchSizes[0] > 0 else None
 
     testImgLoader = torch.utils.data.DataLoader(
         fileLoader.myImageFloder(*pathsTest, training=False, trainCrop=trainCrop,
-                                 kitti=kitti, loadScale=loadScale, cropScale=cropScale),
+                                 kitti=kitti, loadScale=loadScale, cropScale=cropScale, mode=mode),
         batch_size=batchSizes[1], shuffle=False, num_workers=8, drop_last=False) if batchSizes[1] > 0 else None
 
     # For KITTI, evaluation should exclude zero disparity pixels. A flag kitti will be added to imgLoader.
