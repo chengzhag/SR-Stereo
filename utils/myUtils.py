@@ -118,3 +118,13 @@ def adjustLearningRate(optimizer, epoch, lr):
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
     return lr
+
+def assertMode(kitti, mode):
+    if kitti:
+        print(
+            'Using dataset KITTI. Evaluation will exclude zero disparity pixels. And only left disparity map will be considered.')
+        return 'left'
+    else:
+        if mode not in ('left', 'right', 'both'):
+            raise Exception('No mode \'%s!\'' % mode)
+        return  mode

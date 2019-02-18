@@ -11,12 +11,7 @@ from tensorboardX import SummaryWriter
 class Test:
     def __init__(self, testImgLoader, mode='both', evalFcn='outlier', ndisLog=1):
         self.testImgLoader = testImgLoader
-        if self.testImgLoader.kitti:
-            self.mode = 'left'
-            print(
-                'Using dataset KITTI. Evaluation will exclude zero disparity pixels. And only left disparity map will be considered.')
-        else:
-            self.mode = mode
+        self.mode = myUtils.assertMode(testImgLoader.kitti, mode)
         self.evalFcn = evalFcn
         self.localtime = None
         self.totalTestScores = None
