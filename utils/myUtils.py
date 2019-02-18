@@ -89,7 +89,7 @@ def getBasicParser():
     parser.add_argument('--ndis_log', type=int, default=1,
                         help='number of disparity maps to log')
     parser.add_argument('--dataset', type=str, default='sceneflow',
-                        help='evaluation function used in testing')
+                        help='(sceneflow/kitti2012/kitti2015/carla_kitti)')
     parser.add_argument('--load_scale', type=float, default=1,
                         help='scaling applied to data during loading')
     parser.add_argument('--crop_scale', type=float, default=None,
