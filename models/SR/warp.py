@@ -77,13 +77,13 @@ def warp(left, right, displ, dispr):
     maskr[maskr < 0.999] = 0
     maskr[maskr > 0] = 1
 
-    outimgl = torch.cat([left, imglw, maskl], 1)
-    outimgr = torch.cat([right, imgrw, maskr], 1)
+    # outimgl = torch.cat([left, imglw, maskl], 1)
+    # outimgr = torch.cat([right, imgrw, maskr], 1)
 
     for x in list(locals()):
         del locals()[x]
     gc.collect()
-    return outimgl, outimgr, imglw, imgrw
+    return imglw, imgrw, maskl, maskr
 
 
 def main():
@@ -91,6 +91,9 @@ def main():
     from tensorboardX import SummaryWriter
     import os
     import argparse
+    from evaluation import evalFcn
+    import dataloader
+
     parser = argparse.ArgumentParser(description='warp')
     parser.add_argument('--maxdisp', type=int, default=192,
                         help='maxium disparity')
@@ -117,7 +120,6 @@ def main():
         torch.cuda.manual_seed(args.seed)
 
     # Dataset
-    import dataloader
     _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
                                                  batchSizes=(0, 1),
                                                  loadScale=args.load_scale, mode='scaled')
@@ -129,11 +131,21 @@ def main():
     for iSample, sample in enumerate(testImgLoader, 1):
         if args.cuda:
             sample = [s.cuda() for s in sample]
-        _, _, imglw, imgrw = warp(*sample)
+        imglw, imgrw, maskl, maskr = warp(*sample)
 
-        for name, im  in zip(('inputL', 'inputR', 'gtL', 'gtR', 'warpL', 'warpR'), sample + [imglw, imgrw]):
-            myUtils.logFirstNdis(writer, 'warp/' + name, im,
-                                 args.maxdisp if im is not None and im.dim() == 3 else 255,
+        masklRGB = maskl.byte().repeat(1, 3, 1, 1)
+        maskrRGB = maskr.byte().repeat(1, 3, 1, 1)
+        errorL = getattr(evalFcn, args.eval_fcn)(sample[0][masklRGB], imglw[masklRGB])
+        errorR = getattr(evalFcn, args.eval_fcn)(sample[1][maskrRGB], imgrw[maskrRGB])
+
+        for name, value in myUtils.NameValues('error', ('L', 'R'), (errorL, errorR)).pairs():
+            writer.add_scalar('warp/' + name, value, iSample)
+        for name, im, range  in zip(
+                ('inputL', 'inputR', 'gtL', 'gtR', 'warpL', 'warpR', 'disocclusionsMaskL', 'disocclusionsMaskR'),
+                sample + [imglw, imgrw, maskl, maskr],
+                (255, 255, args.maxdisp, args.maxdisp, 255, 255, 1, 1)
+        ):
+            myUtils.logFirstNdis(writer, 'warp/' + name, im, range,
                                  global_step=iSample, n=args.nsample_save)
 
         if iSample >= args.nsample_save:
