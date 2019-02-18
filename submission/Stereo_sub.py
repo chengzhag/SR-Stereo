@@ -14,19 +14,24 @@ import skimage.transform
 # Submission for any stereo model including SR-Stereo
 class Submission:
     def __init__(self, subImgLoader):
+        if max(subImgLoader.batchSizes) > 1:
+            raise Exception('subImgLoader for Submission can only have batchSize equal to 1!')
         self.subImgLoader = subImgLoader
         self.stereo = None
 
     def __call__(self, stereo):
         self.stereo = stereo
+        saveFolder = os.path.join(self.stereo.checkpointFolder, 'Stereo_sub')
+        myUtils.checkDir(saveFolder)
         tic = time.time()
         ticFull = time.time()
-        for batch_idx, batch in enumerate(self.subImgLoader, 1):
-            batch = [data if data.numel() else None for data in batch]
-            dispOut = self.stereo.predict(*batch[0:2], mode='left')
+        for iIm, ims in enumerate(self.subImgLoader):
+            nameL = self.subImgLoader.dataset.inputLdirs[iIm].split('/')[-1]
+            ims = [data if data.numel() else None for data in ims]
+            dispOut = self.stereo.predict(*ims[0:2], mode='left')
             dispOut = dispOut.squeeze()
             dispOut = dispOut.data.cpu().numpy()
-            # skimage.io.imsave('submission/' + test_left_img.split('/')[-1], (dispOut * 256).astype('uint16'))
+            skimage.io.imsave(os.path.join(saveFolder, nameL), (dispOut * 256).astype('uint16'))
 
 
 

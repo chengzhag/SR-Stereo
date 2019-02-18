@@ -48,5 +48,6 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(512, 256), batchSize
             imgLoader.loadScale = loadScale
             imgLoader.cropScale = cropScale
             imgLoader.datapath = datapath
+            imgLoader.batchSizes = batchSizes
 
     return trainImgLoader, testImgLoader
