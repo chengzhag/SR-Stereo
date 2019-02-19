@@ -4,9 +4,10 @@ import torch.optim as optim
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
-from .PSMNet import *
 from evaluation import evalFcn
 from utils import myUtils
+from .PSMNet import stackhourglass as getPSMNet
+from .PSMNet_TieCheng import stackhourglass as getPSMNet_TieCheng
 
 
 class Stereo:
@@ -134,46 +135,14 @@ class Stereo:
         return self.checkpointDir
 
 
-class PSMNet:
+class PSMNet(Stereo):
     # dataset: only used for suffix of saveFolderName
     def __init__(self, loadScale, cropScale, maxdisp=192, cuda=True, stage='unnamed', dataset=None):
-        self.maxdisp = maxdisp
-        self.cuda = cuda
-        self.stage = stage
-
-        self.startTime = time.localtime(time.time())
-        self.multiple = 16
-
-        self.saveFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) \
-                              + self.__class__.__name__ \
-                              + ('_%.0f_%.0f' % (loadScale * 10, cropScale * 10))
-        if dataset is not None: self.saveFolderName += ('_%s' % dataset)
-        self.saveFolder = os.path.join('logs', stage, self.saveFolderName)
-        self.logFolder = None
-        self.checkpointDir = None
-        self.checkpointFolder = None
-
-        self.model = None
-        self.optimizer = None
-
-    def initModel(self):
-        self.model = stackhourglass(self.maxdisp)
-        self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
-        if self.cuda:
-            self.model = nn.DataParallel(self.model)
-            self.model.cuda()
+        super(PSMNet, self).__init__(loadScale, cropScale, maxdisp, cuda, stage, dataset)
+        self.getModel = getPSMNet
 
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
-        if self.model is None:
-            self.initModel()
-        # When training, log files should be saved to saveFolder.
-        self.logFolder = os.path.join(self.saveFolder, 'logs')
-        self.model.train()
-        myUtils.assertDisp(dispL, dispR)
-        if self.cuda:
-            imgL, imgR = imgL.cuda(), imgR.cuda()
-            dispL = dispL.cuda() if dispL is not None else None
-            dispR = dispR.cuda() if dispR is not None else None
+        imgL, imgR, dispL, dispR = super(PSMNet, self).train(imgL, imgR, dispL, dispR)
 
         def _train(imgL, imgR, disp_true):
             self.optimizer.zero_grad()
@@ -227,9 +196,7 @@ class PSMNet:
             return losses
 
     def predict(self, imgL, imgR, mode='both'):
-        self.model.eval()
-
-        autoPad = myUtils.AutoPad(imgL, self.multiple)
+        autoPad = super(PSMNet, self).predict(imgL, imgR, mode='both')
 
         with torch.no_grad():
             def predictL():
@@ -248,82 +215,28 @@ class PSMNet:
             else:
                 raise Exception('No mode \'%s\'!' % mode)
 
-    def test(self, imgL, imgR, dispL=None, dispR=None, type='l1', output=False, kitti=False):
-        myUtils.assertDisp(dispL, dispR)
+class PSMNet_TieCheng(Stereo):
+    # dataset: only used for suffix of saveFolderName
+    def __init__(self, loadScale, cropScale, maxdisp=192, cuda=True, stage='unnamed', dataset=None):
+        super(PSMNet_TieCheng, self).__init__(loadScale, cropScale, maxdisp, cuda, stage, dataset)
+        self.getModel = getPSMNet_TieCheng
 
-        if self.cuda:
-            imgL, imgR = imgL.cuda(), imgR.cuda()
-            dispL = dispL.cuda() if dispL is not None else None
-            dispR = dispR.cuda() if dispR is not None else None
+    def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
+        imgL, imgR, dispL, dispR = super(PSMNet_TieCheng, self).train(imgL, imgR, dispL, dispR)
+        raise Exception('Fcn \'train\' not done yet...')
 
-        # for kitti dataset, only consider loss of none zero disparity pixels in gt
-        scores = []
-        outputs = []
-        for gt, mode in zip([dispL, dispR], ['left', 'right']):
-            if gt is None:
-                scores.append(None)
-                outputs.append(None)
-                continue
-            dispOut = self.predict(imgL, imgR, mode)
-            if output:
-                outputs.append(dispOut.cpu())
-            if kitti:
-                mask = gt > 0
-                dispOut = dispOut[mask]
-                gt = gt[mask]
-            scores.append(getattr(evalFcn, type)(gt, dispOut))
+    def predict(self, imgL, imgR, mode='both'):
+        autoPad = super(PSMNet_TieCheng, self).predict(imgL, imgR, mode='both')
 
-
-        if output:
-            return scores, outputs
-        else:
-            return scores
-
-    def load(self, checkpointDir):
-        if checkpointDir is not None:
-            print('Loading checkpoint from %s' % checkpointDir)
-            state_dict = torch.load(checkpointDir)
-            if 'maxdisp' in state_dict.keys():
-                maxdisp = state_dict['maxdisp']
-                if maxdisp != self.maxdisp:
-                    print('Specified maxdisp \'%d\' from args is not equal to maxdisp \'%d\' loaded from checkpoint! Using loaded maxdisp instead!' %
-                          (self.maxdisp, maxdisp))
-                self.maxdisp = maxdisp
+        with torch.no_grad():
+            imgL, imgR = autoPad.pad(imgL, self.cuda), autoPad.pad(imgR, self.cuda)
+            pl, pr = self.model(imgL, imgR)
+            if mode == 'left':
+                return autoPad.unpad(pl)
+            elif mode == 'right':
+                return autoPad.unpad(pr)
+            elif mode == 'both':
+                return autoPad.unpad(pl), autoPad.unpad(pr)
             else:
-                print('No maxdisp find in checkpoint! Using specified maxdisp \'%d\' from args!' % self.maxdisp)
-            self.initModel()
-            self.model.load_state_dict(state_dict['state_dict'])
-
-            # update checkpointDir
-            self.checkpointDir = checkpointDir
-            self.checkpointFolder, _ = os.path.split(self.checkpointDir)
-            # When testing, log files should be saved to checkpointFolder.
-            # Here checkpointFolder is setted as default logging folder.
-            self.logFolder = os.path.join(self.checkpointFolder, 'logs')
-
-            print('Loading complete! Number of model parameters: %d' % self.nParams())
-        else:
-            raise Exception('checkpoint dir is None!')
-
-    def nParams(self):
-        return sum([p.data.nelement() for p in self.model.parameters()])
-
-    def save(self, epoch, iteration, trainLoss):
-        # update checkpointDir
-        self.checkpointDir = os.path.join(self.saveFolder, 'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
-        self.checkpointFolder = self.saveFolder
-        self.logFolder = os.path.join(self.checkpointFolder, 'logs')
-
-        myUtils.checkDir(self.saveFolder)
-        torch.save({
-            'epoch': epoch,
-            'iteration': iteration,
-            'state_dict': self.model.state_dict(),
-            'train_loss': trainLoss,
-            'maxdisp': self.maxdisp
-        }, self.checkpointDir)
-        return self.checkpointDir
-
-
-# class PSMNet_TieCheng:
+                raise Exception('No mode \'%s\'!' % mode)
 
