@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="5af41d42-9f6a-4e3f-b5e4-a4d9632ca140" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/models/Stereo.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/Stereo.py" afterDir="false" />
-    </list>
+    <list default="true" id="5af41d42-9f6a-4e3f-b5e4-a4d9632ca140" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -16,9 +14,10 @@
     <SUITE FILE_PATH="coverage/SR_Stereo$writer.coverage" NAME="writer Coverage Results" MODIFIED="1549680113849" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/.PyCharm2018.3/system/remote_sources/2057826824/-1789016477/tensorboardX" />
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_train.coverage" NAME="Stereo_train_sceneflow Coverage Results" MODIFIED="1549940017198" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_train_kitti2015.coverage" NAME="Stereo_train_kitti2015 Coverage Results" MODIFIED="1550457403844" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
+    <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_eval_PSMNet_TieCheng_kitti2015.coverage" NAME="Stereo_eval_PSMNet_TieCheng_kitti2015 Coverage Results" MODIFIED="1550553934085" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_eval.coverage" NAME="Stereo_eval_sceneflow Coverage Results" MODIFIED="1549892725546" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_eval_kitti2012.coverage" NAME="Stereo_eval_kitti2012 Coverage Results" MODIFIED="1550220932757" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
-    <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_eval_kitti2015.coverage" NAME="Stereo_eval_kitti2015 Coverage Results" MODIFIED="1550460829055" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
+    <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_eval_kitti2015.coverage" NAME="Stereo_eval_kitti2015 Coverage Results" MODIFIED="1550554100643" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_train_kitti2015_halfscale.coverage" NAME="Stereo_train_kitti2015_halfscale Coverage Results" MODIFIED="1550404644579" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$warp.coverage" NAME="warp_sceneflow Coverage Results" MODIFIED="1550407629024" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_train_kitti2012.coverage" NAME="Stereo_train_kitti2012 Coverage Results" MODIFIED="1550221701704" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
@@ -50,8 +49,8 @@
           <file pinned="true" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/models/Stereo.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="186">
-                  <caret line="223" column="38" selection-start-line="223" selection-start-column="38" selection-end-line="223" selection-end-column="38" />
+                <state relative-caret-position="188">
+                  <caret line="219" column="44" selection-start-line="219" selection-start-column="44" selection-end-line="219" selection-end-column="44" />
                   <folding>
                     <element signature="e#0#9#0" expanded="true" />
                     <element signature="e#1941#2036#0" />
@@ -131,8 +130,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/submission/Stereo_sub.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="171">
-                  <caret line="48" column="32" selection-start-line="48" selection-start-column="27" selection-end-line="48" selection-end-column="32" />
+                <state relative-caret-position="57">
+                  <caret line="42" column="41" selection-start-line="42" selection-start-column="41" selection-end-line="42" selection-end-column="41" />
                   <folding>
                     <element signature="e#0#25#0" expanded="true" />
                   </folding>
@@ -331,8 +330,31 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.Stereo_sub_PSMNet_TieCheng_kitti2015_eval">
-    <configuration name="Stereo_eval_kitti2012" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_eval">
+  <component name="RunManager" selected="Python.Stereo_train_PSMNet_kitti2015_halfscale">
+    <configuration name="Stereo_eval_PSMNet_TieCheng_kitti2015" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_eval">
+      <module name="SR-Stereo" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+        <env name="CUDA_VISIBLE_DEVICES" value="0" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/Stereo_eval.py" />
+      <option name="PARAMETERS" value="--datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel /media/omnisky/zc/SR-Stereo/PSMNet-LR-TieCheng/trained_batchsize4/finetune_188.tar --model PSMNet_TieCheng --eval_fcn outlier" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Stereo_eval_PSMNet_kitti2012" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_eval">
       <module name="SR-Stereo" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -355,7 +377,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Stereo_eval_kitti2015" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_eval">
+    <configuration name="Stereo_eval_PSMNet_kitti2015" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_eval">
       <module name="SR-Stereo" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -363,9 +385,9 @@
         <env name="PYTHONUNBUFFERED" value="1" />
         <env name="CUDA_VISIBLE_DEVICES" value="0" />
       </envs>
-      <option name="SDK_HOME" value="sftp://omnisky@192.168.195.230:22/home/omnisky/anaconda3/envs/zc36_pytorch10/bin/python" />
+      <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/" />
-      <option name="IS_MODULE_SDK" value="false" />
+      <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
@@ -378,7 +400,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Stereo_eval_sceneflow" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_eval">
+    <configuration name="Stereo_eval_PSMNet_sceneflow" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_eval">
       <module name="SR-Stereo" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -447,7 +469,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Stereo_train_kitti2012" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_train">
+    <configuration name="Stereo_train_PSMNet_kitti2012" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_train">
       <module name="SR-Stereo" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -470,7 +492,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Stereo_train_kitti2015" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_train">
+    <configuration name="Stereo_train_PSMNet_kitti2015" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_train">
       <module name="SR-Stereo" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -493,7 +515,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Stereo_train_kitti2015_halfscale" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_train">
+    <configuration name="Stereo_train_PSMNet_kitti2015_halfscale" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_train">
       <module name="SR-Stereo" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -516,7 +538,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Stereo_train_sceneflow" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_train">
+    <configuration name="Stereo_train_PSMNet_sceneflow" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_train">
       <module name="SR-Stereo" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -539,7 +561,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Stereo_train_sceneflow_halfscale" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_train">
+    <configuration name="Stereo_train_PSMNet_sceneflow_halfscale" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_train">
       <module name="SR-Stereo" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -681,16 +703,17 @@
       <item itemvalue="Python.warp_sceneflow" />
       <item itemvalue="Python.warp_carla_kitti" />
       <item itemvalue="Python.warp_carla_kitti_halfscale" />
-      <item itemvalue="Python.Stereo_eval_kitti2012" />
-      <item itemvalue="Python.Stereo_eval_kitti2015" />
-      <item itemvalue="Python.Stereo_eval_sceneflow" />
+      <item itemvalue="Python.Stereo_eval_PSMNet_kitti2012" />
+      <item itemvalue="Python.Stereo_eval_PSMNet_kitti2015" />
+      <item itemvalue="Python.Stereo_eval_PSMNet_TieCheng_kitti2015" />
+      <item itemvalue="Python.Stereo_eval_PSMNet_sceneflow" />
       <item itemvalue="Python.Stereo_sub_PSMNet_kitti2015_eval" />
       <item itemvalue="Python.Stereo_sub_PSMNet_TieCheng_kitti2015_eval" />
-      <item itemvalue="Python.Stereo_train_kitti2012" />
-      <item itemvalue="Python.Stereo_train_kitti2015" />
-      <item itemvalue="Python.Stereo_train_sceneflow" />
-      <item itemvalue="Python.Stereo_train_sceneflow_halfscale" />
-      <item itemvalue="Python.Stereo_train_kitti2015_halfscale" />
+      <item itemvalue="Python.Stereo_train_PSMNet_kitti2012" />
+      <item itemvalue="Python.Stereo_train_PSMNet_kitti2015" />
+      <item itemvalue="Python.Stereo_train_PSMNet_sceneflow" />
+      <item itemvalue="Python.Stereo_train_PSMNet_sceneflow_halfscale" />
+      <item itemvalue="Python.Stereo_train_PSMNet_kitti2015_halfscale" />
     </list>
   </component>
   <component name="SvnConfiguration">
@@ -736,12 +759,12 @@
       <workItem from="1550496854354" duration="285000" />
       <workItem from="1550497896314" duration="43000" />
       <workItem from="1550498001009" duration="1308000" />
-      <workItem from="1550540528853" duration="8352000" />
+      <workItem from="1550540528853" duration="9874000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="235561000" />
+    <option name="totallyTimeSpent" value="237083000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -761,7 +784,7 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.26681128" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.26681128" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.4989339" visible="true" weight="0.26681128" />
       <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49928367" weight="0.29718006" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -769,7 +792,7 @@
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="8" weight="0.32917705" />
       <window_info anchor="bottom" id="Database Changes" order="9" />
-      <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5007163" side_tool="true" weight="0.29800498" />
+      <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5010661" side_tool="true" weight="0.26681128" />
       <window_info anchor="bottom" id="Terminal" order="11" />
       <window_info anchor="bottom" id="Python Console" order="12" weight="0.32917705" />
       <window_info anchor="bottom" id="File Transfer" order="13" weight="0.29501083" />
@@ -1138,8 +1161,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/submission/Stereo_sub.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="171">
-          <caret line="48" column="32" selection-start-line="48" selection-start-column="27" selection-end-line="48" selection-end-column="32" />
+        <state relative-caret-position="57">
+          <caret line="42" column="41" selection-start-line="42" selection-start-column="41" selection-end-line="42" selection-end-column="41" />
           <folding>
             <element signature="e#0#25#0" expanded="true" />
           </folding>
@@ -1148,8 +1171,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/models/Stereo.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="186">
-          <caret line="223" column="38" selection-start-line="223" selection-start-column="38" selection-end-line="223" selection-end-column="38" />
+        <state relative-caret-position="188">
+          <caret line="219" column="44" selection-start-line="219" selection-start-column="44" selection-end-line="219" selection-end-column="44" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
             <element signature="e#1941#2036#0" />
