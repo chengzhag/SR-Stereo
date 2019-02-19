@@ -10,17 +10,14 @@ from utils import myUtils
 
 
 class PSMNet:
+    # dataset: only used for suffix of saveFolderName
     def __init__(self, loadScale, cropScale, maxdisp=192, cuda=True, stage='unnamed', dataset=None):
-        self.stage = stage
-        self.startTime = time.localtime(time.time())
-        self.model = stackhourglass(maxdisp)
-        self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
         self.maxdisp = maxdisp
         self.cuda = cuda
+        self.stage = stage
+
+        self.startTime = time.localtime(time.time())
         self.multiple = 16
-        if cuda:
-            self.model = nn.DataParallel(self.model)
-            self.model.cuda()
 
         self.saveFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) \
                               + self.__class__.__name__ \
@@ -31,7 +28,20 @@ class PSMNet:
         self.checkpointDir = None
         self.checkpointFolder = None
 
+        self.model = None
+        self.optimizer = None
+
+    def initModel(self):
+        self.model = stackhourglass(self.maxdisp)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
+        if self.cuda:
+            self.model = nn.DataParallel(self.model)
+            self.model.cuda()
+
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
+        if self.model is None:
+            self.initModel()
+
         # When training, log files should be saved to saveFolder.
         self.logFolder = os.path.join(self.saveFolder, 'logs')
         self.model.train()
@@ -149,6 +159,15 @@ class PSMNet:
         if checkpointDir is not None:
             print('Loading checkpoint from %s' % checkpointDir)
             state_dict = torch.load(checkpointDir)
+            if 'maxdisp' in state_dict.keys():
+                maxdisp = state_dict['maxdisp']
+                if maxdisp != self.maxdisp:
+                    print('Specified maxdisp \'%d\' from args is not equal to maxdisp \'%d\' loaded from checkpoint! Using loaded maxdisp instead!' %
+                          (self.maxdisp, maxdisp))
+                self.maxdisp = maxdisp
+            else:
+                print('No maxdisp find in checkpoint! Using specified maxdisp \'%d\' from args!' % self.maxdisp)
+            self.initModel()
             self.model.load_state_dict(state_dict['state_dict'])
 
             # update checkpointDir
@@ -177,5 +196,6 @@ class PSMNet:
             'iteration': iteration,
             'state_dict': self.model.state_dict(),
             'train_loss': trainLoss,
+            'maxdisp': self.maxdisp
         }, self.checkpointDir)
         return self.checkpointDir

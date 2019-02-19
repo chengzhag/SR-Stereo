@@ -89,14 +89,14 @@ def getBasicParser():
     parser.add_argument('--ndis_log', type=int, default=1,
                         help='number of disparity maps to log')
     parser.add_argument('--dataset', type=str, default='sceneflow',
-                        help='evaluation function used in testing')
+                        help='(sceneflow/kitti2012/kitti2015/carla_kitti)')
     parser.add_argument('--load_scale', type=float, default=1,
                         help='scaling applied to data during loading')
     parser.add_argument('--crop_scale', type=float, default=None,
                         help='scaling applied to data during croping')
-    parser.add_argument('--batchsize_train', type=int, default=6,
+    parser.add_argument('--batchsize_train', type=int, default=3,
                         help='training batch size')
-    parser.add_argument('--batchsize_test', type=int, default=6,
+    parser.add_argument('--batchsize_test', type=int, default=3,
                         help='testing batch size')
     return parser
 
@@ -118,3 +118,13 @@ def adjustLearningRate(optimizer, epoch, lr):
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
     return lr
+
+def assertMode(kitti, mode):
+    if kitti:
+        print(
+            'Using dataset KITTI. Evaluation will exclude zero disparity pixels. And only left disparity map will be considered.')
+        return 'left'
+    else:
+        if mode not in ('left', 'right', 'both'):
+            raise Exception('No mode \'%s!\'' % mode)
+        return  mode

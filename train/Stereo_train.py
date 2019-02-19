@@ -21,6 +21,9 @@ class Train:
 
     def __call__(self, stereo, nEpochs):
         self.stereo = stereo
+        # 'stereo.model is None' means no checkpoint is loaded and presetted maxdisp is used
+        if stereo.model is None:
+            stereo.initModel()
 
         # Train
         ticFull = time.time()
@@ -73,7 +76,7 @@ class Train:
             stereo.save(epoch=epoch, iteration=batch_idx,
                         trainLoss=totalTrainLoss / len(self.trainImgLoader))
             # test
-            if ((epoch % self.testEvery == 0 and self.testEvery > 0)
+            if ((self.testEvery > 0 and epoch % self.testEvery == 0)
                 or (self.testEvery == 0 and epoch == nEpochs)) \
                     and self.test is not None:
                 testScores = self.test(stereo=stereo)
@@ -127,7 +130,7 @@ def main():
         stereo.load(args.loadmodel)
 
     # Train
-    test = Stereo_eval.Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath,
+    test = Stereo_eval.Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn,
                             ndisLog=args.ndis_log)
     train = Train(trainImgLoader=trainImgLoader, logEvery=args.log_every, testEvery=args.test_every,
                   ndisLog=args.ndis_log, Test=test, lr=args.lr)

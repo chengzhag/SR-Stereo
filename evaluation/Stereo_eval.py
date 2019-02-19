@@ -9,16 +9,10 @@ from tensorboardX import SummaryWriter
 
 # Testing for any stereo model including SR-Stereo
 class Test:
-    def __init__(self, testImgLoader, mode='both', evalFcn='outlier', datapath=None, ndisLog=1):
+    def __init__(self, testImgLoader, mode='both', evalFcn='outlier', ndisLog=1):
         self.testImgLoader = testImgLoader
-        if self.testImgLoader.kitti:
-            self.mode = 'left'
-            print(
-                'Using dataset KITTI. Evaluation will exclude zero disparity pixels. And only left disparity map will be considered.')
-        else:
-            self.mode = mode
+        self.mode = myUtils.assertMode(testImgLoader.kitti, mode)
         self.evalFcn = evalFcn
-        self.datapath = datapath
         self.localtime = None
         self.totalTestScores = None
         self.testTime = None
@@ -81,7 +75,7 @@ class Test:
 
             log.seek(0)
             log.write('---------------------- %s ----------------------\n' % self.localtime)
-            baseInfos = (('data', self.datapath),
+            baseInfos = (('data', self.testImgLoader.datapath ),
                          ('load_scale', self.testImgLoader.loadScale),
                          ('checkpoint', self.stereo.checkpointDir),
                          ('test_type', self.evalFcn),
@@ -129,7 +123,7 @@ def main():
     stereo.load(args.loadmodel)
 
     # Test
-    test = Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn, datapath=args.datapath,
+    test = Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn,
                 ndisLog=args.ndis_log)
     test(stereo=stereo)
     test.log()

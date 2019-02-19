@@ -106,7 +106,7 @@ def main():
     parser.add_argument('--eval_fcn', type=str, default='l1',
                         help='evaluation function used in testing')
     parser.add_argument('--dataset', type=str, default='sceneflow',
-                        help='evaluation function used in testing')
+                        help='(sceneflow/kitti2012/kitti2015/carla_kitti)')
     parser.add_argument('--load_scale', type=float, default=1,
                         help='scaling applied to data during loading')
     parser.add_argument('--nsample_save', type=int, default=5,
