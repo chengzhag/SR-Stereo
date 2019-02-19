@@ -25,15 +25,22 @@ class Submission:
         myUtils.checkDir(saveFolder)
         tic = time.time()
         ticFull = time.time()
-        for iIm, ims in enumerate(self.subImgLoader):
-            nameL = self.subImgLoader.dataset.inputLdirs[iIm].split('/')[-1]
+        for iIm, ims in enumerate(self.subImgLoader, 1):
+            nameL = self.subImgLoader.dataset.inputLdirs[iIm - 1].split('/')[-1]
+            savePath = os.path.join(saveFolder, nameL)
             ims = [data if data.numel() else None for data in ims]
             dispOut = self.stereo.predict(*ims[0:2], mode='left')
             dispOut = dispOut.squeeze()
             dispOut = dispOut.data.cpu().numpy()
-            skimage.io.imsave(os.path.join(saveFolder, nameL), (dispOut * 256).astype('uint16'))
+            skimage.io.imsave(savePath, (dispOut * 256).astype('uint16'))
 
-
+            timeLeft = (time.time() - tic) / 60 * (len(self.subImgLoader) - iIm)
+            print('im %d/%d, %s, left %.2fmin' % (
+                iIm, len(self.subImgLoader),
+                savePath, timeLeft))
+            tic = time.time()
+        submissionTime = time.time() - ticFull
+        print('Full submission time = %.2fmin' % (submissionTime / 60))
 
 def main():
     parser = argparse.ArgumentParser(description='Stereo')
