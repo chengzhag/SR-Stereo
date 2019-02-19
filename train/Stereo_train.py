@@ -21,6 +21,9 @@ class Train:
 
     def __call__(self, stereo, nEpochs):
         self.stereo = stereo
+        # 'stereo.model is None' means no checkpoint is loaded and presetted maxdisp is used
+        if stereo.model is None:
+            stereo.initModel()
 
         # Train
         ticFull = time.time()

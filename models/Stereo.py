@@ -31,7 +31,7 @@ class PSMNet:
         self.model = None
         self.optimizer = None
 
-    def _initModel(self):
+    def initModel(self):
         self.model = stackhourglass(self.maxdisp)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
         if self.cuda:
@@ -40,7 +40,7 @@ class PSMNet:
 
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
         if self.model is None:
-            self._initModel()
+            self.initModel()
 
         # When training, log files should be saved to saveFolder.
         self.logFolder = os.path.join(self.saveFolder, 'logs')
@@ -167,7 +167,7 @@ class PSMNet:
                 self.maxdisp = maxdisp
             else:
                 print('No maxdisp find in checkpoint! Using specified maxdisp \'%d\' from args!' % self.maxdisp)
-            self._initModel()
+            self.initModel()
             self.model.load_state_dict(state_dict['state_dict'])
 
             # update checkpointDir
