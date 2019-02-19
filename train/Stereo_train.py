@@ -73,7 +73,7 @@ class Train:
             stereo.save(epoch=epoch, iteration=batch_idx,
                         trainLoss=totalTrainLoss / len(self.trainImgLoader))
             # test
-            if ((epoch % self.testEvery == 0 and self.testEvery > 0)
+            if ((self.testEvery > 0 and epoch % self.testEvery == 0)
                 or (self.testEvery == 0 and epoch == nEpochs)) \
                     and self.test is not None:
                 testScores = self.test(stereo=stereo)
