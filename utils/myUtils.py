@@ -3,13 +3,13 @@ import os
 import argparse
 
 class NameValues:
-    def __init__(self, prefix, suffixes, values):
+    def __init__(self, names, values, prefix='', suffix=''):
         self._pairs = []
-        for suffix, value in zip(suffixes, values):
+        for name, value in zip(names, values):
             if value is not None:
-                self._pairs.append((prefix + suffix, value))
+                self._pairs.append((prefix + name + suffix, value))
 
-    def str(self, unit=''):
+    def strPrint(self, unit=''):
         str = ''
         for name, value in self._pairs:
             str += '%s: %.2f%s, ' % (name, value, unit)

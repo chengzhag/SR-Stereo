@@ -42,18 +42,18 @@ class Test:
             except NameError:
                 totalTestScores = scores
             timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
-            scoresPairs = myUtils.NameValues(self.evalFcn,
-                                             ('L', 'R', 'LTotal', 'RTotal'),
+            scoresPairs = myUtils.NameValues(('L', 'R', 'LTotal', 'RTotal'),
                                              scores + [(score / batch_idx) if score is not None else None
-                                                       for score in totalTestScores])
+                                                       for score in totalTestScores],
+                                             prefix=self.evalFcn)
             print('it %d/%d, %sleft %.2fh' % (
                 batch_idx, len(self.testImgLoader),
-                scoresPairs.str(scoreUnit), timeLeft))
+                scoresPairs.strPrint(scoreUnit), timeLeft))
             tic = time.time()
 
         totalTestScores = [(score / batch_idx) if score is not None else None
                                           for score in totalTestScores]
-        scoresPairs = myUtils.NameValues(self.evalFcn, ('LTotal', 'RTotal'), totalTestScores)
+        scoresPairs = myUtils.NameValues(('LTotal', 'RTotal'), totalTestScores, prefix=self.evalFcn)
 
         self.testTime = time.time() - ticFull
         print('Full testing time = %.2fh' % (self.testTime / 3600))
