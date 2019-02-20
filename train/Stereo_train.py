@@ -124,8 +124,12 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    stereo = getattr(Stereo, args.model)(loadScale=trainImgLoader.loadScale, cropScale=trainImgLoader.cropScale,
-                                         maxdisp=args.maxdisp, cuda=args.cuda, stage=stage, dataset=args.dataset)
+    saveFolderSuffix =  myUtils.NameValues(('loadScale', 'cropScale', 'batchSize'),
+                                           (trainImgLoader.loadScale * 10,
+                                            trainImgLoader.cropScale * 10,
+                                            args.batchsize_train))
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage=stage, dataset=args.dataset,
+                                         saveFolderSuffix=saveFolderSuffix.strSuffix())
     if args.loadmodel is not None:
         stereo.load(args.loadmodel)
 

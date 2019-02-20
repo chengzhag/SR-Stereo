@@ -15,6 +15,12 @@ class NameValues:
             str += '%s: %.2f%s, ' % (name, value, unit)
         return str
 
+    def strSuffix(self):
+        str = ''
+        for name, value in self._pairs:
+            str += '_%s_%.0f' % (name, value)
+        return str
+
     def dic(self):
         dic={}
         for name, value in self._pairs:

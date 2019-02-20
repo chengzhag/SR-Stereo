@@ -12,7 +12,7 @@ from .PSMNet_TieCheng import stackhourglass as getPSMNet_TieCheng
 
 class Stereo:
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, loadScale, cropScale, maxdisp=192, cuda=True, stage='unnamed', dataset=None):
+    def __init__(self, maxdisp=192, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
         self.maxdisp = maxdisp
         self.cuda = cuda
         self.stage = stage
@@ -22,7 +22,7 @@ class Stereo:
 
         self.saveFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) \
                               + self.__class__.__name__ \
-                              + ('_%.0f_%.0f' % (loadScale * 10, cropScale * 10))
+                              + saveFolderSuffix
         if dataset is not None: self.saveFolderName += ('_%s' % dataset)
         self.saveFolder = os.path.join('logs', stage, self.saveFolderName)
         self.logFolder = None
@@ -137,8 +137,8 @@ class Stereo:
 
 class PSMNet(Stereo):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, loadScale, cropScale, maxdisp=192, cuda=True, stage='unnamed', dataset=None):
-        super(PSMNet, self).__init__(loadScale, cropScale, maxdisp, cuda, stage, dataset)
+    def __init__(self, maxdisp=192, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        super(PSMNet, self).__init__(maxdisp, cuda, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet
 
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
@@ -217,8 +217,8 @@ class PSMNet(Stereo):
 
 class PSMNet_TieCheng(Stereo):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, loadScale, cropScale, maxdisp=192, cuda=True, stage='unnamed', dataset=None):
-        super(PSMNet_TieCheng, self).__init__(loadScale, cropScale, maxdisp, cuda, stage, dataset)
+    def __init__(self, maxdisp=192, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        super(PSMNet_TieCheng, self).__init__(maxdisp, cuda, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet_TieCheng
 
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):

@@ -70,8 +70,11 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    stereo = getattr(Stereo, args.model)(loadScale=imgLoader.loadScale, cropScale=imgLoader.cropScale,
-                                         maxdisp=args.maxdisp, cuda=args.cuda, stage=stage)
+    saveFolderSuffix = myUtils.NameValues(('loadScale', 'cropScale'),
+                                          (imgLoader.loadScale * 10,
+                                           imgLoader.cropScale * 10))
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage=stage,
+                                         saveFolderSuffix=saveFolderSuffix.strSuffix())
     stereo.load(args.loadmodel)
 
     # Submission
