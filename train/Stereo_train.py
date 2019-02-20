@@ -68,8 +68,10 @@ class Train:
                 totalTrainLoss += sum(losses) / len(losses)
 
                 timeLeft = (time.time() - tic) / 3600 * ((self.nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
-                print('it %d/%d, %sleft %.2fh' % (
+                print('globalIt %d/%d, it %d/%d, epoch %d/%d, %sleft %.2fh' % (
                     global_step, len(self.trainImgLoader) * self.nEpochs,
+                    batch_idx, len(self.trainImgLoader),
+                    epoch, self.nEpochs,
                     lossesPairs.strPrint(''), timeLeft))
                 tic = time.time()
 
@@ -114,7 +116,7 @@ class Train:
                 log.write('python ')
                 for arg in sys.argv:
                     log.write(arg + ' ')
-                log.write('\n')
+                log.write('\n\n')
 
                 baseInfos = (('data', self.trainImgLoader.datapath),
                              ('load_scale', self.trainImgLoader.loadScale),
