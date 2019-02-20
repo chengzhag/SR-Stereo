@@ -74,15 +74,16 @@ class Test:
             logOld = log.read()
 
             log.seek(0)
-            log.write('---------------------- %s ----------------------\n' % self.localtime)
+            log.write('---------------------- %s ----------------------\n\n' % self.localtime)
             baseInfos = (('data', self.testImgLoader.datapath ),
-                         ('load_scale', self.testImgLoader.loadScale),
+                         ('loadScale', self.testImgLoader.loadScale),
+                         ('cropScale', self.testImgLoader.cropScale),
                          ('checkpoint', self.stereo.checkpointDir),
-                         ('test_type', self.evalFcn),
-                         ('test_time', self.testTime),
+                         ('evalFcn', self.evalFcn),
                          ('epoch', epoch),
                          ('iteration', it),
-                         ('global_step', global_step)
+                         ('global_step', global_step),
+                         ('testTime', self.testTime),
                          )
             for pairs in (baseInfos, self.testResults, additionalValue):
                 for (name, value) in pairs:
