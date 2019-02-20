@@ -7,7 +7,7 @@ from models import Stereo
 from tensorboardX import SummaryWriter
 from evaluation import Stereo_eval
 from utils import myUtils
-
+import sys
 
 class Train:
     def __init__(self, trainImgLoader, logEvery=1, testEvery=1, ndisLog=1, Test=None, lr=[0.001]):
@@ -124,6 +124,11 @@ class Train:
                 for (name, value) in pairs:
                     writeNotNone(name, value)
                 log.write('\n')
+
+            log.write('python ')
+            for arg in sys.argv:
+                log.write(arg + ' ')
+            log.write('\n')
 
             log.write(logOld)
 
