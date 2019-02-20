@@ -43,21 +43,8 @@ class Submission:
         print('Full submission time = %.2fmin' % (submissionTime / 60))
 
 def main():
-    parser = argparse.ArgumentParser(description='Stereo')
-    parser.add_argument('--maxdisp', type=int, default=192,
-                        help='maxium disparity')
-    parser.add_argument('--model', default='PSMNet',
-                        help='select model')
-    parser.add_argument('--datapath', default='../datasets/sceneflow/',
-                        help='datapath')
-    parser.add_argument('--loadmodel', default=None,
-                        help='load model')
-    parser.add_argument('--no_cuda', action='store_true', default=False,
-                        help='enables CUDA training')
-    parser.add_argument('--dataset', type=str, default='kitti2015',
-                        help='(sceneflow/kitti2012/kitti2015/carla_kitti)')
-    parser.add_argument('--subtype', type=str, default='eval',
-                        help='dataset type used for submission (eval/test)')
+    parser = myUtils.getBasicParser(['maxdisp', 'model', 'datapath', 'loadmodel', 'no_cuda', 'dataset', 'subtype'],
+                                    description='generate png image for kitti final submission')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 

@@ -98,16 +98,10 @@ class Train:
 
 
 def main():
-    parser = myUtils.getBasicParser()
-    # parser.add_argument('--both_disparity', type=bool, default=True,
-    #                     help='if train on disparity maps from both views')
-    parser.add_argument('--log_every', type=int, default=10,
-                        help='log every log_every iterations. set to 0 to stop logging')
-    parser.add_argument('--test_every', type=int, default=1,
-                        help='test every test_every epochs. set to 0 to stop testing')
-    parser.add_argument('--epochs', type=int, default=10,
-                        help='number of epochs to train')
-    parser.add_argument('--lr', type=float, default=[0.001], help='', nargs='+')
+    parser = myUtils.getBasicParser(['maxdisp', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
+                                     'ndis_log', 'dataset', 'load_scale', 'crop_scale', 'batchsize_test',
+                                     'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr'],
+                                    description='train or finetune Stereo net')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()

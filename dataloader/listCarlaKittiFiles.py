@@ -54,17 +54,8 @@ def main():
     from utils import myUtils
     import dataloader
 
-    parser = argparse.ArgumentParser(description='CarlaKitti')
-    parser.add_argument('--maxdisp', type=int, default=192,
-                        help='maxium disparity')
-    parser.add_argument('--seed', type=int, default=1, metavar='S',
-                        help='random seed (default: 1)')
-    parser.add_argument('--datapath', type=str, default='../datasets/carla_kitti/carla_kitti_sr_highquality',
-                        help='filepath to load')
-    parser.add_argument('--load_scale', type=float, default=1,
-                        help='scaling applied to data during loading')
-    parser.add_argument('--nsample_save', type=int, default=5,
-                        help='save n samples as png images')
+    parser = myUtils.getBasicParser(['maxdisp', 'seed', 'datapath', 'load_scale', 'nsample_save'],
+                                    description='listCarlaKittiFiles module test')
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
