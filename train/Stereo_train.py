@@ -34,6 +34,7 @@ class Train:
         for epoch in range(1, nEpochs + 1):
             print('This is %d-th epoch' % (epoch))
             lrNow = myUtils.adjustLearningRate(stereo.optimizer, epoch, self.lr)
+            self.log(additionalValue=(('nEpochs', nEpochs),))
 
             # iteration
             totalTrainLoss = 0
@@ -96,12 +97,43 @@ class Train:
 
         print('Full training time = %.2fh' % ((time.time() - ticFull) / 3600))
 
+    def log(self, additionalValue=()):
+        myUtils.checkDir(self.stereo.saveFolder)
+        logDir = os.path.join(self.stereo.saveFolder, 'train_info.txt')
+        with open(logDir, "a") as log:
+            pass
+        with open(logDir, "r+") as log:
+            def writeNotNone(name, value):
+                if value is not None: log.write(name + ': ' + str(value) + '\n')
+
+            log.seek(0)
+            logOld = log.read()
+
+            log.seek(0)
+            log.write('---------------------- %s ----------------------\n' % time.asctime(time.localtime(time.time()))
+)
+            baseInfos = (('data', self.trainImgLoader.datapath),
+                         ('load_scale', self.trainImgLoader.loadScale),
+                         ('checkpoint', self.stereo.checkpointDir),
+                         ('logEvery', self.logEvery),
+                         ('testEvery', self.testEvery),
+                         ('ndisLog', self.ndisLog),
+                         ('lr', self.lr)
+                         )
+            for pairs in (baseInfos, additionalValue):
+                for (name, value) in pairs:
+                    writeNotNone(name, value)
+                log.write('\n')
+
+            log.write(logOld)
+
 
 def main():
-    parser = myUtils.getBasicParser(['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
-                                     'ndis_log', 'dataset', 'load_scale', 'crop_scale', 'batchsize_test',
-                                     'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr'],
-                                    description='train or finetune Stereo net')
+    parser = myUtils.getBasicParser(
+        ['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
+         'ndis_log', 'dataset', 'load_scale', 'crop_scale', 'batchsize_test',
+         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr'],
+        description='train or finetune Stereo net')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -118,11 +150,12 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    saveFolderSuffix =  myUtils.NameValues(('loadScale', 'cropScale', 'batchSize'),
-                                           (trainImgLoader.loadScale * 10,
-                                            trainImgLoader.cropScale * 10,
-                                            args.batchsize_train))
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage, dataset=args.dataset,
+    saveFolderSuffix = myUtils.NameValues(('loadScale', 'cropScale', 'batchSize'),
+                                          (trainImgLoader.loadScale * 10,
+                                           trainImgLoader.cropScale * 10,
+                                           args.batchsize_train))
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage,
+                                         dataset=args.dataset,
                                          saveFolderSuffix=saveFolderSuffix.strSuffix())
     if args.loadmodel is not None:
         stereo.load(args.loadmodel)
