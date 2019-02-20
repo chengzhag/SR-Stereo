@@ -138,7 +138,7 @@ def main():
         errorL = getattr(evalFcn, args.eval_fcn)(sample[0][masklRGB], imglw[masklRGB])
         errorR = getattr(evalFcn, args.eval_fcn)(sample[1][maskrRGB], imgrw[maskrRGB])
 
-        for name, value in myUtils.NameValues('error', ('L', 'R'), (errorL, errorR)).pairs():
+        for name, value in myUtils.NameValues(('L', 'R'), (errorL, errorR), prefix='error').pairs():
             writer.add_scalar('warp/' + name, value, iSample)
         for name, im, range  in zip(
                 ('inputL', 'inputR', 'gtL', 'gtR', 'warpL', 'warpR', 'disocclusionsMaskL', 'disocclusionsMaskR'),

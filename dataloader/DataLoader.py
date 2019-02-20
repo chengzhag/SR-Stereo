@@ -60,7 +60,8 @@ class myImageFloder(data.Dataset):
         if self.mode == 'raw':
             inputL, inputR, gtL, gtR = [transforms.ToTensor()(im) if im is not None else None
                                         for im in (inputL, inputR, gtL, gtR)]
-            gtL, gtR = gtL.squeeze(), gtR.squeeze()
+            gtL, gtR = [im.squeeze() if im is not None else np.array([])
+                                        for im in (gtL, gtR)]
             return inputL, inputR, gtL, gtR
 
         inputL = scale(inputL, Image.ANTIALIAS)

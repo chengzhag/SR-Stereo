@@ -48,7 +48,7 @@ class Train:
                     losses, outputs = stereo.train(*batch, output=True, kitti=self.trainImgLoader.kitti)
 
                     # save Tensorboard logs to where checkpoint is.
-                    lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
+                    lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
                     writer = SummaryWriter(stereo.logFolder)
                     for name, value in lossesPairs.pairs() + [('lr', lrNow), ]:
                         writer.add_scalar(stereo.stage + '/trainLosses/' + name, value, global_step)
@@ -60,7 +60,7 @@ class Train:
 
                     losses = stereo.train(*batch, output=False, kitti=self.trainImgLoader.kitti)
 
-                    lossesPairs = myUtils.NameValues('loss', ('L', 'R'), losses)
+                    lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
 
                 losses = [loss for loss in losses if loss is not None]
                 totalTrainLoss += sum(losses) / len(losses)
@@ -68,7 +68,7 @@ class Train:
                 timeLeft = (time.time() - tic) / 3600 * ((nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
                 print('it %d/%d, %sleft %.2fh' % (
                     global_step, len(self.trainImgLoader) * nEpochs,
-                    lossesPairs.str(''), timeLeft))
+                    lossesPairs.strPrint(''), timeLeft))
                 tic = time.time()
 
             print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / len(self.trainImgLoader)))
@@ -90,8 +90,8 @@ class Train:
                     minTestScore = testScore
                     minTestScoreEpoch = epoch
                 testReaults = myUtils.NameValues(
-                    '', ('minTestScore', 'minTestScoreEpoch'), (minTestScore, minTestScoreEpoch))
-                print('Training status: %s' % testReaults.str(''))
+                    ('minTestScore', 'minTestScoreEpoch'), (minTestScore, minTestScoreEpoch))
+                print('Training status: %s' % testReaults.strPrint(''))
                 self.test.log(epoch=epoch, it=batch_idx, global_step=global_step, additionalValue=testReaults.pairs())
 
         print('Full training time = %.2fh' % ((time.time() - ticFull) / 3600))
@@ -124,8 +124,12 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    stereo = getattr(Stereo, args.model)(loadScale=trainImgLoader.loadScale, cropScale=trainImgLoader.cropScale,
-                                         maxdisp=args.maxdisp, cuda=args.cuda, stage=stage, dataset=args.dataset)
+    saveFolderSuffix =  myUtils.NameValues(('loadScale', 'cropScale', 'batchSize'),
+                                           (trainImgLoader.loadScale * 10,
+                                            trainImgLoader.cropScale * 10,
+                                            args.batchsize_train))
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage=stage, dataset=args.dataset,
+                                         saveFolderSuffix=saveFolderSuffix.strSuffix())
     if args.loadmodel is not None:
         stereo.load(args.loadmodel)
 

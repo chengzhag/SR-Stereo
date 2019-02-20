@@ -3,16 +3,22 @@ import os
 import argparse
 
 class NameValues:
-    def __init__(self, prefix, suffixes, values):
+    def __init__(self, names, values, prefix='', suffix=''):
         self._pairs = []
-        for suffix, value in zip(suffixes, values):
+        for name, value in zip(names, values):
             if value is not None:
-                self._pairs.append((prefix + suffix, value))
+                self._pairs.append((prefix + name + suffix, value))
 
-    def str(self, unit=''):
+    def strPrint(self, unit=''):
         str = ''
         for name, value in self._pairs:
             str += '%s: %.2f%s, ' % (name, value, unit)
+        return str
+
+    def strSuffix(self):
+        str = ''
+        for name, value in self._pairs:
+            str += '_%s_%.0f' % (name, value)
         return str
 
     def dic(self):
@@ -84,7 +90,7 @@ def getBasicParser():
                         help='enables CUDA training')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
-    parser.add_argument('--eval_fcn', type=str, default='l1',
+    parser.add_argument('--eval_fcn', type=str, default='outlier',
                         help='evaluation function used in testing')
     parser.add_argument('--ndis_log', type=int, default=1,
                         help='number of disparity maps to log')

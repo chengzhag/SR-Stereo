@@ -42,18 +42,18 @@ class Test:
             except NameError:
                 totalTestScores = scores
             timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
-            scoresPairs = myUtils.NameValues(self.evalFcn,
-                                             ('L', 'R', 'LTotal', 'RTotal'),
+            scoresPairs = myUtils.NameValues(('L', 'R', 'LTotal', 'RTotal'),
                                              scores + [(score / batch_idx) if score is not None else None
-                                                       for score in totalTestScores])
+                                                       for score in totalTestScores],
+                                             prefix=self.evalFcn)
             print('it %d/%d, %sleft %.2fh' % (
                 batch_idx, len(self.testImgLoader),
-                scoresPairs.str(scoreUnit), timeLeft))
+                scoresPairs.strPrint(scoreUnit), timeLeft))
             tic = time.time()
 
         totalTestScores = [(score / batch_idx) if score is not None else None
                                           for score in totalTestScores]
-        scoresPairs = myUtils.NameValues(self.evalFcn, ('LTotal', 'RTotal'), totalTestScores)
+        scoresPairs = myUtils.NameValues(('LTotal', 'RTotal'), totalTestScores, prefix=self.evalFcn)
 
         self.testTime = time.time() - ticFull
         print('Full testing time = %.2fh' % (self.testTime / 3600))
@@ -118,8 +118,11 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    stereo = getattr(Stereo, args.model)(loadScale=testImgLoader.loadScale, cropScale=testImgLoader.cropScale,
-                                         maxdisp=args.maxdisp, cuda=args.cuda, stage=stage)
+    saveFolderSuffix = myUtils.NameValues(('loadScale', 'cropScale'),
+                                          (testImgLoader.loadScale * 10,
+                                           testImgLoader.cropScale * 10))
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage=stage,
+                                         saveFolderSuffix=saveFolderSuffix.strSuffix())
     stereo.load(args.loadmodel)
 
     # Test
