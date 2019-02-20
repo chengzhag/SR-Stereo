@@ -93,24 +93,9 @@ def main():
     import argparse
     from evaluation import evalFcn
     import dataloader
-
-    parser = argparse.ArgumentParser(description='warp')
-    parser.add_argument('--maxdisp', type=int, default=192,
-                        help='maxium disparity')
-    parser.add_argument('--datapath', default='../datasets/sceneflow/',
-                        help='datapath')
-    parser.add_argument('--no_cuda', action='store_true', default=False,
-                        help='enables CUDA training')
-    parser.add_argument('--seed', type=int, default=1, metavar='S',
-                        help='random seed (default: 1)')
-    parser.add_argument('--eval_fcn', type=str, default='l1',
-                        help='evaluation function used in testing')
-    parser.add_argument('--dataset', type=str, default='sceneflow',
-                        help='(sceneflow/kitti2012/kitti2015/carla_kitti)')
-    parser.add_argument('--load_scale', type=float, default=1,
-                        help='scaling applied to data during loading')
-    parser.add_argument('--nsample_save', type=int, default=5,
-                        help='save n samples as png images')
+    parser = myUtils.getBasicParser(['maxdisp', 'datapath', 'no_cuda', 'seed', 'eval_fcn',
+                                     'dataset', 'load_scale', 'nsample_save'],
+                                    description='warp module test')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()

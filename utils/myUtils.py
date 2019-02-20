@@ -2,6 +2,7 @@ import torch
 import os
 import argparse
 
+
 class NameValues:
     def __init__(self, names, values, prefix='', suffix=''):
         self._pairs = []
@@ -22,13 +23,14 @@ class NameValues:
         return str
 
     def dic(self):
-        dic={}
+        dic = {}
         for name, value in self._pairs:
             dic[name] = value
         return dic
 
     def pairs(self):
         return self._pairs
+
 
 class AutoPad:
     def __init__(self, imgs, multiple):
@@ -37,7 +39,8 @@ class AutoPad:
         self.WPad = ((self.W - 1) // multiple + 1) * multiple
 
     def pad(self, imgs, cuda):
-        imgsPad = torch.zeros([self.N, self.C, self.HPad, self.WPad], dtype=imgs.dtype, device='cuda' if cuda else 'cpu')
+        imgsPad = torch.zeros([self.N, self.C, self.HPad, self.WPad], dtype=imgs.dtype,
+                              device='cuda' if cuda else 'cpu')
         imgsPad[:, :, (self.HPad - self.H):, (self.WPad - self.W):] = imgs
         return imgsPad
 
@@ -45,13 +48,16 @@ class AutoPad:
         imgs = imgs[:, (self.HPad - self.H):, (self.WPad - self.W):]
         return imgs
 
+
 # Flip among W dimension. For NCHW data type.
 def flipLR(im):
     return im.flip(-1)
 
+
 def assertDisp(dispL=None, dispR=None):
     if (dispL is None or dispL.numel() == 0) and (dispR is None or dispR.numel() == 0):
         raise Exception('No disp input!')
+
 
 # Log First n ims into tensorboard
 # Log All ims if n == 0
@@ -67,43 +73,71 @@ def logFirstNdis(writer, name, im, range, global_step=None, n=0):
             im = gray2rgb(im)
         writer.add_images(name, im, global_step=global_step)
 
+
 def gray2rgb(im):
     if im.dim() == 3:
         im = im.unsqueeze(1)
     return im.repeat(1, 3, 1, 1)
 
+
 def checkDir(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
 
-def getBasicParser():
-    parser = argparse.ArgumentParser(description='Stereo')
-    parser.add_argument('--maxdisp', type=int, default=192,
-                        help='maxium disparity')
-    parser.add_argument('--model', default='PSMNet',
-                        help='select model')
-    parser.add_argument('--datapath', default='../datasets/sceneflow/',
-                        help='datapath')
-    parser.add_argument('--loadmodel', default=None,
-                        help='load model')
-    parser.add_argument('--no_cuda', action='store_true', default=False,
-                        help='enables CUDA training')
-    parser.add_argument('--seed', type=int, default=1, metavar='S',
-                        help='random seed (default: 1)')
-    parser.add_argument('--eval_fcn', type=str, default='outlier',
-                        help='evaluation function used in testing')
-    parser.add_argument('--ndis_log', type=int, default=1,
-                        help='number of disparity maps to log')
-    parser.add_argument('--dataset', type=str, default='sceneflow',
-                        help='(sceneflow/kitti2012/kitti2015/carla_kitti)')
-    parser.add_argument('--load_scale', type=float, default=1,
-                        help='scaling applied to data during loading')
-    parser.add_argument('--crop_scale', type=float, default=None,
-                        help='scaling applied to data during croping')
-    parser.add_argument('--batchsize_train', type=int, default=3,
-                        help='training batch size')
-    parser.add_argument('--batchsize_test', type=int, default=3,
-                        help='testing batch size')
+
+def getBasicParser(includeKeys=['all'], description='Stereo'):
+    parser = argparse.ArgumentParser(description=description)
+
+    addParams = {'maxdisp': lambda: parser.add_argument('--maxdisp', type=int, default=192,
+                                                        help='maxium disparity'),
+                 'model': lambda: parser.add_argument('--model', default='PSMNet',
+                                                      help='select model'),
+                 'datapath': lambda: parser.add_argument('--datapath', default='../datasets/sceneflow/',
+                                                         help='datapath'),
+                 'loadmodel': lambda: parser.add_argument('--loadmodel', default=None,
+                                                          help='load model'),
+                 'no_cuda': lambda: parser.add_argument('--no_cuda', action='store_true', default=False,
+                                                        help='enables CUDA training'),
+                 'seed': lambda: parser.add_argument('--seed', type=int, default=1, metavar='S',
+                                                     help='random seed (default: 1)'),
+                 'eval_fcn': lambda: parser.add_argument('--eval_fcn', type=str, default='outlier',
+                                                         help='evaluation function used in testing'),
+                 'ndis_log': lambda: parser.add_argument('--ndis_log', type=int, default=1,
+                                                         help='number of disparity maps to log'),
+                 'dataset': lambda: parser.add_argument('--dataset', type=str, default='sceneflow',
+                                                        help='(sceneflow/kitti2012/kitti2015/carla_kitti)'),
+                 'load_scale': lambda: parser.add_argument('--load_scale', type=float, default=1,
+                                                           help='scaling applied to data during loading'),
+                 'crop_scale': lambda: parser.add_argument('--crop_scale', type=float, default=None,
+                                                           help='scaling applied to data during croping'),
+                 'batchsize_test': lambda: parser.add_argument('--batchsize_test', type=int, default=3,
+                                                               help='testing batch size'),
+                 # training
+                 'batchsize_train': lambda: parser.add_argument('--batchsize_train', type=int, default=3,
+                                                                help='training batch size'),
+                 'log_every': lambda: parser.add_argument('--log_every', type=int, default=10,
+                                     help='log every log_every iterations. set to 0 to stop logging'),
+                 'test_every': lambda: parser.add_argument('--test_every', type=int, default=1,
+                                         help='test every test_every epochs. set to 0 to stop testing'),
+                 'epochs': lambda: parser.add_argument('--epochs', type=int, default=10,
+                                     help='number of epochs to train'),
+                 'lr': lambda: parser.add_argument('--lr', type=float, default=[0.001], help='', nargs='+'),
+                 # submission
+                 'subtype': lambda: parser.add_argument('--subtype', type=str, default='eval',
+                                     help='dataset type used for submission (eval/test)'),
+                 # module test
+                 'nsample_save': lambda: parser.add_argument('--nsample_save', type=int, default=5,
+                                     help='save n samples in module testing')
+                 }
+
+    if len(includeKeys):
+        if includeKeys[0] == 'all':
+            for addParam in addParams.values():
+                addParam()
+        else:
+            for key in includeKeys:
+                addParams[key]()
+
     return parser
 
 
@@ -125,6 +159,7 @@ def adjustLearningRate(optimizer, epoch, lr):
         param_group['lr'] = lr
     return lr
 
+
 def assertMode(kitti, mode):
     if kitti:
         print(
@@ -133,4 +168,4 @@ def assertMode(kitti, mode):
     else:
         if mode not in ('left', 'right', 'both'):
             raise Exception('No mode \'%s!\'' % mode)
-        return  mode
+        return mode

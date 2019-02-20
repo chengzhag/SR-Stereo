@@ -102,7 +102,9 @@ class Test:
 
 
 def main():
-    parser = myUtils.getBasicParser()
+    parser = myUtils.getBasicParser(['maxdisp', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
+                                     'ndis_log', 'dataset', 'load_scale', 'crop_scale', 'batchsize_test'],
+                                    description='evaluate Stereo net or SR-Stereo net')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -113,7 +115,7 @@ def main():
     # Dataset
     import dataloader
     _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
-                                                batchSizes=(args.batchsize_train, args.batchsize_test),
+                                                batchSizes=(0, args.batchsize_test),
                                                 loadScale=args.load_scale, cropScale=args.crop_scale)
 
     # Load model
