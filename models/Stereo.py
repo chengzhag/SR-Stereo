@@ -12,8 +12,9 @@ from .PSMNet_TieCheng import stackhourglass as getPSMNet_TieCheng
 
 class Stereo:
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, maxdisp=192, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
+    def __init__(self, maxdisp=192, dispScale=1, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
         self.maxdisp = maxdisp
+        self.dispScale = dispScale
         self.cuda = cuda
         self.stage = stage
 
@@ -34,7 +35,7 @@ class Stereo:
         self.optimizer = None
 
     def initModel(self):
-        self.model = self.getModel(self.maxdisp)
+        self.model = self.getModel(round(self.maxdisp // self.dispScale))
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
         if self.cuda:
             self.model = nn.DataParallel(self.model)
@@ -100,7 +101,7 @@ class Stereo:
                         (self.maxdisp, maxdisp))
                 self.maxdisp = maxdisp
             else:
-                print('No maxdisp find in checkpoint! Using specified maxdisp \'%d\' from args!' % self.maxdisp)
+                print('No maxdisp find in checkpoint! Using maxdisp \'%d\' specified in args!' % self.maxdisp)
             self.initModel()
             self.model.load_state_dict(state_dict['state_dict'])
 
@@ -137,13 +138,13 @@ class Stereo:
 
 class PSMNet(Stereo):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, maxdisp=192, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
-        super(PSMNet, self).__init__(maxdisp, cuda, stage, dataset, saveFolderSuffix)
+    def __init__(self, maxdisp=192, dispScale=1, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        super(PSMNet, self).__init__(maxdisp, dispScale, cuda, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet
 
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
         imgL, imgR, dispL, dispR = super(PSMNet, self).train(imgL, imgR, dispL, dispR)
-
+        dispL, dispR = dispL / self.dispScale, dispR / self.dispScale
         def _train(imgL, imgR, disp_true):
             self.optimizer.zero_grad()
 
@@ -172,16 +173,17 @@ class PSMNet(Stereo):
             if dispL is not None:
                 loss, dispOut = _train(imgL, imgR, dispL)
                 losses.append(loss)
-                outputs.append(dispOut.cpu())
+                outputs.append((dispOut * self.dispScale).cpu())
             else:
                 losses.append(None)
                 outputs.append(None)
 
             if dispR is not None:
                 # swap and flip input for right disparity map
-                loss, dispOut = _train(myUtils.flipLR(imgR), myUtils.flipLR(imgL), myUtils.flipLR(dispR))
+                loss, dispOut = _train(myUtils.flipLR(imgR), myUtils.flipLR(imgL),
+                                       myUtils.flipLR(dispR))
                 losses.append(loss)
-                outputs.append(myUtils.flipLR(dispOut).cpu())
+                outputs.append((myUtils.flipLR(dispOut) * self.dispScale).cpu())
             else:
                 losses.append(None)
                 outputs.append(None)
@@ -200,10 +202,12 @@ class PSMNet(Stereo):
 
         with torch.no_grad():
             def predictL():
-                return autoPad.unpad(self.model(imgL, imgR))
+                return autoPad.unpad(self.model(imgL, imgR)) * self.dispScale
 
             def predictR():
-                return autoPad.unpad(myUtils.flipLR(self.model(myUtils.flipLR(imgR), myUtils.flipLR(imgL))))
+                return autoPad.unpad(
+                    myUtils.flipLR(self.model(myUtils.flipLR(imgR), myUtils.flipLR(imgL)))
+                ) * self.dispScale
 
             imgL, imgR = autoPad.pad(imgL, self.cuda), autoPad.pad(imgR, self.cuda)
             if mode == 'left':
@@ -215,10 +219,11 @@ class PSMNet(Stereo):
             else:
                 raise Exception('No mode \'%s\'!' % mode)
 
+
 class PSMNet_TieCheng(Stereo):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, maxdisp=192, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
-        super(PSMNet_TieCheng, self).__init__(maxdisp, cuda, stage, dataset, saveFolderSuffix)
+    def __init__(self, maxdisp=192, dispScale=1, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        super(PSMNet_TieCheng, self).__init__(maxdisp, dispScale, cuda, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet_TieCheng
 
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
@@ -232,11 +237,10 @@ class PSMNet_TieCheng(Stereo):
             imgL, imgR = autoPad.pad(imgL, self.cuda), autoPad.pad(imgR, self.cuda)
             pl, pr = self.model(imgL, imgR)
             if mode == 'left':
-                return autoPad.unpad(pl)
+                return autoPad.unpad(pl) * self.dispScale
             elif mode == 'right':
-                return autoPad.unpad(pr)
+                return autoPad.unpad(pr) * self.dispScale
             elif mode == 'both':
-                return autoPad.unpad(pl), autoPad.unpad(pr)
+                return autoPad.unpad(pl) * self.dispScale, autoPad.unpad(pr) * self.dispScale
             else:
                 raise Exception('No mode \'%s\'!' % mode)
-

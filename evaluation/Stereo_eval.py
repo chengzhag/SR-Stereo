@@ -102,7 +102,7 @@ class Test:
 
 
 def main():
-    parser = myUtils.getBasicParser(['maxdisp', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
+    parser = myUtils.getBasicParser(['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
                                      'ndis_log', 'dataset', 'load_scale', 'crop_scale', 'batchsize_test'],
                                     description='evaluate Stereo net or SR-Stereo net')
     args = parser.parse_args()
@@ -123,7 +123,7 @@ def main():
     saveFolderSuffix = myUtils.NameValues(('loadScale', 'cropScale'),
                                           (testImgLoader.loadScale * 10,
                                            testImgLoader.cropScale * 10))
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage=stage,
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage,
                                          saveFolderSuffix=saveFolderSuffix.strSuffix())
     stereo.load(args.loadmodel)
 
