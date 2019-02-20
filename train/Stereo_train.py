@@ -98,7 +98,7 @@ class Train:
 
 
 def main():
-    parser = myUtils.getBasicParser(['maxdisp', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
+    parser = myUtils.getBasicParser(['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
                                      'ndis_log', 'dataset', 'load_scale', 'crop_scale', 'batchsize_test',
                                      'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr'],
                                     description='train or finetune Stereo net')
@@ -122,7 +122,7 @@ def main():
                                            (trainImgLoader.loadScale * 10,
                                             trainImgLoader.cropScale * 10,
                                             args.batchsize_train))
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage=stage, dataset=args.dataset,
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage, dataset=args.dataset,
                                          saveFolderSuffix=saveFolderSuffix.strSuffix())
     if args.loadmodel is not None:
         stereo.load(args.loadmodel)

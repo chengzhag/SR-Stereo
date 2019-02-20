@@ -89,7 +89,9 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
     parser = argparse.ArgumentParser(description=description)
 
     addParams = {'maxdisp': lambda: parser.add_argument('--maxdisp', type=int, default=192,
-                                                        help='maxium disparity'),
+                                                        help='maxium disparity of dataset (before scaling)'),
+                 'dispscale': lambda: parser.add_argument('--dispscale', type=float, default=1,
+                                                          help='scale disparity when training and predicting (real disparity range of stereo net will be set as maxdisp/dispscale)'),
                  'model': lambda: parser.add_argument('--model', default='PSMNet',
                                                       help='select model'),
                  'datapath': lambda: parser.add_argument('--datapath', default='../datasets/sceneflow/',

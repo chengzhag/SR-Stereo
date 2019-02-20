@@ -43,7 +43,7 @@ class Submission:
         print('Full submission time = %.2fmin' % (submissionTime / 60))
 
 def main():
-    parser = myUtils.getBasicParser(['maxdisp', 'model', 'datapath', 'loadmodel', 'no_cuda', 'dataset', 'subtype'],
+    parser = myUtils.getBasicParser(['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'dataset', 'subtype'],
                                     description='generate png image for kitti final submission')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -60,7 +60,7 @@ def main():
     saveFolderSuffix = myUtils.NameValues(('loadScale', 'cropScale'),
                                           (imgLoader.loadScale * 10,
                                            imgLoader.cropScale * 10))
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, cuda=args.cuda, stage=stage,
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage,
                                          saveFolderSuffix=saveFolderSuffix.strSuffix())
     stereo.load(args.loadmodel)
 
