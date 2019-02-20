@@ -90,7 +90,7 @@ def getBasicParser():
                         help='enables CUDA training')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
-    parser.add_argument('--eval_fcn', type=str, default='l1',
+    parser.add_argument('--eval_fcn', type=str, default='outlier',
                         help='evaluation function used in testing')
     parser.add_argument('--ndis_log', type=int, default=1,
                         help='number of disparity maps to log')
