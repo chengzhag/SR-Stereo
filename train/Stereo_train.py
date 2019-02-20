@@ -25,7 +25,8 @@ class Train:
         # 'stereo.model is None' means no checkpoint is loaded and presetted maxdisp is used
         if stereo.model is None:
             stereo.initModel()
-
+        self.log()
+        
         # Train
         ticFull = time.time()
 
@@ -35,7 +36,6 @@ class Train:
         for epoch in range(1, self.nEpochs + 1):
             print('This is %d-th epoch' % (epoch))
             lrNow = myUtils.adjustLearningRate(stereo.optimizer, epoch, self.lr)
-            self.log()
 
             # iteration
             totalTrainLoss = 0
