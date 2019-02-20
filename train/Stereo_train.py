@@ -7,10 +7,10 @@ from models import Stereo
 from tensorboardX import SummaryWriter
 from evaluation import Stereo_eval
 from utils import myUtils
-
+import sys
 
 class Train:
-    def __init__(self, trainImgLoader, logEvery=1, testEvery=1, ndisLog=1, Test=None, lr=[0.001]):
+    def __init__(self, trainImgLoader, nEpochs, lr=[0.001], logEvery=1, testEvery=1, ndisLog=1, Test=None):
         self.trainImgLoader = trainImgLoader
         self.logEvery = logEvery
         self.testEvery = testEvery
@@ -18,8 +18,9 @@ class Train:
         self.stereo = None
         self.test = Test
         self.lr = lr
+        self.nEpochs = nEpochs
 
-    def __call__(self, stereo, nEpochs):
+    def __call__(self, stereo):
         self.stereo = stereo
         # 'stereo.model is None' means no checkpoint is loaded and presetted maxdisp is used
         if stereo.model is None:
@@ -31,9 +32,10 @@ class Train:
         epoch = None
         batch_idx = None
         global_step = 0
-        for epoch in range(1, nEpochs + 1):
+        for epoch in range(1, self.nEpochs + 1):
             print('This is %d-th epoch' % (epoch))
             lrNow = myUtils.adjustLearningRate(stereo.optimizer, epoch, self.lr)
+            self.log()
 
             # iteration
             totalTrainLoss = 0
@@ -65,9 +67,9 @@ class Train:
                 losses = [loss for loss in losses if loss is not None]
                 totalTrainLoss += sum(losses) / len(losses)
 
-                timeLeft = (time.time() - tic) / 3600 * ((nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
+                timeLeft = (time.time() - tic) / 3600 * ((self.nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
                 print('it %d/%d, %sleft %.2fh' % (
-                    global_step, len(self.trainImgLoader) * nEpochs,
+                    global_step, len(self.trainImgLoader) * self.nEpochs,
                     lossesPairs.strPrint(''), timeLeft))
                 tic = time.time()
 
@@ -77,7 +79,7 @@ class Train:
                         trainLoss=totalTrainLoss / len(self.trainImgLoader))
             # test
             if ((self.testEvery > 0 and epoch % self.testEvery == 0)
-                or (self.testEvery == 0 and epoch == nEpochs)) \
+                or (self.testEvery == 0 and epoch == self.nEpochs)) \
                     and self.test is not None:
                 testScores = self.test(stereo=stereo)
                 testScores = [score for score in testScores if score is not None]
@@ -94,14 +96,57 @@ class Train:
                 print('Training status: %s' % testReaults.strPrint(''))
                 self.test.log(epoch=epoch, it=batch_idx, global_step=global_step, additionalValue=testReaults.pairs())
 
-        print('Full training time = %.2fh' % ((time.time() - ticFull) / 3600))
+        endMessage = 'Full training time = %.2fh\n' % ((time.time() - ticFull) / 3600)
+        print(endMessage)
+        self.log(endMessage=endMessage)
+
+
+    def log(self, additionalValue=(), endMessage=None):
+        myUtils.checkDir(self.stereo.saveFolder)
+        logDir = os.path.join(self.stereo.saveFolder, 'train_info.txt')
+        with open(logDir, "a") as log:
+            def writeNotNone(name, value):
+                if value is not None: log.write(name + ': ' + str(value) + '\n')
+
+            if endMessage is None:
+                log.write('---------------------- %s ----------------------\n\n' % time.asctime(time.localtime(time.time())))
+
+                log.write('python ')
+                for arg in sys.argv:
+                    log.write(arg + ' ')
+                log.write('\n')
+
+                baseInfos = (('data', self.trainImgLoader.datapath),
+                             ('load_scale', self.trainImgLoader.loadScale),
+                             ('cropScale', self.trainImgLoader.cropScale),
+                             ('checkpoint', self.stereo.checkpointDir),
+                             ('nEpochs', self.nEpochs),
+                             ('lr', self.lr),
+                             ('logEvery', self.logEvery),
+                             ('testEvery', self.testEvery),
+                             ('ndisLog', self.ndisLog),
+                             )
+
+                nameValues = baseInfos + additionalValue
+                for pairs in (baseInfos, additionalValue):
+                    for (name, value) in pairs:
+                        writeNotNone(name, value)
+                    log.write('\n')
+
+            else:
+                log.write(endMessage)
+                for pairs in (additionalValue,):
+                    for (name, value) in pairs:
+                        writeNotNone(name, value)
+                    log.write('\n')
 
 
 def main():
-    parser = myUtils.getBasicParser(['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
-                                     'ndis_log', 'dataset', 'load_scale', 'crop_scale', 'batchsize_test',
-                                     'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr'],
-                                    description='train or finetune Stereo net')
+    parser = myUtils.getBasicParser(
+        ['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
+         'ndis_log', 'dataset', 'load_scale', 'crop_scale', 'batchsize_test',
+         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr'],
+        description='train or finetune Stereo net')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -118,11 +163,12 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    saveFolderSuffix =  myUtils.NameValues(('loadScale', 'cropScale', 'batchSize'),
-                                           (trainImgLoader.loadScale * 10,
-                                            trainImgLoader.cropScale * 10,
-                                            args.batchsize_train))
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage, dataset=args.dataset,
+    saveFolderSuffix = myUtils.NameValues(('loadScale', 'cropScale', 'batchSize'),
+                                          (trainImgLoader.loadScale * 10,
+                                           trainImgLoader.cropScale * 10,
+                                           args.batchsize_train))
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage,
+                                         dataset=args.dataset,
                                          saveFolderSuffix=saveFolderSuffix.strSuffix())
     if args.loadmodel is not None:
         stereo.load(args.loadmodel)
@@ -130,9 +176,10 @@ def main():
     # Train
     test = Stereo_eval.Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn,
                             ndisLog=args.ndis_log)
-    train = Train(trainImgLoader=trainImgLoader, logEvery=args.log_every, testEvery=args.test_every,
-                  ndisLog=args.ndis_log, Test=test, lr=args.lr)
-    train(stereo=stereo, nEpochs=args.epochs)
+    train = Train(trainImgLoader=trainImgLoader, nEpochs=args.epochs, lr=args.lr,
+                  logEvery=args.log_every, ndisLog=args.ndis_log,
+                  testEvery=args.test_every, Test=test)
+    train(stereo=stereo)
 
 
 if __name__ == '__main__':
