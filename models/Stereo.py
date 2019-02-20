@@ -149,7 +149,8 @@ class PSMNet(Stereo):
 
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
         imgL, imgR, dispL, dispR = super(PSMNet, self).train(imgL, imgR, dispL, dispR)
-        dispL, dispR = dispL / self.dispScale, dispR / self.dispScale
+        dispL, dispR = dispL / self.dispScale if dispL is not None else None, \
+                       dispR / self.dispScale if dispR is not None else None
 
         def _train(imgL, imgR, disp_true):
             self.optimizer.zero_grad()
