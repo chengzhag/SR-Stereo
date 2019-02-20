@@ -93,15 +93,19 @@ class Stereo:
         if checkpointDir is not None:
             print('Loading checkpoint from %s' % checkpointDir)
             state_dict = torch.load(checkpointDir)
-            if 'maxdisp' in state_dict.keys():
-                maxdisp = state_dict['maxdisp']
-                if maxdisp != self.maxdisp:
-                    print(
-                        'Specified maxdisp \'%d\' from args is not equal to maxdisp \'%d\' loaded from checkpoint! Using loaded maxdisp instead!' %
-                        (self.maxdisp, maxdisp))
-                self.maxdisp = maxdisp
-            else:
-                print('No maxdisp find in checkpoint! Using maxdisp \'%d\' specified in args!' % self.maxdisp)
+
+            def loadValue(name):
+                if name in state_dict.keys():
+                    value = state_dict[name]
+                    if value != getattr(self, name):
+                        print(
+                            f'Specified {name} \'{getattr(self, name)}\' from args is not equal to {name} \'{value}\' loaded from checkpoint! Using loaded {name} instead!')
+                    setattr(self, name, value)
+                else:
+                    print(f'No {name} find in checkpoint! Using {name} \'{getattr(self, name)}\' specified in args!')
+
+            loadValue('maxdisp')
+            loadValue('dispScale')
             self.initModel()
             self.model.load_state_dict(state_dict['state_dict'])
 
@@ -131,7 +135,8 @@ class Stereo:
             'iteration': iteration,
             'state_dict': self.model.state_dict(),
             'train_loss': trainLoss,
-            'maxdisp': self.maxdisp
+            'maxdisp': self.maxdisp,
+            'dispScale': self.dispScale
         }, self.checkpointDir)
         return self.checkpointDir
 
@@ -145,6 +150,7 @@ class PSMNet(Stereo):
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
         imgL, imgR, dispL, dispR = super(PSMNet, self).train(imgL, imgR, dispL, dispR)
         dispL, dispR = dispL / self.dispScale, dispR / self.dispScale
+
         def _train(imgL, imgR, disp_true):
             self.optimizer.zero_grad()
 
