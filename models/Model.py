@@ -1,0 +1,58 @@
+import os
+import time
+import torch.optim as optim
+import torch
+import torch.nn.functional as F
+import torch.nn as nn
+from evaluation import evalFcn
+from utils import myUtils
+
+class Model:
+    def __init__(self, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        self.cuda = cuda
+        self.stage = stage
+
+        self.startTime = time.localtime(time.time())
+        self.multiple = 16
+
+        self.saveFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) \
+                              + self.__class__.__name__ \
+                              + saveFolderSuffix
+        if dataset is not None: self.saveFolderName += ('_%s' % dataset)
+        self.saveFolder = os.path.join('logs', stage, self.saveFolderName)
+        self.logFolder = None
+        self.checkpointDir = None
+        self.checkpointFolder = None
+
+        self.getModel = None
+        self.model = None
+        self.optimizer = None
+
+    def initModel(self):
+        pass
+
+    def _train(self):
+        if self.model is None:
+            self.initModel()
+        # When training, log files should be saved to saveFolder.
+        self.logFolder = os.path.join(self.saveFolder, 'logs')
+        self.model.train()
+
+    def _predict(self):
+        self.model.eval()
+
+    def load(self, checkpointDir):
+        if checkpointDir is not None:
+            print('Loading checkpoint from %s' % checkpointDir)
+        else:
+            raise Exception('checkpoint dir is None!')
+
+    def nParams(self):
+        return sum([p.data.nelement() for p in self.model.parameters()])
+
+    def _save(self, epoch, iteration):
+        # update checkpointDir
+        self.checkpointDir = os.path.join(self.saveFolder, 'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
+        self.checkpointFolder = self.saveFolder
+        self.logFolder = os.path.join(self.checkpointFolder, 'logs')
+        myUtils.checkDir(self.saveFolder)

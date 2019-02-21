@@ -8,31 +8,15 @@ from evaluation import evalFcn
 from utils import myUtils
 from .PSMNet import stackhourglass as getPSMNet
 from .PSMNet_TieCheng import stackhourglass as getPSMNet_TieCheng
+from .Model import Model
 
 
-class Stereo:
+class Stereo(Model):
     # dataset: only used for suffix of saveFolderName
     def __init__(self, maxdisp=192, dispScale=1, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        super(Stereo, self).__init__(cuda, stage, dataset, saveFolderSuffix)
         self.maxdisp = maxdisp
         self.dispScale = dispScale
-        self.cuda = cuda
-        self.stage = stage
-
-        self.startTime = time.localtime(time.time())
-        self.multiple = 16
-
-        self.saveFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) \
-                              + self.__class__.__name__ \
-                              + saveFolderSuffix
-        if dataset is not None: self.saveFolderName += ('_%s' % dataset)
-        self.saveFolder = os.path.join('logs', stage, self.saveFolderName)
-        self.logFolder = None
-        self.checkpointDir = None
-        self.checkpointFolder = None
-
-        self.getModel = None
-        self.model = None
-        self.optimizer = None
 
     def initModel(self):
         self.model = self.getModel(round(self.maxdisp // self.dispScale))
@@ -42,11 +26,7 @@ class Stereo:
             self.model.cuda()
 
     def train(self, imgL, imgR, dispL=None, dispR=None):
-        if self.model is None:
-            self.initModel()
-        # When training, log files should be saved to saveFolder.
-        self.logFolder = os.path.join(self.saveFolder, 'logs')
-        self.model.train()
+        super(Stereo, self)._train()
         myUtils.assertDisp(dispL, dispR)
         if self.cuda:
             imgL, imgR = imgL.cuda(), imgR.cuda()
@@ -55,7 +35,7 @@ class Stereo:
         return imgL, imgR, dispL, dispR
 
     def predict(self, imgL, imgR, mode='both'):
-        self.model.eval()
+        super(Stereo, self)._predict()
         autoPad = myUtils.AutoPad(imgL, self.multiple)
         return autoPad
 
@@ -90,46 +70,36 @@ class Stereo:
             return scores
 
     def load(self, checkpointDir):
-        if checkpointDir is not None:
-            print('Loading checkpoint from %s' % checkpointDir)
-            state_dict = torch.load(checkpointDir)
+        super(Stereo, self).load(checkpointDir)
 
-            def loadValue(name):
-                if name in state_dict.keys():
-                    value = state_dict[name]
-                    if value != getattr(self, name):
-                        print(
-                            f'Specified {name} \'{getattr(self, name)}\' from args is not equal to {name} \'{value}\' loaded from checkpoint! Using loaded {name} instead!')
-                    setattr(self, name, value)
-                else:
-                    print(f'No {name} find in checkpoint! Using {name} \'{getattr(self, name)}\' specified in args!')
+        state_dict = torch.load(checkpointDir)
 
-            loadValue('maxdisp')
-            loadValue('dispScale')
-            self.initModel()
-            self.model.load_state_dict(state_dict['state_dict'])
+        def loadValue(name):
+            if name in state_dict.keys():
+                value = state_dict[name]
+                if value != getattr(self, name):
+                    print(
+                        f'Specified {name} \'{getattr(self, name)}\' from args is not equal to {name} \'{value}\' loaded from checkpoint! Using loaded {name} instead!')
+                setattr(self, name, value)
+            else:
+                print(f'No {name} find in checkpoint! Using {name} \'{getattr(self, name)}\' specified in args!')
 
-            # update checkpointDir
-            self.checkpointDir = checkpointDir
-            self.checkpointFolder, _ = os.path.split(self.checkpointDir)
-            # When testing, log files should be saved to checkpointFolder.
-            # Here checkpointFolder is setted as default logging folder.
-            self.logFolder = os.path.join(self.checkpointFolder, 'logs')
+        loadValue('maxdisp')
+        loadValue('dispScale')
+        self.initModel()
+        self.model.load_state_dict(state_dict['state_dict'])
 
-            print('Loading complete! Number of model parameters: %d' % self.nParams())
-        else:
-            raise Exception('checkpoint dir is None!')
-
-    def nParams(self):
-        return sum([p.data.nelement() for p in self.model.parameters()])
-
-    def save(self, epoch, iteration, trainLoss):
         # update checkpointDir
-        self.checkpointDir = os.path.join(self.saveFolder, 'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
-        self.checkpointFolder = self.saveFolder
+        self.checkpointDir = checkpointDir
+        self.checkpointFolder, _ = os.path.split(self.checkpointDir)
+        # When testing, log files should be saved to checkpointFolder.
+        # Here checkpointFolder is setted as default logging folder.
         self.logFolder = os.path.join(self.checkpointFolder, 'logs')
 
-        myUtils.checkDir(self.saveFolder)
+        print('Loading complete! Number of model parameters: %d' % self.nParams())
+
+    def save(self, epoch, iteration, trainLoss):
+        super(Stereo, self)._save(epoch, iteration)
         torch.save({
             'epoch': epoch,
             'iteration': iteration,
