@@ -8,7 +8,7 @@ from evaluation import evalFcn
 from utils import myUtils
 from .PSMNet import stackhourglass as getPSMNet
 from .PSMNet_TieCheng import stackhourglass as getPSMNet_TieCheng
-from .Model import Model
+from ..Model import Model
 
 
 class Stereo(Model):
