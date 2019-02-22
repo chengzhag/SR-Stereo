@@ -21,7 +21,7 @@ def grayLoader(path):
 
 class myImageFloder(data.Dataset):
     # trainCrop = (W, H)
-    def __init__(self, inputLdirs, inputRdirs, gtLdirs=None, gtRdirs=None, status='testing',
+    def __init__(self, inputLdirs, inputRdirs=None, gtLdirs=None, gtRdirs=None, status='testing',
                  trainCrop=(512, 256), kitti=False, loadScale=1, cropScale=1, mode='normal'):
         self.inputLdirs = inputLdirs
         self.inputRdirs = inputRdirs
@@ -44,76 +44,100 @@ class myImageFloder(data.Dataset):
             w, h = im.size
             return im.resize((round(w * self.loadScale), round(h * self.loadScale)), method)
 
-        inputLdir = self.inputLdirs[index]
-        inputRdir = self.inputRdirs[index]
-        inputL = self.inputLoader(inputLdir)
-        inputR = self.inputLoader(inputRdir)
+        def testCrop(im):
+            w, h = im.size
+            wCrop, hCrop = self.testCrop
+            return im.crop((w - wCrop, h - hCrop, w, h))
 
-        gtLdir = self.gtLdirs[index] if self.gtLdirs is not None else None
-        gtRdir = self.gtRdirs[index] if self.gtRdirs is not None else None
-        gtL = self.gtLoader(gtLdir) if gtLdir is not None else None
-        gtR = self.gtLoader(gtRdir) if gtRdir is not None else None
-        if type(gtL) == np.ndarray or type(gtR) == np.ndarray:
-            gtL = Image.fromarray(gtL) if gtLdir is not None else None
-            gtR = Image.fromarray(gtR) if gtRdir is not None else None
+        class RandomCrop:
+            def __init__(self, trainCrop):
+                self.wCrop, self.hCrop = trainCrop
+                self.x1 = None
+                self.y1 = None
 
-        if self.mode == 'raw':
-            inputL, inputR, gtL, gtR = [transforms.ToTensor()(im) if im is not None else None
-                                        for im in (inputL, inputR, gtL, gtR)]
-            gtL, gtR = [im.squeeze() if im is not None else np.array([])
-                                        for im in (gtL, gtR)]
-            return inputL, inputR, gtL, gtR
+            def __call__(self, input):
+                w, h = input.size
+                if self.x1 is None: self.x1 = random.randint(0, w - self.wCrop)
+                if self.y1 is None: self.y1 = random.randint(0, h - self.hCrop)
+                return input.crop((self.x1, self.y1, self.x1 + self.wCrop, self.y1 + self.hCrop))
 
-        inputL = scale(inputL, Image.ANTIALIAS)
-        inputR = scale(inputR, Image.ANTIALIAS)
-        gtL = scale(gtL, Image.NEAREST) if gtLdir is not None else None
-        gtR = scale(gtR, Image.NEAREST) if gtRdir is not None else None
+        def loadInput(dir, randomCrop):
+            input = self.inputLoader(dir)
 
-        if self.mode == 'PIL':
-            pass
-        elif self.mode == 'scaled':
-            inputL, inputR = [transforms.ToTensor()(im) if im is not None else None
-                              for im in (inputL, inputR)]
-        elif self.mode == 'normal':
-            if self.status == 'training':
-                # random crop
-                w, h = inputL.size
-                wCrop, hCrop = self.trainCrop
+            if self.mode == 'raw':
+                input = transforms.ToTensor()(input) if input is not None else None
+                return input
 
-                x1 = random.randint(0, w - wCrop)
-                y1 = random.randint(0, h - hCrop)
+            input = scale(input, Image.ANTIALIAS)
 
-                inputL = inputL.crop((x1, y1, x1 + wCrop, y1 + hCrop))
-                inputR = inputR.crop((x1, y1, x1 + wCrop, y1 + hCrop))
-
-                gtL = gtL.crop((x1, y1, x1 + wCrop, y1 + hCrop)) if gtL is not None else None
-                gtR = gtR.crop((x1, y1, x1 + wCrop, y1 + hCrop)) if gtR is not None else None
-            elif self.status == 'testing':
-                if self.testCrop is not None:
-                    # crop to the same size
-                    w, h = inputL.size
-                    wCrop, hCrop = self.testCrop
-                    inputL = inputL.crop((w - wCrop, h - hCrop, w, h))
-                    inputR = inputR.crop((w - wCrop, h - hCrop, w, h))
-
-                    gtL = gtL.crop((w - wCrop, h - hCrop, w, h)) if gtL is not None else None
-                    gtR = gtR.crop((w - wCrop, h - hCrop, w, h)) if gtR is not None else None
-            elif self.status == 'submission':
-                # do no crop
+            if self.mode == 'PIL':
                 pass
+            elif self.mode == 'scaled':
+                input = transforms.ToTensor()(input) if input is not None else None
+            elif self.mode == 'normal':
+                if self.status == 'training':
+                    # random crop
+                    input = randomCrop(input)
+
+                elif self.status == 'testing':
+                    if self.testCrop is not None:
+                        # crop to the same size
+                        input = testCrop(input)
+                elif self.status == 'submission':
+                    # do no crop
+                    pass
+                else:
+                    raise Exception('No stats \'%s\'' % self.status)
+
+                processed = preprocess.get_transform(augment=False)
+                input = processed(input)
             else:
-                raise Exception('No stats \'%s\'' % self.status)
+                raise Exception('No mode %s!' % self.mode)
 
-            processed = preprocess.get_transform(augment=False)
-            inputL = processed(inputL)
-            inputR = processed(inputR)
-        else:
-            raise Exception('No mode %s!' % self.mode)
+            return input
 
-        gtL = np.ascontiguousarray(gtL, dtype=np.float32) / self.dispScale * self.loadScale \
-            if gtL is not None else np.array([])
-        gtR = np.ascontiguousarray(gtR, dtype=np.float32) / self.dispScale * self.loadScale \
-            if gtR is not None else np.array([])
+        def loadGT(dir, randomCrop):
+            gt = self.gtLoader(dir)
+            if type(gt) == np.ndarray:
+                gt = Image.fromarray(gt)
+
+            if self.mode == 'raw':
+                gt = transforms.ToTensor()(gt)
+                gt = gt.squeeze()
+                return gt
+
+            gt = scale(gt, Image.NEAREST)
+
+            if self.mode == 'PIL':
+                pass
+            elif self.mode == 'scaled':
+                pass
+            elif self.mode == 'normal':
+                if self.status == 'training':
+                    # random crop
+                    gt = randomCrop(gt)
+                elif self.status == 'testing':
+                    if self.testCrop is not None:
+                        # crop to the same size
+                        gt = testCrop(gt)
+                elif self.status == 'submission':
+                    # do no crop
+                    pass
+                else:
+                    raise Exception('No stats \'%s\'' % self.status)
+            else:
+                raise Exception('No mode %s!' % self.mode)
+
+            gt = np.ascontiguousarray(gt, dtype=np.float32) / self.dispScale * self.loadScale
+            return gt
+
+        randomCrop = RandomCrop(trainCrop=self.trainCrop)
+
+        inputL = loadInput(self.inputLdirs[index], randomCrop) if self.inputLdirs is not None else np.array([])
+        inputR = loadInput(self.inputRdirs[index], randomCrop) if self.inputRdirs is not None else np.array([])
+
+        gtL = loadGT(self.gtLdirs[index], randomCrop) if self.gtLdirs is not None else np.array([])
+        gtR = loadGT(self.gtRdirs[index], randomCrop) if self.gtRdirs is not None else np.array([])
 
         return inputL, inputR, gtL, gtR
 
