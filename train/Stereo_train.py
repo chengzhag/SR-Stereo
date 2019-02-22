@@ -40,10 +40,11 @@ class Train:
             # iteration
             totalTrainLoss = 0
             tic = time.time()
+            torch.cuda.empty_cache()
             for batch_idx, batch in enumerate(self.trainImgLoader, 1):
                 batch = [data if data.numel() else None for data in batch]
                 global_step += 1
-                torch.cuda.empty_cache()
+                # torch.cuda.empty_cache()
 
                 if global_step % self.logEvery == 0 and self.logEvery > 0:
 
@@ -120,7 +121,7 @@ class Train:
 
                 baseInfos = (('data', self.trainImgLoader.datapath),
                              ('load_scale', self.trainImgLoader.loadScale),
-                             ('cropScale', self.trainImgLoader.cropScale),
+                             ('trainCrop', self.trainImgLoader.trainCrop),
                              ('checkpoint', self.stereo.checkpointDir),
                              ('nEpochs', self.nEpochs),
                              ('lr', self.lr),
@@ -146,7 +147,7 @@ class Train:
 def main():
     parser = myUtils.getBasicParser(
         ['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
-         'ndis_log', 'dataset', 'load_scale', 'crop_scale', 'batchsize_test',
+         'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
          'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr'],
         description='train or finetune Stereo net')
 
@@ -160,14 +161,15 @@ def main():
     # Dataset
     import dataloader
     trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
+                                                             trainCrop=args.trainCrop,
                                                              batchSizes=(args.batchsize_train, args.batchsize_test),
-                                                             loadScale=args.load_scale, cropScale=args.crop_scale)
+                                                             loadScale=args.load_scale)
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    saveFolderSuffix = myUtils.NameValues(('loadScale', 'cropScale', 'batchSize'),
+    saveFolderSuffix = myUtils.NameValues(('loadScale', 'trainCrop', 'batchSize'),
                                           (trainImgLoader.loadScale * 10,
-                                           trainImgLoader.cropScale * 10,
+                                           trainImgLoader.trainCrop,
                                            args.batchsize_train))
     stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage,
                                          dataset=args.dataset,

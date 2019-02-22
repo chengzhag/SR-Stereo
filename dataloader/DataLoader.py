@@ -22,7 +22,7 @@ def grayLoader(path):
 class myImageFloder(data.Dataset):
     # trainCrop = (W, H)
     def __init__(self, inputLdirs, inputRdirs=None, gtLdirs=None, gtRdirs=None, status='testing',
-                 trainCrop=(512, 256), kitti=False, loadScale=1, cropScale=1, mode='normal'):
+                 trainCrop=(256, 512), kitti=False, loadScale=1, mode='normal'):
         self.inputLdirs = inputLdirs
         self.inputRdirs = inputRdirs
         self.status = status
@@ -35,8 +35,7 @@ class myImageFloder(data.Dataset):
         self.testCrop = (round(1232 * loadScale), round(368 * loadScale)) if kitti else None
         self.dispScale = 256 if kitti else 1
         self.loadScale = loadScale
-        self.cropScale = cropScale
-        self.trainCrop = (round(trainCrop[0] * self.cropScale), round(trainCrop[1] * self.cropScale))
+        self.trainCrop = trainCrop
         self.mode = mode
 
     def __getitem__(self, index):
@@ -51,7 +50,7 @@ class myImageFloder(data.Dataset):
 
         class RandomCrop:
             def __init__(self, trainCrop):
-                self.wCrop, self.hCrop = trainCrop
+                self.hCrop, self.wCrop = trainCrop
                 self.x1 = None
                 self.y1 = None
 

@@ -77,7 +77,7 @@ class Test:
             log.write('---------------------- %s ----------------------\n\n' % self.localtime)
             baseInfos = (('data', self.testImgLoader.datapath ),
                          ('loadScale', self.testImgLoader.loadScale),
-                         ('cropScale', self.testImgLoader.cropScale),
+                         ('trainCrop', self.testImgLoader.trainCrop),
                          ('checkpoint', self.stereo.checkpointDir),
                          ('evalFcn', self.evalFcn),
                          ('epoch', epoch),
@@ -104,7 +104,7 @@ class Test:
 
 def main():
     parser = myUtils.getBasicParser(['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
-                                     'ndis_log', 'dataset', 'load_scale', 'crop_scale', 'batchsize_test'],
+                                     'ndis_log', 'dataset', 'load_scale', 'batchsize_test'],
                                     description='evaluate Stereo net or SR-Stereo net')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -117,7 +117,7 @@ def main():
     import dataloader
     _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
                                                 batchSizes=(0, args.batchsize_test),
-                                                loadScale=args.load_scale, cropScale=args.crop_scale)
+                                                loadScale=args.load_scale)
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))

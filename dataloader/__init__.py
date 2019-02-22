@@ -1,8 +1,8 @@
 import torch
 
 # cropScale: defaultly set to loadScale to remain ratio between loaded image and cropped image
-def getDataLoader(datapath, dataset='sceneflow', trainCrop=(512, 256), batchSizes=(12, 11),
-                  loadScale=1, cropScale=None, mode='normal'):
+def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSizes=(12, 11),
+                  loadScale=1, mode='normal'):
     if dataset == 'sceneflow':
         from dataloader import listSceneFlowFiles as listFile
     elif dataset == 'kitti2012':
@@ -23,8 +23,6 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(512, 256), batchSize
     # For KITTI, images have different resolutions. Crop will be needed.
     kitti = dataset in ('kitti2012', 'kitti2015')
 
-    cropScale = loadScale if cropScale is None else cropScale
-
     if mode == 'submission':
         mode = 'normal'
         status = 'submission'
@@ -32,12 +30,12 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(512, 256), batchSize
         status = None
     trainImgLoader = torch.utils.data.DataLoader(
         fileLoader.myImageFloder(*pathsTrain, status='training' if status is None else status, trainCrop=trainCrop,
-                                 kitti=kitti, loadScale=loadScale, cropScale=cropScale, mode=mode),
+                                 kitti=kitti, loadScale=loadScale, mode=mode),
         batch_size=batchSizes[0], shuffle=True, num_workers=8, drop_last=False) if batchSizes[0] > 0 else None
 
     testImgLoader = torch.utils.data.DataLoader(
         fileLoader.myImageFloder(*pathsTest, status='testing' if status is None else status, trainCrop=trainCrop,
-                                 kitti=kitti, loadScale=loadScale, cropScale=cropScale, mode=mode),
+                                 kitti=kitti, loadScale=loadScale, mode=mode),
         batch_size=batchSizes[1], shuffle=False, num_workers=8, drop_last=False) if batchSizes[1] > 0 else None
 
     # Add dataset info to imgLoader objects
@@ -46,7 +44,7 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(512, 256), batchSize
         if imgLoader is not None:
             imgLoader.kitti = kitti
             imgLoader.loadScale = loadScale
-            imgLoader.cropScale = cropScale
+            imgLoader.trainCrop = trainCrop
             imgLoader.datapath = datapath
             imgLoader.batchSizes = batchSizes
 
