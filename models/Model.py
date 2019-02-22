@@ -47,6 +47,13 @@ class Model:
         else:
             raise Exception('checkpoint dir is None!')
 
+        # update checkpointDir
+        self.checkpointDir = checkpointDir
+        self.checkpointFolder, _ = os.path.split(self.checkpointDir)
+        # When testing, log files should be saved to checkpointFolder.
+        # Here checkpointFolder is setted as default logging folder.
+        self.logFolder = os.path.join(self.checkpointFolder, 'logs')
+
     def nParams(self):
         return sum([p.data.nelement() for p in self.model.parameters()])
 

@@ -89,13 +89,6 @@ class Stereo(Model):
         self.initModel()
         self.model.load_state_dict(state_dict['state_dict'])
 
-        # update checkpointDir
-        self.checkpointDir = checkpointDir
-        self.checkpointFolder, _ = os.path.split(self.checkpointDir)
-        # When testing, log files should be saved to checkpointFolder.
-        # Here checkpointFolder is setted as default logging folder.
-        self.logFolder = os.path.join(self.checkpointFolder, 'logs')
-
         print('Loading complete! Number of model parameters: %d' % self.nParams())
 
     def save(self, epoch, iteration, trainLoss):

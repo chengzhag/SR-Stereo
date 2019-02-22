@@ -55,4 +55,6 @@ class SR(Model):
         state_dict = torch.load(checkpointDir)
         self.model.load_state_dict(state_dict, strict=False)
 
+        print('Loading complete! Number of model parameters: %d' % self.nParams())
+
 
