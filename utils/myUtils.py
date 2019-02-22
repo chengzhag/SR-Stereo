@@ -171,3 +171,7 @@ def assertMode(kitti, mode):
         if mode not in ('left', 'right', 'both'):
             raise Exception('No mode \'%s!\'' % mode)
         return mode
+
+def quantize(img, rgb_range):
+    pixel_range = 255 / rgb_range
+    return img.mul(pixel_range).clamp(0, 255).round().div(pixel_range)
