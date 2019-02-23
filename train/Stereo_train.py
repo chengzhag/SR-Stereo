@@ -68,8 +68,8 @@ def main():
         stereo.load(args.loadmodel)
 
     # Train
-    test = Stereo_eval.Test(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn,
-                            ndisLog=args.ndis_log)
+    test = Stereo_eval.Evaluation(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn,
+                                  ndisLog=args.ndis_log)
     train = Train(trainImgLoader=trainImgLoader, nEpochs=args.epochs, lr=args.lr,
                   logEvery=args.log_every, ndisLog=args.ndis_log,
                   testEvery=args.test_every, Test=test)
