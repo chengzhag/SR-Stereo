@@ -23,22 +23,20 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
     pathsTrain = paths[0:4]
     pathsTest = paths[4:8]
 
-    # mask out unnecessary data
-    for paths in (pathsTrain, pathsTest):
-        for i, m in enumerate(mask):
-            if not m: paths[i] = None
-
     # For KITTI, images have different resolutions. Crop will be needed.
     kitti = dataset in ('kitti2012', 'kitti2015')
 
     trainImgLoader = torch.utils.data.DataLoader(
         fileLoader.myImageFloder(*pathsTrain, trainCrop=trainCrop,
-                                 kitti=kitti, loadScale=loadScale, mode=mode),
+                                 kitti=kitti, loadScale=loadScale,
+                                 mode=mode, mask=mask),
         batch_size=batchSizes[0], shuffle=True, num_workers=8, drop_last=False) if batchSizes[0] > 0 else None
 
     testImgLoader = torch.utils.data.DataLoader(
         fileLoader.myImageFloder(*pathsTest, trainCrop=trainCrop,
-                                 kitti=kitti, loadScale=loadScale, mode='testing' if mode == 'training' else mode),
+                                 kitti=kitti, loadScale=loadScale,
+                                 mode='testing' if mode == 'training' else mode,
+                                 mask=mask),
         batch_size=batchSizes[1], shuffle=False, num_workers=8, drop_last=False) if batchSizes[1] > 0 else None
 
     # Add dataset info to imgLoader objects

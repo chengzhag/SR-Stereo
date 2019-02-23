@@ -26,8 +26,8 @@ class Submission:
         tic = time.time()
         ticFull = time.time()
         for iIm, ims in enumerate(self.subImgLoader, 1):
-            nameL = self.subImgLoader.dataset.inputLdirs[iIm - 1].split('/')[-1]
-            savePath = os.path.join(saveFolder, nameL)
+            name = self.subImgLoader.dataset.name(iIm - 1)
+            savePath = os.path.join(saveFolder, name)
             ims = [data if data.numel() else None for data in ims]
             dispOut = self.stereo.predict(*ims[0:2], mode='left')
             dispOut = dispOut.squeeze()

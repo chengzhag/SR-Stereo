@@ -22,13 +22,10 @@ def grayLoader(path):
 class myImageFloder(data.Dataset):
     # trainCrop = (W, H)
     def __init__(self, inputLdirs=None, inputRdirs=None, gtLdirs=None, gtRdirs=None,
-                 trainCrop=(256, 512), kitti=False, loadScale=(1,), mode='training'):
+                 trainCrop=(256, 512), kitti=False, loadScale=(1,), mode='training', mask=(1, 1, 1, 1)):
+        self.mask = mask
         self.mode = mode
-        self.inputLdirs = inputLdirs
-        self.inputRdirs = inputRdirs
-        # in submission, only input images are needed
-        self.gtLdirs = gtLdirs
-        self.gtRdirs = gtRdirs
+        self.dirs = (inputLdirs, inputRdirs, gtLdirs, gtRdirs)
         self.inputLoader = rgbLoader
         self.gtLoader = grayLoader if kitti else pfmLoader
         self.trainCrop = trainCrop
@@ -65,11 +62,11 @@ class myImageFloder(data.Dataset):
 
         randomCrop = RandomCrop(trainCrop=self.trainCrop)
 
-        def loadIm(dirs, loader, scaleRatios, isRGBorDepth):
+        def loadIm(dirsIndex, loader, scaleRatios, isRGBorDepth):
             ims = []
-            if dirs is None:
+            if not self.mask[dirsIndex] or self.dirs[dirsIndex] is None:
                 return [np.array([]),]
-            im0 = loader(dirs[index])
+            im0 = loader(self.dirs[dirsIndex][index])
             if type(im0) == np.ndarray:
                 im0 = Image.fromarray(im0)
 
@@ -116,15 +113,24 @@ class myImageFloder(data.Dataset):
                        for im, scaleRatio in zip(ims, scaleRatios)]
             return ims
 
-        inputL = loadIm(self.inputLdirs, self.inputLoader, self.loadScale, True)
-        inputR = loadIm(self.inputRdirs, self.inputLoader, self.loadScale, True)
+        inputL = loadIm(0, self.inputLoader, self.loadScale, True)
+        inputR = loadIm(1, self.inputLoader, self.loadScale, True)
 
-        gtL = loadIm(self.gtLdirs, self.gtLoader, self.loadScale, False)
-        gtR = loadIm(self.gtRdirs, self.gtLoader, self.loadScale, False)
+        gtL = loadIm(2, self.gtLoader, self.loadScale, False)
+        gtR = loadIm(3, self.gtLoader, self.loadScale, False)
 
         r = [im for scale in zip(inputL, inputR, gtL, gtR) for im in scale]
 
         return tuple(r)
 
     def __len__(self):
-        return len(self.inputLdirs)
+        for dirs in self.dirs:
+            if dirs is not None:
+                return len(dirs)
+        raise Exception('Empty dataloader!')
+
+    def name(self, index):
+        for dirs in self.dirs:
+            if dirs is not None:
+                return dirs[index].split('/')[-1]
+        raise Exception('Empty dataloader!')

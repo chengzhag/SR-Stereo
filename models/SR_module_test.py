@@ -25,7 +25,8 @@ def main():
 
     # Load model
     sr = SR(cuda=args.cuda, stage='SR_moduleTest', dataset='testImages', saveFolderSuffix='')
-    sr.load(args.loadmodel)
+    if args.loadmodel is not None:
+        sr.load(args.loadmodel)
 
     # Predict
     saveFolder = os.path.join(sr.checkpointFolder, 'SR_module_test')
@@ -33,8 +34,8 @@ def main():
     tic = time.time()
     ticFull = time.time()
     for iIm, ims in enumerate(imgLoader, 1):
-        nameL = imgLoader.dataset.inputLdirs[iIm - 1].split('/')[-1]
-        savePath = os.path.join(saveFolder, nameL)
+        name = imgLoader.dataset.name(iIm - 1)
+        savePath = os.path.join(saveFolder, name)
         output = sr.predict(ims[0])
         output = output.squeeze()
         output = output.data.cpu().numpy()
