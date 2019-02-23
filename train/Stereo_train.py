@@ -7,7 +7,7 @@ from tensorboardX import SummaryWriter
 from evaluation import Stereo_eval
 from utils import myUtils
 import sys
-from .Train import Train as Base
+from train.Train import Train as Base
 
 class Train(Base):
     def __init__(self, trainImgLoader, nEpochs, lr=[0.001,], logEvery=1, testEvery=1, ndisLog=1, Test=None):

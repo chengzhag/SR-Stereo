@@ -4,7 +4,7 @@ import os
 from models import Stereo
 from utils import myUtils
 from tensorboardX import SummaryWriter
-from .Evaluation import Evaluation as Base
+from evaluation.Evaluation import Evaluation as Base
 
 # Evaluation for any stereo model including SR-Stereo
 class Evaluation(Base):
@@ -51,17 +51,13 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    saveFolderSuffix = myUtils.NameValues(('loadScale', 'cropScale'),
-                                          (testImgLoader.loadScale * 10,
-                                           testImgLoader.cropScale * 10))
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage,
-                                         saveFolderSuffix=saveFolderSuffix.strSuffix())
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage)
     stereo.load(args.loadmodel)
 
     # Test
     test = Evaluation(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn,
                       ndisLog=args.ndis_log)
-    test(stereo=stereo)
+    test(model=stereo)
     test.log()
 
 

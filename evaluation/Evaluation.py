@@ -34,7 +34,7 @@ class Evaluation:
             except NameError:
                 totalTestScores = scoresPairs.values()
 
-            scoresTotalPairs = myUtils.NameValues(scoresPairs.name(),
+            scoresTotalPairs = myUtils.NameValues(scoresPairs.names(),
                                                   [score / batch_idx for score in totalTestScores],
                                                   suffix='Total')
 

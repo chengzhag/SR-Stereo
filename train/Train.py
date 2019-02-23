@@ -50,7 +50,7 @@ class Train:
 
                 lossesPairs = self._trainIt(batch=batch, log=(self.global_step % self.logEvery == 0 and self.logEvery > 0))
 
-                totalTrainLoss += sum(lossesPairs.values) / len(lossesPairs.values)
+                totalTrainLoss += sum(lossesPairs.values()) / len(lossesPairs.values())
 
                 timeLeft = (time.time() - tic) / 3600 * (
                             (self.nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
