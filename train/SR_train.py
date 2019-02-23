@@ -14,23 +14,35 @@ class Train(Base):
 
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
-        if log:
-            losses, outputs = self.model.train(*batch, output=True, kitti=self.trainImgLoader.kitti)
 
-            # save Tensorboard logs to where checkpoint is.
-            lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
-            writer = SummaryWriter(self.model.logFolder)
-            for name, value in lossesPairs.pairs() + [('lr', self.lrNow), ]:
-                writer.add_scalar(self.model.stage + '/trainLosses/' + name, value, self.global_step)
-            for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), batch[2:4] + outputs):
-                myUtils.logFirstNdis(writer, self.model.stage + '/trainImages/' + name, disp, self.model.maxdisp,
-                                     global_step=self.global_step, n=self.ndisLog)
-            writer.close()
-        else:
-            losses = self.model.train(*batch, output=False, kitti=self.trainImgLoader.kitti)
+        batch = batch[0:2] + batch[4:6]
 
-            lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
+        losses = []
+        for input, gt, suffix in zip(batch[2:4], batch[0:2], ('L', 'R')):
+            if input is None or gt is None:
+                losses.append(None)
+                continue
+            if log:
+                loss, output = self.model.train(input, gt)
+                output = myUtils.quantize(output, 1)
+                imgs = [input, gt, output]
 
+                # save Tensorboard logs to where checkpoint is.
+                writer = SummaryWriter(self.model.logFolder)
+
+                for name, value in [('loss' + suffix, loss), ('lr', self.lrNow)]:
+                    writer.add_scalar(self.model.stage + '/trainLosses/' + name, value, self.global_step)
+
+                for name, im in zip(('input', 'gt', 'output'), imgs):
+                    myUtils.logFirstNdis(writer, self.model.stage + '/trainImages/' + name + suffix, im, 1,
+                                         global_step=self.global_step, n=self.ndisLog)
+                writer.close()
+            else:
+                loss, _ = self.model.train(input, gt)
+
+            losses.append(loss)
+
+        lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
         return lossesPairs
 
 

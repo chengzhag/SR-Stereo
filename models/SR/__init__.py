@@ -32,9 +32,20 @@ class SR(Model):
         if self.cuda:
             self.model.cuda()
 
-    def train(self):
+    # imgL: RGB value range 0~1
+    # imgH: RGB value range 0~1
+    def train(self, imgL, imgH):
         super(SR, self)._train()
-        # TODO
+
+        if self.cuda:
+            imgL, imgH = imgL.cuda(), imgH.cuda()
+        self.optimizer.zero_grad()
+        output = self.model(imgL * self.args.rgb_range)
+        output = output / self.args.rgb_range
+        loss = F.smooth_l1_loss(imgH, output, size_average=True)
+        loss.backward()
+        self.optimizer.step()
+        return loss.data.item(), output
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
@@ -58,8 +69,19 @@ class SR(Model):
         super(SR, self).load(checkpointDir)
 
         state_dict = torch.load(checkpointDir)
+        if 'state_dict' in state_dict.keys():
+            state_dict = state_dict['state_dict']
+
         self.model.load_state_dict(state_dict, strict=False)
 
         print('Loading complete! Number of model parameters: %d' % self.nParams())
 
+    def save(self, epoch, iteration, trainLoss):
+        super(SR, self)._save(epoch, iteration)
 
+        torch.save({
+            'epoch': epoch,
+            'iteration': iteration,
+            'state_dict': self.model.state_dict(),
+            'train_loss': trainLoss,
+        }, self.checkpointDir)
