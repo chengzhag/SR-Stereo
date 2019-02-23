@@ -2,7 +2,7 @@ import torch
 
 # cropScale: defaultly set to loadScale to remain ratio between loaded image and cropped image
 def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSizes=(12, 11),
-                  loadScale=1, mode='normal'):
+                  loadScale=1, mode='normal', mask=(1, 1, 1, 1)):
     if dataset == 'sceneflow':
         from dataloader import listSceneFlowFiles as listFile
     elif dataset == 'kitti2012':
@@ -16,13 +16,17 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
 
     from dataloader import DataLoader as fileLoader
 
-    paths = listFile.dataloader(datapath)
+    paths = list(listFile.dataloader(datapath))
     pathsTrain = paths[0:4]
     pathsTest = paths[4:8]
 
+    # mask out unnecessary data
+    for paths in (pathsTrain, pathsTest):
+        for i, m in enumerate(mask):
+            if not m: paths[i] = None
+
     # For KITTI, images have different resolutions. Crop will be needed.
     kitti = dataset in ('kitti2012', 'kitti2015')
-
 
     trainImgLoader = torch.utils.data.DataLoader(
         fileLoader.myImageFloder(*pathsTrain, trainCrop=trainCrop,

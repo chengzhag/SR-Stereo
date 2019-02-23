@@ -1,7 +1,6 @@
 import os
 import os.path
 
-
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
     '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
@@ -15,7 +14,7 @@ def is_image_file(filename):
 
 def _scanImages(filepath, episodes, folderName):
     folderDir = os.path.join(filepath, episodes, folderName)
-    imagedirs =  [os.path.join(folderDir, d) for d in os.listdir(folderDir) if is_image_file(d)]
+    imagedirs = [os.path.join(folderDir, d) for d in os.listdir(folderDir) if is_image_file(d)]
     imagedirs.sort()
     return imagedirs
 
@@ -47,6 +46,7 @@ def dataloader(filepath, trainProportion=0.8):
 
     return all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp
 
+
 def main():
     import argparse
     from tensorboardX import SummaryWriter
@@ -62,8 +62,9 @@ def main():
 
     # Dataset
     trainImgLoader, _ = dataloader.getDataLoader(datapath=args.datapath, dataset='carla_kitti',
-                                                batchSizes=(1, 0),
-                                                loadScale=args.load_scale, mode='rawScaledTensor')
+                                                 batchSizes=(1, 0),
+                                                 loadScale=args.load_scale,
+                                                 mode='rawScaledTensor')
 
     logFolder = [folder for folder in args.datapath.split('/') if folder != '']
     logFolder[-1] += '_moduleTest'
@@ -79,6 +80,6 @@ def main():
 
     writer.close()
 
+
 if __name__ == '__main__':
     main()
-

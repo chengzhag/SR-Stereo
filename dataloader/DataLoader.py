@@ -27,8 +27,8 @@ class myImageFloder(data.Dataset):
         self.inputLdirs = inputLdirs
         self.inputRdirs = inputRdirs
         # in submission, only input images are needed
-        self.gtLdirs = gtLdirs if self.mode != 'submission' else None
-        self.gtRdirs = gtRdirs if self.mode != 'submission' else None
+        self.gtLdirs = gtLdirs
+        self.gtRdirs = gtRdirs
         self.inputLoader = rgbLoader
         self.gtLoader = grayLoader if kitti else pfmLoader
         self.trainCrop = trainCrop
@@ -90,7 +90,7 @@ class myImageFloder(data.Dataset):
                     # do no crop
                     pass
                 else:
-                    raise Exception('No stats \'%s\'' % self.status)
+                    raise Exception('No stats \'%s\'' % self.mode)
 
                 if isRGBorDepth:
                     processed = preprocess.get_transform(augment=False)

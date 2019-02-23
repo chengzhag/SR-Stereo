@@ -42,9 +42,11 @@ class Submission:
         submissionTime = time.time() - ticFull
         print('Full submission time = %.2fmin' % (submissionTime / 60))
 
+
 def main():
-    parser = myUtils.getBasicParser(['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'dataset', 'subtype'],
-                                    description='generate png image for kitti final submission')
+    parser = myUtils.getBasicParser(
+        ['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'dataset', 'subtype'],
+        description='generate png image for kitti final submission')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -53,7 +55,8 @@ def main():
     if args.subtype == 'eval':
         batchSizes = (0, 1)
     _, imgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
-                                                batchSizes=batchSizes, mode='submission')
+                                            batchSizes=batchSizes, mode='submission',
+                                            mask=(1, 1, 0, 0))
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
@@ -64,6 +67,6 @@ def main():
     sub = Submission(subImgLoader=imgLoader)
     sub(stereo=stereo)
 
+
 if __name__ == '__main__':
     main()
-

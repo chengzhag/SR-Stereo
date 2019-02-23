@@ -9,8 +9,9 @@ from utils import myUtils
 import sys
 from train.Train import Train as Base
 
+
 class Train(Base):
-    def __init__(self, trainImgLoader, nEpochs, lr=[0.001,], logEvery=1, testEvery=1, ndisLog=1, Test=None):
+    def __init__(self, trainImgLoader, nEpochs, lr=[0.001, ], logEvery=1, testEvery=1, ndisLog=1, Test=None):
         super(Train, self).__init__(trainImgLoader, nEpochs, lr, logEvery, testEvery, ndisLog, Test)
 
     def _trainIt(self, batch, log):
@@ -33,6 +34,7 @@ class Train(Base):
             lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
 
         return lossesPairs
+
 
 def main():
     parser = myUtils.getBasicParser(
