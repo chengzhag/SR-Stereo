@@ -82,7 +82,7 @@ class Stereo(Model):
                         f'Specified {name} \'{getattr(self, name)}\' from args is not equal to {name} \'{value}\' loaded from checkpoint! Using loaded {name} instead!')
                 setattr(self, name, value)
             else:
-                print(f'No {name} find in checkpoint! Using {name} \'{getattr(self, name)}\' specified in args!')
+                print(f'No {name} found in checkpoint! Using {name} \'{getattr(self, name)}\' specified in args!')
 
         loadValue('maxdisp')
         loadValue('dispScale')

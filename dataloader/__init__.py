@@ -1,8 +1,11 @@
 import torch
 
-# cropScale: defaultly set to loadScale to remain ratio between loaded image and cropped image
+# cropScale: Defaultly set to loadScale to remain ratio between loaded image and cropped image.
+# loadScale: A list of scale to load. Will return 4 * len(loadScale) images. Should be decreasing values.
 def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSizes=(12, 11),
-                  loadScale=1, mode='normal', mask=(1, 1, 1, 1)):
+                  loadScale=(1,), mode='normal', mask=(1, 1, 1, 1)):
+    if not hasattr(loadScale, '__iter__'):
+        loadScale = (loadScale,)
     if dataset == 'sceneflow':
         from dataloader import listSceneFlowFiles as listFile
     elif dataset == 'kitti2012':
@@ -43,7 +46,7 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
     for imgLoader in (trainImgLoader, testImgLoader):
         if imgLoader is not None:
             imgLoader.kitti = kitti
-            imgLoader.loadScale = loadScale
+            imgLoader.loadScale = loadScale[0]
             imgLoader.trainCrop = trainCrop
             imgLoader.datapath = datapath
             imgLoader.batchSizes = batchSizes
