@@ -63,7 +63,7 @@ def main():
     # Dataset
     trainImgLoader, _ = dataloader.getDataLoader(datapath=args.datapath, dataset='carla_kitti',
                                                 batchSizes=(1, 0),
-                                                loadScale=args.load_scale, mode='scaled')
+                                                loadScale=args.load_scale, mode='rawScaledTensor')
 
     logFolder = [folder for folder in args.datapath.split('/') if folder != '']
     logFolder[-1] += '_moduleTest'

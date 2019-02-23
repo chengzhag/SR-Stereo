@@ -107,7 +107,7 @@ def main():
     # Dataset
     _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
                                                  batchSizes=(0, 1),
-                                                 loadScale=args.load_scale, mode='scaled')
+                                                 loadScale=args.load_scale, mode='rawScaledTensor')
 
     logFolder = [folder for folder in args.datapath.split('/') if folder != '']
     logFolder[-1] += '_moduleTest'

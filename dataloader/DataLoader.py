@@ -21,14 +21,14 @@ def grayLoader(path):
 
 class myImageFloder(data.Dataset):
     # trainCrop = (W, H)
-    def __init__(self, inputLdirs, inputRdirs=None, gtLdirs=None, gtRdirs=None, status='testing',
-                 trainCrop=(256, 512), kitti=False, loadScale=1, mode='normal'):
+    def __init__(self, inputLdirs=None, inputRdirs=None, gtLdirs=None, gtRdirs=None,
+                 trainCrop=(256, 512), kitti=False, loadScale=1, mode='training'):
+        self.mode = mode
         self.inputLdirs = inputLdirs
         self.inputRdirs = inputRdirs
-        self.status = status
         # in submission, only input images are needed
-        self.gtLdirs = gtLdirs if self.status != 'submission' else None
-        self.gtRdirs = gtRdirs if self.status != 'submission' else None
+        self.gtLdirs = gtLdirs if self.mode != 'submission' else None
+        self.gtRdirs = gtRdirs if self.mode != 'submission' else None
         self.inputLoader = rgbLoader
         self.gtLoader = grayLoader if kitti else pfmLoader
         self.trainCrop = trainCrop
@@ -36,7 +36,7 @@ class myImageFloder(data.Dataset):
         self.dispScale = 256 if kitti else 1
         self.loadScale = loadScale
         self.trainCrop = trainCrop
-        self.mode = mode
+
 
     def __getitem__(self, index):
         def scale(im, method, scaleRatio):
@@ -76,17 +76,17 @@ class myImageFloder(data.Dataset):
 
             if self.mode == 'PIL':
                 pass
-            elif self.mode == 'scaled':
+            elif self.mode == 'rawScaledTensor':
                 im = transforms.ToTensor()(im) if im is not None else None
-            elif self.mode == 'normal':
-                if self.status == 'training':
+            elif self.mode in ('training', 'testing', 'submission'):
+                if self.mode == 'training':
                     # random crop
                     im = randomCrop(im)
-                elif self.status == 'testing':
+                elif self.mode == 'testing':
                     if self.testCrop is not None:
                         # crop to the same size
                         im = testCrop(im)
-                elif self.status == 'submission':
+                elif self.mode == 'submission':
                     # do no crop
                     pass
                 else:

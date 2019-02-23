@@ -47,7 +47,7 @@ def main():
     import dataloader
     _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
                                                 batchSizes=(0, args.batchsize_test),
-                                                loadScale=args.load_scale)
+                                                loadScale=args.load_scale, mode='testing')
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
