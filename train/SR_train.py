@@ -9,7 +9,7 @@ from train.Train import Train as Base
 
 
 class Train(Base):
-    def __init__(self, trainImgLoader, nEpochs, lr=(0.001, ), logEvery=1, testEvery=1, ndisLog=1, Test=None):
+    def __init__(self, trainImgLoader, nEpochs, lr=(0.001,), logEvery=1, testEvery=1, ndisLog=1, Test=None):
         super(Train, self).__init__(trainImgLoader, nEpochs, lr, logEvery, testEvery, ndisLog, Test)
 
     def _trainIt(self, batch, log):
@@ -55,6 +55,7 @@ def main():
                                                              batchSizes=(args.batchsize_train, args.batchsize_test),
                                                              loadScale=(args.load_scale, args.load_scale / 2),
                                                              mode='training',
+                                                             preprocess=False,
                                                              mask=(1, 1, 0, 0))
 
     # Load model
@@ -64,14 +65,14 @@ def main():
                                            trainImgLoader.trainCrop,
                                            args.batchsize_train))
     sr = getattr(SR, 'SR')(cuda=args.cuda, stage=stage,
-                               dataset=args.dataset,
-                               saveFolderSuffix=saveFolderSuffix.strSuffix())
+                           dataset=args.dataset,
+                           saveFolderSuffix=saveFolderSuffix.strSuffix())
     if args.loadmodel is not None:
         sr.load(args.loadmodel)
 
     # Train
     test = SR_eval.Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
-                                  ndisLog=args.ndis_log)
+                              ndisLog=args.ndis_log)
     train = Train(trainImgLoader=trainImgLoader, nEpochs=args.epochs, lr=args.lr,
                   logEvery=args.log_every, ndisLog=args.ndis_log,
                   testEvery=args.test_every, Test=test)

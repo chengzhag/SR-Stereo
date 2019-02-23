@@ -64,7 +64,9 @@ def main():
                                                 batchSizes=(0, args.batchsize_test),
                                                 loadScale=(args.load_scale, args.load_scale / 2),
                                                 mode='testing',
+                                                preprocess=False,
                                                 mask=(1, 1, 0, 0))
+
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
     sr = getattr(SR, 'SR')(cuda=args.cuda, stage=stage,
