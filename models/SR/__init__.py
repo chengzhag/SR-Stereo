@@ -41,10 +41,10 @@ class SR(Model):
             imgL, imgH = imgL.cuda(), imgH.cuda()
         self.optimizer.zero_grad()
         output = self.model(imgL * self.args.rgb_range)
-        output = output / self.args.rgb_range
-        loss = F.smooth_l1_loss(imgH, output, size_average=True)
+        loss = F.smooth_l1_loss(imgH * self.args.rgb_range, output, reduction='mean')
         loss.backward()
         self.optimizer.step()
+        output = output / self.args.rgb_range
         return loss.data.item(), output
 
     # imgL: RGB value range 0~1
@@ -61,7 +61,7 @@ class SR(Model):
             imgL, imgH = imgL.cuda(), imgH.cuda()
 
         output = self.predict(imgL)
-        score = getattr(evalFcn, type)(imgH, output)
+        score = getattr(evalFcn, type)(imgH * self.args.rgb_range, output * self.args.rgb_range)
 
         return score, output
 

@@ -69,7 +69,7 @@ class Train:
             if ((self.testEvery > 0 and epoch % self.testEvery == 0)
                 or (self.testEvery == 0 and epoch == self.nEpochs)) \
                     and self.test is not None:
-                testScores = self.test(model=model)
+                testScores = self.test(model=model).values()
                 testScores = [score for score in testScores if score is not None]
                 testScore = sum(testScores) / len(testScores)
                 try:
