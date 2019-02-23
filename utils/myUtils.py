@@ -7,9 +7,13 @@ from collections import Iterable
 class NameValues:
     def __init__(self, names, values, prefix='', suffix=''):
         self._pairs = []
+        self._names = []
+        self._values = []
         for name, value in zip(names, values):
             if value is not None:
                 self._pairs.append((prefix + name + suffix, value))
+                self._names.append(name)
+                self._values.append(value)
 
     def strPrint(self, unit=''):
         str = ''
@@ -42,6 +46,12 @@ class NameValues:
 
     def pairs(self):
         return self._pairs
+
+    def values(self):
+        return self._values
+
+    def names(self):
+        return self._names
 
 
 class AutoPad:
