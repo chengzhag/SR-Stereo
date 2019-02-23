@@ -37,6 +37,7 @@ class SR(Model):
         # TODO
 
     # imgL: RGB value range 0~1
+    # output: RGB value range 0~1
     def predict(self, imgL):
         super(SR, self)._predict()
         with torch.no_grad():

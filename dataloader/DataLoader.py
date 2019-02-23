@@ -39,9 +39,9 @@ class myImageFloder(data.Dataset):
         self.mode = mode
 
     def __getitem__(self, index):
-        def scale(im, method):
+        def scale(im, method, scaleRatio):
             w, h = im.size
-            return im.resize((round(w * self.loadScale), round(h * self.loadScale)), method)
+            return im.resize((round(w * scaleRatio), round(h * scaleRatio)), method)
 
         def testCrop(im):
             w, h = im.size
@@ -60,83 +60,53 @@ class myImageFloder(data.Dataset):
                 if self.y1 is None: self.y1 = random.randint(0, h - self.hCrop)
                 return input.crop((self.x1, self.y1, self.x1 + self.wCrop, self.y1 + self.hCrop))
 
-        def loadInput(dir, randomCrop):
-            input = self.inputLoader(dir)
-
-            if self.mode == 'raw':
-                input = transforms.ToTensor()(input) if input is not None else None
-                return input
-
-            input = scale(input, Image.ANTIALIAS)
-
-            if self.mode == 'PIL':
-                pass
-            elif self.mode == 'scaled':
-                input = transforms.ToTensor()(input) if input is not None else None
-            elif self.mode == 'normal':
-                if self.status == 'training':
-                    # random crop
-                    input = randomCrop(input)
-
-                elif self.status == 'testing':
-                    if self.testCrop is not None:
-                        # crop to the same size
-                        input = testCrop(input)
-                elif self.status == 'submission':
-                    # do no crop
-                    pass
-                else:
-                    raise Exception('No stats \'%s\'' % self.status)
-
-                processed = preprocess.get_transform(augment=False)
-                input = processed(input)
-            else:
-                raise Exception('No mode %s!' % self.mode)
-
-            return input
-
-        def loadGT(dir, randomCrop):
-            gt = self.gtLoader(dir)
-            if type(gt) == np.ndarray:
-                gt = Image.fromarray(gt)
-
-            if self.mode == 'raw':
-                gt = transforms.ToTensor()(gt)
-                gt = gt.squeeze()
-                return gt
-
-            gt = scale(gt, Image.NEAREST)
-
-            if self.mode == 'PIL':
-                pass
-            elif self.mode == 'scaled':
-                pass
-            elif self.mode == 'normal':
-                if self.status == 'training':
-                    # random crop
-                    gt = randomCrop(gt)
-                elif self.status == 'testing':
-                    if self.testCrop is not None:
-                        # crop to the same size
-                        gt = testCrop(gt)
-                elif self.status == 'submission':
-                    # do no crop
-                    pass
-                else:
-                    raise Exception('No stats \'%s\'' % self.status)
-            else:
-                raise Exception('No mode %s!' % self.mode)
-
-            gt = np.ascontiguousarray(gt, dtype=np.float32) / self.dispScale * self.loadScale
-            return gt
-
         randomCrop = RandomCrop(trainCrop=self.trainCrop)
 
-        inputL = loadInput(self.inputLdirs[index], randomCrop) if self.inputLdirs is not None else np.array([])
-        inputR = loadInput(self.inputRdirs[index], randomCrop) if self.inputRdirs is not None else np.array([])
+        def loadIm(dirs, loader, scaleRatio, isRGBorDepth):
+            if dirs is None: return np.array([])
+            im = loader(dirs[index])
+            if type(im) == np.ndarray:
+                im = Image.fromarray(im)
 
-        gtL = loadGT(self.gtLdirs[index], randomCrop) if self.gtLdirs is not None else np.array([])
-        gtR = loadGT(self.gtRdirs[index], randomCrop) if self.gtRdirs is not None else np.array([])
+            if self.mode == 'rawUnscaledTensor':
+                im = transforms.ToTensor()(im) if im is not None else None
+                return im
+
+            im = scale(im, Image.ANTIALIAS, scaleRatio)
+
+            if self.mode == 'PIL':
+                pass
+            elif self.mode == 'scaled':
+                im = transforms.ToTensor()(im) if im is not None else None
+            elif self.mode == 'normal':
+                if self.status == 'training':
+                    # random crop
+                    im = randomCrop(im)
+                elif self.status == 'testing':
+                    if self.testCrop is not None:
+                        # crop to the same size
+                        im = testCrop(im)
+                elif self.status == 'submission':
+                    # do no crop
+                    pass
+                else:
+                    raise Exception('No stats \'%s\'' % self.status)
+
+                if isRGBorDepth:
+                    processed = preprocess.get_transform(augment=False)
+                    im = processed(im)
+            else:
+                raise Exception('No mode %s!' % self.mode)
+
+            if not isRGBorDepth:
+                im = np.ascontiguousarray(im, dtype=np.float32) / self.dispScale * scaleRatio
+            return im
+
+        inputL = loadIm(self.inputLdirs, self.inputLoader, self.loadScale, True)
+        inputR = loadIm(self.inputRdirs, self.inputLoader, self.loadScale, True)
+
+        gtL = loadIm(self.gtLdirs, self.gtLoader, self.loadScale, False)
+        gtR = loadIm(self.gtRdirs, self.gtLoader, self.loadScale, False)
 
         return inputL, inputR, gtL, gtR
 

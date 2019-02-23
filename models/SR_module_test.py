@@ -20,7 +20,7 @@ def main():
     # Dataset
     paths = listFile.dataloader(args.datapath)
     imgLoader = torch.utils.data.DataLoader(
-        fileLoader.myImageFloder(paths, mode='raw'),
+        fileLoader.myImageFloder(paths, mode='rawUnscaledTensor'),
         batch_size=1, shuffle=False, num_workers=1, drop_last=False)
 
     # Load model
