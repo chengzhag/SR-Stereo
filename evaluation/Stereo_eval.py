@@ -9,10 +9,11 @@ from evaluation.Evaluation import Evaluation as Base
 # Evaluation for any stereo model including SR-Stereo
 class Evaluation(Base):
     def __init__(self, testImgLoader, mode='both', evalFcn='outlier', ndisLog=1):
-        super(Evaluation, self).__init__(testImgLoader, evalFcn='outlier', ndisLog=1)
+        super(Evaluation, self).__init__(testImgLoader, evalFcn, ndisLog)
         self.mode = myUtils.assertMode(testImgLoader.kitti, mode)
 
     def _evalIt(self, batch, log):
+        if self.mode == 'left': batch[3] = None
         if self.mode == 'right': batch[2] = None
 
         if log:
@@ -52,7 +53,8 @@ def main():
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
     stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage)
-    stereo.load(args.loadmodel)
+    if args.loadmodel is not None:
+        stereo.load(args.loadmodel)
 
     # Test
     test = Evaluation(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn,

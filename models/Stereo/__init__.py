@@ -168,7 +168,7 @@ class PSMNet(Stereo):
             return losses
 
     def predict(self, imgL, imgR, mode='both'):
-        autoPad = super(PSMNet, self).predict(imgL, imgR, mode='both')
+        autoPad = super(PSMNet, self).predict(imgL, imgR, mode)
 
         with torch.no_grad():
             def predictL():
@@ -201,7 +201,7 @@ class PSMNet_TieCheng(Stereo):
         raise Exception('Fcn \'train\' not done yet...')
 
     def predict(self, imgL, imgR, mode='both'):
-        autoPad = super(PSMNet_TieCheng, self).predict(imgL, imgR, mode='both')
+        autoPad = super(PSMNet_TieCheng, self).predict(imgL, imgR, mode)
 
         with torch.no_grad():
             imgL, imgR = autoPad.pad(imgL, self.cuda), autoPad.pad(imgR, self.cuda)

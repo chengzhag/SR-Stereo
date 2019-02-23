@@ -45,14 +45,14 @@ class SR(Model):
             output = myUtils.quantize(output, self.args.rgb_range) / self.args.rgb_range
             return output
 
-    def test(self, imgL, imgH, type='l1', output=False):
+    def test(self, imgL, imgH, type='l1'):
         if self.cuda:
             imgL, imgH = imgL.cuda(), imgH.cuda()
 
         output = self.predict(imgL)
         score = getattr(evalFcn, type)(imgH, output)
 
-        return score
+        return score, output
 
     def load(self, checkpointDir):
         super(SR, self).load(checkpointDir)
