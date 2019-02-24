@@ -9,38 +9,24 @@ from tensorboardX import SummaryWriter
 import skimage
 import skimage.io
 import skimage.transform
+from submission.Submission import Submission as Base
+import collections
 
 
 # Submission for any stereo model including SR-Stereo
-class Submission:
+class Submission(Base):
     def __init__(self, subImgLoader):
-        if max(subImgLoader.batchSizes) > 1:
-            raise Exception('subImgLoader for Submission can only have batchSize equal to 1!')
-        self.subImgLoader = subImgLoader
-        self.stereo = None
+        super(Submission, self).__init__(subImgLoader)
 
-    def __call__(self, stereo):
-        self.stereo = stereo
-        saveFolder = os.path.join(self.stereo.checkpointFolder, 'Stereo_sub')
-        myUtils.checkDir(saveFolder)
-        tic = time.time()
-        ticFull = time.time()
-        for iIm, ims in enumerate(self.subImgLoader, 1):
-            name = self.subImgLoader.dataset.name(iIm - 1)
-            savePath = os.path.join(saveFolder, name)
-            ims = [data if data.numel() else None for data in ims]
-            dispOut = self.stereo.predict(*ims[0:2], mode='left')
-            dispOut = dispOut.squeeze()
-            dispOut = dispOut.data.cpu().numpy()
-            skimage.io.imsave(savePath, (dispOut * 256).astype('uint16'))
+    def _subIt(self, batch):
+        dispOut = self.model.predict(*batch[0:2], mode='left')
+        dispOut = dispOut.squeeze()
+        dispOut = dispOut.data.cpu().numpy()
+        dispOut = (dispOut * 256).astype('uint16')
 
-            timeLeft = (time.time() - tic) / 60 * (len(self.subImgLoader) - iIm)
-            print('im %d/%d, %s, left %.2fmin' % (
-                iIm, len(self.subImgLoader),
-                savePath, timeLeft))
-            tic = time.time()
-        submissionTime = time.time() - ticFull
-        print('Full submission time = %.2fmin' % (submissionTime / 60))
+        outputs = collections.OrderedDict()
+        outputs['dispOutL'] = dispOut
+        return outputs
 
 
 def main():
@@ -65,7 +51,7 @@ def main():
 
     # Submission
     sub = Submission(subImgLoader=imgLoader)
-    sub(stereo=stereo)
+    sub(model=stereo)
 
 
 if __name__ == '__main__':
