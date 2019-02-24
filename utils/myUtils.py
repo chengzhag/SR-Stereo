@@ -208,15 +208,21 @@ def quantize(img, rgb_range):
 class TensorboardLogger:
     def __init__(self):
         self.writer = None
+        self._folder = None
 
     def __del__(self):
         if self.writer is not None:
             self.writer.close()
 
-    def init(self, folder):
+    def set(self, folder):
         if self.writer is None:
             self.writer = SummaryWriter(folder)
-        
+        else:
+            if folder != self._folder:
+                self.writer.close()
+                self.writer = SummaryWriter(folder)
+        self._folder = folder
+
     def logFirstNIms(self, name, im, range, global_step=None, n=0):
         if self.writer is None:
             raise Exception('Error: SummaryWriter is not initialized!')

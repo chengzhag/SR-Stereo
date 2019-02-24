@@ -31,7 +31,7 @@ class Evaluation(Base):
                 imgs = input + (gt, output)
 
                 # save Tensorboard logs to where checkpoint is.
-                self.tensorboardLogger.init(self.model.logFolder)
+                self.tensorboardLogger.set(self.model.logFolder)
                 for name, im in zip(('input', 'warpTo', 'mask', 'gt', 'output'), imgs):
                     self.tensorboardLogger.logFirstNIms(self.model.stage + '/testImages/' + name + suffix, im, 1,
                                                         global_step=1, n=self.ndisLog)

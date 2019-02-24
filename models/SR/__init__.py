@@ -82,6 +82,7 @@ class SR(Model):
             if loadName in model_dict and model_dict[loadName].size() == loadValue.size():
                 selected_load_dict[loadName] = loadValue
             else:
+                # try to initialize input layer from weights with different channels
                 # if loadName == 'head.0.weight':
                 #     selected_load_dict[loadName] = model_dict[loadName]
                 #     selected_load_dict[loadName][:,:3,:,:] = loadValue

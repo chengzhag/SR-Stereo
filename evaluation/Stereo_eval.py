@@ -21,7 +21,7 @@ class Evaluation(Base):
             imgs = batch[2:4] + outputs
 
             # save Tensorboard logs to where checkpoint is.
-            self.tensorboardLogger.init(self.model.logFolder)
+            self.tensorboardLogger.set(self.model.logFolder)
             for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), imgs):
                 self.tensorboardLogger.logFirstNIms(self.model.stage + '/testImages/' + name, disp, self.model.maxdisp,
                                                     global_step=1, n=self.ndisLog)

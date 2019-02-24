@@ -33,7 +33,7 @@ class Train(Base):
                 output = myUtils.quantize(output, 1)
                 imgs = input + (gt, output)
 
-                self.tensorboardLogger.init(self.model.logFolder)
+                self.tensorboardLogger.set(self.model.logFolder)
                 for name, im in zip(('input', 'warpTo', 'mask', 'gt', 'output'), imgs):
                     self.tensorboardLogger.logFirstNIms(self.model.stage + '/trainImages/' + name + suffix, im, 1,
                                                         global_step=self.global_step, n=self.ndisLog)
