@@ -23,6 +23,13 @@
 #Evaluate with carla_kitti dataset:
 #CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python evaluation/Stereo_eval.py --maxdisp 192 --dispscale 1 --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --load_scale 0.5 --crop_scale 1 --batchsize_test 4 --eval_fcn outlier --loadmodel logs/Stereo_train/[TRAINING_DATE]_PSMNet_[SUFFIX]_carla_kitti/checkpoint_epoch_10_it_[ITERATION].tar
 
+
+#for testing purpose
+#full-scale SRdisp with same settings with EDSR_baseline_x2 but 7 channels input with warped imgs and mask
+CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python train/SRdisp_train.py --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --trainCrop 96 1360 --epochs 5 --log_every 10 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 4  --lr 0.0002 1 0.0001 3 0.00005 --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt
+CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python train/SRdisp_train.py --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --trainCrop 96 1360 --epochs 5 --log_every 10 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 4  --lr 0.0002 1 0.0001 3 0.00005 --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --withMask
+CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python train/SR_train.py --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --trainCrop 96 1360 --epochs 5 --log_every 10 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 4  --lr 0.0002 1 0.0001 3 0.00005 --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt
+
 #for testing purpose
 #full-scale PSMNet with same D dimension but different trainCrop trained with carla_kitti
 #Fintune PSMNet with carla_kitti dataset:
@@ -40,7 +47,3 @@ CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python train/SR_train.py --datapath ../da
 CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python train/SR_train.py --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti  --trainCrop 96 1360 --epochs 5 --log_every 10 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 4 --lr 0.0001 1 0.00005 3 0.00002 --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt
 CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python train/SR_train.py --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti  --trainCrop 80 1632 --epochs 5 --log_every 10 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 4 --lr 0.0001 1 0.00005 3 0.00002 --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt
 
-#for testing purpose
-#full-scale SRdisp with same settings with EDSR_baseline_x2 but 7 channels input with warped imgs and mask
-CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python train/SRdisp_train.py --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --trainCrop 96 1360 --epochs 5 --log_every 10 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 4  --lr 0.0002 1 0.0001 3 0.00005 --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt
-CUDA_VISIBLE_DEVICES=0,1 PYTHONPATH=./ python train/SR_train.py --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --trainCrop 96 1360 --epochs 5 --log_every 10 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 4  --lr 0.0002 1 0.0001 3 0.00005 --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt

@@ -28,7 +28,9 @@ class Train(Base):
                 losses.append(None)
                 continue
             if log:
-                loss, output = self.model.train(torch.cat(input, 1), gt)
+                loss, output = self.model.train(
+                    torch.cat(input if self.model.args.n_inputs == 7 else input[:2], 1),
+                    gt)
                 output = myUtils.quantize(output, 1)
                 imgs = input + (gt, output)
 
@@ -54,7 +56,7 @@ def main():
     parser = myUtils.getBasicParser(
         ['datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
-         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half'],
+         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half', 'withMask'],
         description='train or finetune SR net')
 
     args = parser.parse_args()
@@ -80,7 +82,7 @@ def main():
                                           (trainImgLoader.loadScale * 10,
                                            trainImgLoader.trainCrop,
                                            args.batchsize_train))
-    sr = getattr(SR, 'SR')(cInput=7,
+    sr = getattr(SR, 'SR')(cInput=7 if args.withMask else 6,
                            cuda=args.cuda, half=args.half, stage=stage,
                            dataset=args.dataset,
                            saveFolderSuffix=saveFolderSuffix.strSuffix())

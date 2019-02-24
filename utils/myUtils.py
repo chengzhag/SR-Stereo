@@ -155,6 +155,9 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                  # half precision
                  'half': lambda: parser.add_argument('--half', action='store_true', default=False,
                                                      help='enables half precision'),
+                 # SRdisp specified param
+                 'withMask': lambda:  parser.add_argument('--withMask', action='store_true', default=False,
+                                                     help='input 7 channels with mask to SRdisp instead of 6'),
                  }
 
     if len(includeKeys):

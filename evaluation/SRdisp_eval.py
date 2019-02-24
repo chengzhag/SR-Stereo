@@ -25,7 +25,9 @@ class Evaluation(Base):
                 scores.append(None)
                 continue
             if log:
-                score, output = self.model.test(torch.cat(input, 1), gt, type=self.evalFcn)
+                score, output = self.model.test(
+                    torch.cat(input if self.model.args.n_inputs == 7 else input[:2], 1),
+                    gt, type=self.evalFcn)
                 output = myUtils.quantize(output, 1)
                 imgs = input + (gt, output)
 
@@ -46,7 +48,7 @@ class Evaluation(Base):
 def main():
     parser = myUtils.getBasicParser(
         ['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
-         'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half'],
+         'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half', 'withMask'],
         description='evaluate Stereo net or SR-Stereo net')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -66,7 +68,7 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    sr = getattr(SR, 'SR')(cInput=7,
+    sr = getattr(SR, 'SR')(cInput=7 if args.withMask else 6,
                            cuda=args.cuda, half=args.half, stage=stage,
                            dataset=args.dataset)
     if args.loadmodel is not None:

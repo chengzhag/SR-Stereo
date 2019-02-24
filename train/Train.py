@@ -7,7 +7,7 @@ import sys
 
 
 class Train:
-    def __init__(self, trainImgLoader, nEpochs, lr=[0.001, ], logEvery=1, testEvery=1, ndisLog=1, Test=None):
+    def __init__(self, trainImgLoader, nEpochs, lr=(0.001, ), logEvery=1, testEvery=1, ndisLog=1, Test=None):
         self.trainImgLoader = trainImgLoader
         self.logEvery = logEvery
         self.testEvery = testEvery
