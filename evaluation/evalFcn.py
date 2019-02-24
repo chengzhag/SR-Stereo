@@ -1,5 +1,14 @@
 import torch
 
+def getEvalFcn(type):
+    if '_' in type:
+        params = type.split('_')
+        type = params[-1]
+        params = [float(param) for param in params[:-1]]
+        return lambda gt, output: globals()[type](gt, output, *params)
+    else:
+        return globals()[type]
+
 # L1 loss between gt and output
 def l1(gt, output):
     if len(gt) == 0:

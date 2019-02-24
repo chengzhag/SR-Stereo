@@ -62,7 +62,7 @@ class Stereo(Model):
                 mask = gt > 0
                 dispOut = dispOut[mask]
                 gt = gt[mask]
-            scores.append(getattr(evalFcn, type)(gt, dispOut))
+            scores.append(evalFcn.getEvalFcn(type)(gt, dispOut))
 
         if output:
             return scores, outputs
