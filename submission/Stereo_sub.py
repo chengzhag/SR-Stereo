@@ -19,19 +19,23 @@ class Submission(Base):
         super(Submission, self).__init__(subImgLoader)
 
     def _subIt(self, batch):
+        def preprocess(disp):
+            dispOut = disp.squeeze()
+            dispOut = dispOut.data.cpu().numpy()
+            dispOut = (dispOut * 256).astype('uint16')
+            return dispOut
+
         dispOut = self.model.predict(*batch[0:2], mode='left')
-        dispOut = dispOut.squeeze()
-        dispOut = dispOut.data.cpu().numpy()
-        dispOut = (dispOut * 256).astype('uint16')
 
         outputs = collections.OrderedDict()
-        outputs['dispOutL'] = dispOut
+        outputs['dispOutL'] = preprocess(dispOut)
+        outputs['gtL'] = preprocess(batch[2])
         return outputs
 
 
 def main():
     parser = myUtils.getBasicParser(
-        ['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'dataset', 'subtype'],
+        ['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'dataset', 'subtype', 'load_scale'],
         description='generate png image for kitti final submission')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -41,8 +45,10 @@ def main():
     if args.subtype == 'eval':
         batchSizes = (0, 1)
     _, imgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
-                                            batchSizes=batchSizes, mode='submission',
-                                            mask=(1, 1, 0, 0))
+                                            batchSizes=batchSizes,
+                                            loadScale=args.load_scale,
+                                            mode='submission',
+                                            mask=(1, 1, 1, 0))
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
