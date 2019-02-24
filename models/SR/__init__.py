@@ -13,7 +13,7 @@ import torch.nn.parallel as P
 
 class SR(Model):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
+    def __init__(self, cInput=3, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
         super(SR, self).__init__(cuda, stage, dataset, saveFolderSuffix)
         class Arg:
             def __init__(self):
@@ -21,7 +21,7 @@ class SR(Model):
                 self.n_feats = 64
                 self.scale = [2]
                 self.rgb_range = 255
-                self.n_colors = 3
+                self.n_colors = cInput
                 self.res_scale = 1
         self.args = Arg()
         self.initModel()
