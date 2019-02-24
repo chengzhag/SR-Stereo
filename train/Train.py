@@ -61,7 +61,7 @@ class Train:
                     lossesPairs.strPrint(''), timeLeft))
                 tic = time.time()
 
-            print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / len(self.trainImgLoader)))
+            print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / batch_idx))
             # save
             model.save(epoch=epoch, iteration=batch_idx,
                         trainLoss=totalTrainLoss / len(self.trainImgLoader))

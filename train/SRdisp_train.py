@@ -3,7 +3,7 @@ import torch.utils.data
 import os
 from models import SR
 from tensorboardX import SummaryWriter
-from evaluation import SR_eval
+from evaluation import SRdisp_eval
 from utils import myUtils
 from train.Train import Train as Base
 from models.SR.warp import warp
@@ -43,7 +43,7 @@ class Train(Base):
                                          global_step=self.global_step, n=self.ndisLog)
                 writer.close()
             else:
-                loss, _ = self.model.train(input, gt)
+                loss, _ = self.model.train(torch.cat(input, 1), gt)
 
             losses.append(loss)
 
@@ -88,7 +88,7 @@ def main():
         sr.load(args.loadmodel)
 
     # Train
-    test = SR_eval.Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
+    test = SRdisp_eval.Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
                               ndisLog=args.ndis_log)
     train = Train(trainImgLoader=trainImgLoader, nEpochs=args.epochs, lr=args.lr,
                   logEvery=args.log_every, ndisLog=args.ndis_log,
