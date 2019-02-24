@@ -3,7 +3,6 @@ import torch
 import os
 from models import SR
 from utils import myUtils
-from tensorboardX import SummaryWriter
 from evaluation.Evaluation import Evaluation as Base
 
 
@@ -32,11 +31,10 @@ class Evaluation(Base):
                 imgs = [input, gt, output]
 
                 # save Tensorboard logs to where checkpoint is.
-                writer = SummaryWriter(self.model.logFolder)
+                self.tensorboardLogger.init(self.model.logFolder)
                 for name, im in zip(('input', 'gt', 'output'), imgs):
-                    myUtils.logFirstNdis(writer, self.model.stage + '/testImages/' + name + suffix, im, 1,
-                                         global_step=1, n=self.ndisLog)
-                writer.close()
+                    self.tensorboardLogger.logFirstNIms(self.model.stage + '/testImages/' + name + suffix, im, 1,
+                                                       global_step=1, n=self.ndisLog)
             else:
                 score, _ = self.model.test(input, gt, type=self.evalFcn)
 

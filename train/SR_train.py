@@ -2,7 +2,6 @@ from __future__ import print_function
 import torch.utils.data
 import os
 from models import SR
-from tensorboardX import SummaryWriter
 from evaluation import SR_eval
 from utils import myUtils
 from train.Train import Train as Base
@@ -28,15 +27,14 @@ class Train(Base):
                 imgs = [input, gt, output]
 
                 # save Tensorboard logs to where checkpoint is.
-                writer = SummaryWriter(self.model.logFolder)
-
+                self.tensorboardLogger.init(self.model.logFolder)
                 for name, value in [('loss' + suffix, loss), ('lr', self.lrNow)]:
-                    writer.add_scalar(self.model.stage + '/trainLosses/' + name, value, self.global_step)
+                    self.tensorboardLogger.writer.add_scalar(self.model.stage + '/trainLosses/' + name, value,
+                                                             self.global_step)
 
                 for name, im in zip(('input', 'gt', 'output'), imgs):
-                    myUtils.logFirstNdis(writer, self.model.stage + '/trainImages/' + name + suffix, im, 1,
-                                         global_step=self.global_step, n=self.ndisLog)
-                writer.close()
+                    self.tensorboardLogger.logFirstNIms(self.model.stage + '/trainImages/' + name + suffix, im, 1,
+                                                        global_step=self.global_step, n=self.ndisLog)
             else:
                 loss, _ = self.model.train(input, gt)
 

@@ -3,7 +3,6 @@ import torch.utils.data
 import time
 import os
 from models import Stereo
-from tensorboardX import SummaryWriter
 from evaluation import Stereo_eval
 from utils import myUtils
 import sys
@@ -11,7 +10,7 @@ from train.Train import Train as Base
 
 
 class Train(Base):
-    def __init__(self, trainImgLoader, nEpochs, lr=(0.001, ), logEvery=1, testEvery=1, ndisLog=1, Test=None):
+    def __init__(self, trainImgLoader, nEpochs, lr=(0.001,), logEvery=1, testEvery=1, ndisLog=1, Test=None):
         super(Train, self).__init__(trainImgLoader, nEpochs, lr, logEvery, testEvery, ndisLog, Test)
 
     def _trainIt(self, batch, log):
@@ -21,13 +20,13 @@ class Train(Base):
 
             # save Tensorboard logs to where checkpoint is.
             lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
-            writer = SummaryWriter(self.model.logFolder)
+            self.tensorboardLogger.init(self.model.logFolder)
             for name, value in lossesPairs.pairs() + [('lr', self.lrNow), ]:
-                writer.add_scalar(self.model.stage + '/trainLosses/' + name, value, self.global_step)
+                self.tensorboardLogger.writer.add_scalar(self.model.stage + '/trainLosses/' + name, value,
+                                                         self.global_step)
             for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), batch[2:4] + outputs):
-                myUtils.logFirstNdis(writer, self.model.stage + '/trainImages/' + name, disp, self.model.maxdisp,
-                                     global_step=self.global_step, n=self.ndisLog)
-            writer.close()
+                self.tensorboardLogger.logFirstNIms(self.model.stage + '/trainImages/' + name, disp, self.model.maxdisp,
+                                                    global_step=self.global_step, n=self.ndisLog)
         else:
             losses = self.model.train(*batch, output=False, kitti=self.trainImgLoader.kitti)
 

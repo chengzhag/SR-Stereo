@@ -1,7 +1,7 @@
 import torch
 import os
 import argparse
-from collections import Iterable
+from tensorboardX import SummaryWriter
 
 
 class NameValues:
@@ -83,7 +83,7 @@ def assertDisp(dispL=None, dispR=None):
 
 # Log First n ims into tensorboard
 # Log All ims if n == 0
-def logFirstNdis(writer, name, im, range, global_step=None, n=0):
+def logFirstNIms(writer, name, im, range, global_step=None, n=0):
     if im is not None:
         n = min(n, im.size(0))
         if n > 0:
@@ -201,3 +201,22 @@ def assertMode(kitti, mode):
 def quantize(img, rgb_range):
     pixel_range = 255 / rgb_range
     return img.mul(pixel_range).clamp(0, 255).round().div(pixel_range)
+
+class TensorboardLogger:
+    def __init__(self):
+        self.writer = None
+
+    def __del__(self):
+        if self.writer is not None:
+            self.writer.close()
+
+    def init(self, folder):
+        if self.writer is None:
+            self.writer = SummaryWriter(folder)
+        
+    def logFirstNIms(self, name, im, range, global_step=None, n=0):
+        if self.writer is None:
+            raise Exception('Error: SummaryWriter is not initialized!')
+        logFirstNIms(self.writer, name, im, range, global_step, n)
+
+

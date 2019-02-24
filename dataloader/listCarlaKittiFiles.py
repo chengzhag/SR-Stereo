@@ -72,7 +72,7 @@ def main():
 
     for iSample, sample in enumerate(trainImgLoader, 1):
         for name, im in zip(('inputL', 'inputR', 'gtL', 'gtR'), sample):
-            myUtils.logFirstNdis(writer, 'listCarlaKittiFiles/' + name, im,
+            myUtils.logFirstNIms(writer, 'listCarlaKittiFiles/' + name, im,
                                  args.maxdisp if im is not None and im.dim() == 3 else 255,
                                  global_step=iSample, n=args.nsample_save)
         if iSample >= args.nsample_save:

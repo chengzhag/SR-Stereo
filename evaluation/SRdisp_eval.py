@@ -1,11 +1,10 @@
-import time
 import torch
 import os
 from models import SR
 from utils import myUtils
-from tensorboardX import SummaryWriter
 from evaluation.Evaluation import Evaluation as Base
 from models.SR.warp import warp
+
 
 # Evaluation for any stereo model including SR-Stereo
 class Evaluation(Base):
@@ -14,12 +13,12 @@ class Evaluation(Base):
 
     def _evalIt(self, batch, log):
         warpToL, warpToR, maskL, maskR = warp(*batch[4:8])
-        
+
         gts = batch[0:2]
         inputs = []
         for input in zip(batch[4:6], (warpToL, warpToR), (maskL, maskR)):
             inputs.append(input)
-        
+
         scores = []
         for input, gt, suffix in zip(inputs, gts, ('L', 'R')):
             if gt is None:
@@ -31,12 +30,10 @@ class Evaluation(Base):
                 imgs = input + (gt, output)
 
                 # save Tensorboard logs to where checkpoint is.
-                writer = SummaryWriter(self.model.logFolder)
-
+                self.tensorboardLogger.init(self.model.logFolder)
                 for name, im in zip(('input', 'warpTo', 'mask', 'gt', 'output'), imgs):
-                    myUtils.logFirstNdis(writer, self.model.stage + '/testImages/' + name + suffix, im, 1,
-                                         global_step=1, n=self.ndisLog)
-                writer.close()
+                    self.tensorboardLogger.logFirstNIms(self.model.stage + '/testImages/' + name + suffix, im, 1,
+                                                        global_step=1, n=self.ndisLog)
             else:
                 score, _ = self.model.test(torch.cat(input, 1), gt, type=self.evalFcn)
 

@@ -90,7 +90,6 @@ def main():
     from utils import myUtils
     from tensorboardX import SummaryWriter
     import os
-    import argparse
     from evaluation import evalFcn
     import dataloader
     parser = myUtils.getBasicParser(['maxdisp', 'datapath', 'no_cuda', 'seed', 'eval_fcn',
@@ -131,7 +130,7 @@ def main():
                 sample + [imglw, imgrw, maskl, maskr],
                 (255, 255, args.maxdisp, args.maxdisp, 255, 255, 1, 1)
         ):
-            myUtils.logFirstNdis(writer, 'warp/' + name, im, range,
+            myUtils.logFirstNIms(writer, 'warp/' + name, im, range,
                                  global_step=iSample, n=args.nsample_save)
 
         if iSample >= args.nsample_save:
