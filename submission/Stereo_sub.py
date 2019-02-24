@@ -9,42 +9,34 @@ from tensorboardX import SummaryWriter
 import skimage
 import skimage.io
 import skimage.transform
+from submission.Submission import Submission as Base
+import collections
 
 
 # Submission for any stereo model including SR-Stereo
-class Submission:
+class Submission(Base):
     def __init__(self, subImgLoader):
-        if max(subImgLoader.batchSizes) > 1:
-            raise Exception('subImgLoader for Submission can only have batchSize equal to 1!')
-        self.subImgLoader = subImgLoader
-        self.stereo = None
+        super(Submission, self).__init__(subImgLoader)
 
-    def __call__(self, stereo):
-        self.stereo = stereo
-        saveFolder = os.path.join(self.stereo.checkpointFolder, 'Stereo_sub')
-        myUtils.checkDir(saveFolder)
-        tic = time.time()
-        ticFull = time.time()
-        for iIm, ims in enumerate(self.subImgLoader, 1):
-            nameL = self.subImgLoader.dataset.inputLdirs[iIm - 1].split('/')[-1]
-            savePath = os.path.join(saveFolder, nameL)
-            ims = [data if data.numel() else None for data in ims]
-            dispOut = self.stereo.predict(*ims[0:2], mode='left')
-            dispOut = dispOut.squeeze()
+    def _subIt(self, batch):
+        def preprocess(disp):
+            dispOut = disp.squeeze()
             dispOut = dispOut.data.cpu().numpy()
-            skimage.io.imsave(savePath, (dispOut * 256).astype('uint16'))
+            dispOut = (dispOut * 256).astype('uint16')
+            return dispOut
 
-            timeLeft = (time.time() - tic) / 60 * (len(self.subImgLoader) - iIm)
-            print('im %d/%d, %s, left %.2fmin' % (
-                iIm, len(self.subImgLoader),
-                savePath, timeLeft))
-            tic = time.time()
-        submissionTime = time.time() - ticFull
-        print('Full submission time = %.2fmin' % (submissionTime / 60))
+        dispOut = self.model.predict(*batch[0:2], mode='left')
+
+        outputs = collections.OrderedDict()
+        outputs['dispOutL'] = preprocess(dispOut)
+        outputs['gtL'] = preprocess(batch[2])
+        return outputs
+
 
 def main():
-    parser = myUtils.getBasicParser(['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'dataset', 'subtype'],
-                                    description='generate png image for kitti final submission')
+    parser = myUtils.getBasicParser(
+        ['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'dataset', 'subtype', 'load_scale'],
+        description='generate png image for kitti final submission')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -53,21 +45,20 @@ def main():
     if args.subtype == 'eval':
         batchSizes = (0, 1)
     _, imgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
-                                                batchSizes=batchSizes, mode='submission')
+                                            batchSizes=batchSizes,
+                                            loadScale=args.load_scale,
+                                            mode='submission',
+                                            mask=(1, 1, 1, 0))
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    saveFolderSuffix = myUtils.NameValues(('loadScale', 'cropScale'),
-                                          (imgLoader.loadScale * 10,
-                                           imgLoader.cropScale * 10))
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage,
-                                         saveFolderSuffix=saveFolderSuffix.strSuffix())
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage)
     stereo.load(args.loadmodel)
 
     # Submission
     sub = Submission(subImgLoader=imgLoader)
-    sub(stereo=stereo)
+    sub(model=stereo)
+
 
 if __name__ == '__main__':
     main()
-

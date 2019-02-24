@@ -106,8 +106,9 @@ def main():
 
     # Dataset
     _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
-                                                 batchSizes=(0, 1),
-                                                 loadScale=args.load_scale, mode='scaled')
+                                                batchSizes=(0, 1),
+                                                loadScale=args.load_scale,
+                                                mode='rawScaledTensor')
 
     logFolder = [folder for folder in args.datapath.split('/') if folder != '']
     logFolder[-1] += '_moduleTest'
@@ -125,7 +126,7 @@ def main():
 
         for name, value in myUtils.NameValues(('L', 'R'), (errorL, errorR), prefix='error').pairs():
             writer.add_scalar('warp/' + name, value, iSample)
-        for name, im, range  in zip(
+        for name, im, range in zip(
                 ('inputL', 'inputR', 'gtL', 'gtR', 'warpL', 'warpR', 'disocclusionsMaskL', 'disocclusionsMaskR'),
                 sample + [imglw, imgrw, maskl, maskr],
                 (255, 255, args.maxdisp, args.maxdisp, 255, 255, 1, 1)

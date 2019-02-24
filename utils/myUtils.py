@@ -1,25 +1,41 @@
 import torch
 import os
 import argparse
+from collections import Iterable
 
 
 class NameValues:
     def __init__(self, names, values, prefix='', suffix=''):
         self._pairs = []
+        self._names = []
+        self._values = []
         for name, value in zip(names, values):
             if value is not None:
                 self._pairs.append((prefix + name + suffix, value))
+                self._names.append(name)
+                self._values.append(value)
 
     def strPrint(self, unit=''):
         str = ''
         for name, value in self._pairs:
-            str += '%s: %.2f%s, ' % (name, value, unit)
+            str += '%s: ' % (name)
+            if hasattr(value, '__iter__'):
+                for v in value:
+                    str += '%.2f%s, ' % (v, unit)
+            else:
+                str += '%.2f%s, ' % (value, unit)
+
         return str
 
     def strSuffix(self):
         str = ''
         for name, value in self._pairs:
-            str += '_%s_%.0f' % (name, value)
+            str += '_%s' % (name)
+            if hasattr(value, '__iter__'):
+                for v in value:
+                    str += '_%.0f' % (v)
+            else:
+                str += '_%.0f' % (value)
         return str
 
     def dic(self):
@@ -30,6 +46,12 @@ class NameValues:
 
     def pairs(self):
         return self._pairs
+
+    def values(self):
+        return self._values
+
+    def names(self):
+        return self._names
 
 
 class AutoPad:
@@ -110,8 +132,8 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                                                         help='(sceneflow/kitti2012/kitti2015/carla_kitti)'),
                  'load_scale': lambda: parser.add_argument('--load_scale', type=float, default=1,
                                                            help='scaling applied to data during loading'),
-                 'crop_scale': lambda: parser.add_argument('--crop_scale', type=float, default=None,
-                                                           help='scaling applied to data during croping'),
+                 'trainCrop': lambda: parser.add_argument('--trainCrop', type=float, default=(256, 512), nargs=2,
+                                                           help='size of random crop (H x W) applied to data during training'),
                  'batchsize_test': lambda: parser.add_argument('--batchsize_test', type=int, default=3,
                                                                help='testing batch size'),
                  # training
@@ -171,3 +193,7 @@ def assertMode(kitti, mode):
         if mode not in ('left', 'right', 'both'):
             raise Exception('No mode \'%s!\'' % mode)
         return mode
+
+def quantize(img, rgb_range):
+    pixel_range = 255 / rgb_range
+    return img.mul(pixel_range).clamp(0, 255).round().div(pixel_range)
