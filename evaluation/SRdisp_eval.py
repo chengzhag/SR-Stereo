@@ -24,10 +24,9 @@ class Evaluation(Base):
             if gt is None:
                 scores.append(None)
                 continue
+            inputCat = torch.cat(input if self.model.args.n_inputs == 7 else input[:2], 1)
             if log:
-                score, output = self.model.test(
-                    torch.cat(input if self.model.args.n_inputs == 7 else input[:2], 1),
-                    gt, type=self.evalFcn)
+                score, output = self.model.test(inputCat, gt, type=self.evalFcn)
                 output = myUtils.quantize(output, 1)
                 imgs = input + (gt, output)
 
@@ -37,7 +36,7 @@ class Evaluation(Base):
                     self.tensorboardLogger.logFirstNIms(self.model.stage + '/testImages/' + name + suffix, im, 1,
                                                         global_step=1, n=self.ndisLog)
             else:
-                score, _ = self.model.test(torch.cat(input, 1), gt, type=self.evalFcn)
+                score, _ = self.model.test(inputCat, gt, type=self.evalFcn)
 
             scores.append(score)
 

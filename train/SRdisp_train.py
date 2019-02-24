@@ -27,10 +27,9 @@ class Train(Base):
             if gt is None:
                 losses.append(None)
                 continue
+            inputCat = torch.cat(input if self.model.args.n_inputs == 7 else input[:2], 1)
             if log:
-                loss, output = self.model.train(
-                    torch.cat(input if self.model.args.n_inputs == 7 else input[:2], 1),
-                    gt)
+                loss, output = self.model.train(inputCat, gt)
                 output = myUtils.quantize(output, 1)
                 imgs = input + (gt, output)
 
@@ -44,7 +43,7 @@ class Train(Base):
                     self.tensorboardLogger.logFirstNIms(self.model.stage + '/trainImages/' + name + suffix, im, 1,
                                                         global_step=self.global_step, n=self.ndisLog)
             else:
-                loss, _ = self.model.train(torch.cat(input, 1), gt)
+                loss, _ = self.model.train(inputCat, gt)
 
             losses.append(loss)
 
