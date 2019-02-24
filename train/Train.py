@@ -44,7 +44,7 @@ class Train:
             tic = time.time()
             torch.cuda.empty_cache()
             for batch_idx, batch in enumerate(self.trainImgLoader, 1):
-                batch = [data if data.numel() else None for data in batch]
+                batch = [(data.cuda() if self.model.cuda else data) if data.numel() else None for data in batch]
                 self.global_step += 1
                 # torch.cuda.empty_cache()
 
