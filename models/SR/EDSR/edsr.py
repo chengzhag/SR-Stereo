@@ -11,8 +11,10 @@ url = {
     'r32f256x4': 'https://cv.snu.ac.kr/research/EDSR/models/edsr_x4-4f62e9ef.pt'
 }
 
+
 def make_model(args, parent=False):
     return EDSR(args)
+
 
 class EDSR(nn.Module):
     def __init__(self, args, conv=common.default_conv):
@@ -20,7 +22,7 @@ class EDSR(nn.Module):
 
         n_resblocks = args.n_resblocks
         n_feats = args.n_feats
-        kernel_size = 3 
+        kernel_size = 3
         scale = args.scale[0]
         act = nn.ReLU(True)
         self.url = url['r{}f{}x{}'.format(n_resblocks, n_feats, scale)]
@@ -28,7 +30,7 @@ class EDSR(nn.Module):
         self.add_mean = common.MeanShift(args.rgb_range, sign=1)
 
         # define head module
-        m_head = [conv(args.n_colors, n_feats, kernel_size)]
+        m_head = [conv(args.n_inputs, n_feats, kernel_size)]
 
         # define body module
         m_body = [
@@ -49,7 +51,10 @@ class EDSR(nn.Module):
         self.tail = nn.Sequential(*m_tail)
 
     def forward(self, x):
-        x = self.sub_mean(x)
+        # sub_mean only for RGB ims in the first 6 channels if x has 7 channels
+        for i in range(0, x.size()[1] - 3, 3):
+            x[:, i:i + 3, :, :] = self.sub_mean(x[:, i:i + 3, :, :])
+
         x = self.head(x)
 
         res = self.body(x)
@@ -58,7 +63,7 @@ class EDSR(nn.Module):
         x = self.tail(res)
         x = self.add_mean(x)
 
-        return x 
+        return x
 
     def load_state_dict(self, state_dict, strict=True):
         own_state = self.state_dict()
@@ -78,4 +83,3 @@ class EDSR(nn.Module):
                 if name.find('tail') == -1:
                     raise KeyError('unexpected key "{}" in state_dict'
                                    .format(name))
-

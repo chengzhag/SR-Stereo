@@ -15,14 +15,17 @@ class SR(Model):
     # dataset: only used for suffix of saveFolderName
     def __init__(self, cInput=3, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
         super(SR, self).__init__(cuda, stage, dataset, saveFolderSuffix)
+
         class Arg:
             def __init__(self):
                 self.n_resblocks = 16
                 self.n_feats = 64
                 self.scale = [2]
                 self.rgb_range = 255
-                self.n_colors = cInput
+                self.n_colors = 3
+                self.n_inputs = cInput
                 self.res_scale = 1
+
         self.args = Arg()
         self.initModel()
 
@@ -52,7 +55,7 @@ class SR(Model):
     def predict(self, imgL):
         super(SR, self)._predict()
         with torch.no_grad():
-            output =  P.data_parallel(self.model, imgL * self.args.rgb_range)
+            output = P.data_parallel(self.model, imgL * self.args.rgb_range)
             output = myUtils.quantize(output, self.args.rgb_range) / self.args.rgb_range
             return output
 
@@ -68,11 +71,27 @@ class SR(Model):
     def load(self, checkpointDir):
         super(SR, self).load(checkpointDir)
 
-        state_dict = torch.load(checkpointDir)
-        if 'state_dict' in state_dict.keys():
-            state_dict = state_dict['state_dict']
+        load_state_dict = torch.load(checkpointDir)
+        if 'state_dict' in load_state_dict.keys():
+            load_state_dict = load_state_dict['state_dict']
 
-        self.model.load_state_dict(state_dict, strict=False)
+        model_dict = self.model.state_dict()
+        selected_load_dict = {}
+        for loadName, loadValue in load_state_dict.items():
+            if loadName in model_dict and model_dict[loadName].size() == loadValue.size():
+                selected_load_dict[loadName] = loadValue
+            else:
+                # if loadName == 'head.0.weight':
+                #     selected_load_dict[loadName] = model_dict[loadName]
+                #     selected_load_dict[loadName][:,:3,:,:] = loadValue
+                #     selected_load_dict[loadName][:, 3:6, :, :] = loadValue
+                print('Warning! While copying the parameter named {}, '
+                      'whose dimensions in the model are {} and '
+                      'whose dimensions in the checkpoint are {}.'
+                      .format(loadName, model_dict[loadName].size(), loadValue.size()))
+        model_dict.update(selected_load_dict)
+
+        self.model.load_state_dict(model_dict, strict=False)
 
         print('Loading complete! Number of model parameters: %d' % self.nParams())
 

@@ -19,18 +19,18 @@ class Train(Base):
 
         gts = batch[0:2]
         inputs = []
-        for input, warpTo, mask in zip(batch[4:6], (warpToL, warpToR), (maskL, maskR)):
-            inputs.append(torch.cat([input, warpTo, mask], 1))
+        for input in zip(batch[4:6], (warpToL, warpToR), (maskL, maskR)):
+            inputs.append(input)
 
         losses = []
         for input, gt, suffix in zip(inputs, gts, ('L', 'R')):
-            if input is None or gt is None:
+            if gt is None:
                 losses.append(None)
                 continue
             if log:
-                loss, output = self.model.train(input, gt)
+                loss, output = self.model.train(torch.cat(input, 1), gt)
                 output = myUtils.quantize(output, 1)
-                imgs = [input, gt, output]
+                imgs = input + (gt, output)
 
                 # save Tensorboard logs to where checkpoint is.
                 writer = SummaryWriter(self.model.logFolder)
@@ -38,7 +38,7 @@ class Train(Base):
                 for name, value in [('loss' + suffix, loss), ('lr', self.lrNow)]:
                     writer.add_scalar(self.model.stage + '/trainLosses/' + name, value, self.global_step)
 
-                for name, im in zip(('input', 'gt', 'output'), imgs):
+                for name, im in zip(('input', 'warpTo', 'mask', 'gt', 'output'), imgs):
                     myUtils.logFirstNdis(writer, self.model.stage + '/trainImages/' + name + suffix, im, 1,
                                          global_step=self.global_step, n=self.ndisLog)
                 writer.close()
