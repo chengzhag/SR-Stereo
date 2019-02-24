@@ -61,7 +61,7 @@ class SR(Model):
             imgL, imgH = imgL.cuda(), imgH.cuda()
 
         output = self.predict(imgL)
-        score = getattr(evalFcn, type)(imgH * self.args.rgb_range, output * self.args.rgb_range)
+        score = evalFcn.getEvalFcn(type)(imgH * self.args.rgb_range, output * self.args.rgb_range)
 
         return score, output
 

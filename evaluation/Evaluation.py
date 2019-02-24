@@ -22,7 +22,7 @@ class Evaluation:
         self.model = model
         tic = time.time()
         ticFull = time.time()
-        scoreUnit = '%' if self.evalFcn == 'outlier' else ''
+        scoreUnit = '%' if 'outlier' in self.evalFcn else ''
 
         for batch_idx, batch in enumerate(self.testImgLoader, 1):
             batch = [data if data.numel() else None for data in batch]
