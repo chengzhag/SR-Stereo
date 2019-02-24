@@ -25,7 +25,8 @@ class Evaluation:
         scoreUnit = '%' if 'outlier' in self.evalFcn else ''
 
         for batch_idx, batch in enumerate(self.testImgLoader, 1):
-            batch = [(data.cuda() if self.model.cuda else data) if data.numel() else None for data in batch]
+            batch = [(data.half() if self.model.half else data) if data.numel() else None for data in batch]
+            batch = [(data.cuda() if self.model.cuda else data) if data is not None else None for data in batch]
 
             scoresPairs = self._evalIt(batch, log=(batch_idx == 1))
 

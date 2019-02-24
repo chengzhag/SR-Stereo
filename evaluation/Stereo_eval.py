@@ -35,7 +35,7 @@ class Evaluation(Base):
 
 def main():
     parser = myUtils.getBasicParser(['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
-                                     'ndis_log', 'dataset', 'load_scale', 'batchsize_test'],
+                                     'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half'],
                                     description='evaluate Stereo net or SR-Stereo net')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -52,7 +52,8 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage)
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale,
+                                         half=args.half, cuda=args.cuda, stage=stage)
     if args.loadmodel is not None:
         stereo.load(args.loadmodel)
 

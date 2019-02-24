@@ -13,8 +13,8 @@ import torch.nn.parallel as P
 
 class SR(Model):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, cInput=3, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
-        super(SR, self).__init__(cuda, stage, dataset, saveFolderSuffix)
+    def __init__(self, cInput=3, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        super(SR, self).__init__(cuda, half, stage, dataset, saveFolderSuffix)
 
         class Arg:
             def __init__(self):
@@ -45,7 +45,8 @@ class SR(Model):
         self.optimizer.zero_grad()
         output = P.data_parallel(self.model, imgL * self.args.rgb_range)
         loss = F.smooth_l1_loss(imgH * self.args.rgb_range, output, reduction='mean')
-        loss.backward()
+        with self.amp_handle.scale_loss(loss, self.optimizer) as scaled_loss:
+            scaled_loss.backward()
         self.optimizer.step()
         output = output / self.args.rgb_range
         return loss.data.item(), output

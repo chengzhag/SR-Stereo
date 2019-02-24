@@ -13,8 +13,8 @@ from ..Model import Model
 
 class Stereo(Model):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, maxdisp=192, dispScale=1, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
-        super(Stereo, self).__init__(cuda, stage, dataset, saveFolderSuffix)
+    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        super(Stereo, self).__init__(cuda, half, stage, dataset, saveFolderSuffix)
         self.maxdisp = maxdisp
         self.dispScale = dispScale
 
@@ -108,8 +108,8 @@ class Stereo(Model):
 
 class PSMNet(Stereo):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, maxdisp=192, dispScale=1, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
-        super(PSMNet, self).__init__(maxdisp, dispScale, cuda, stage, dataset, saveFolderSuffix)
+    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        super(PSMNet, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet
 
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
@@ -194,8 +194,8 @@ class PSMNet(Stereo):
 
 class PSMNet_TieCheng(Stereo):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, maxdisp=192, dispScale=1, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
-        super(PSMNet_TieCheng, self).__init__(maxdisp, dispScale, cuda, stage, dataset, saveFolderSuffix)
+    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        super(PSMNet_TieCheng, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet_TieCheng
 
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):

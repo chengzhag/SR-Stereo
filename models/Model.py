@@ -6,10 +6,13 @@ import torch.nn.functional as F
 import torch.nn as nn
 from evaluation import evalFcn
 from utils import myUtils
+from apex import amp
 
 class Model:
-    def __init__(self, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
+    def __init__(self, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
         self.cuda = cuda
+        self.half = half
+        self.amp_handle = amp.init(half)
         self.stage = stage
 
         self.startTime = time.localtime(time.time())
