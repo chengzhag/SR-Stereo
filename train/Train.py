@@ -42,6 +42,7 @@ class Train:
 
             # iteration
             totalTrainLoss = 0
+            lossesAvg = None
             tic = time.time()
             torch.cuda.empty_cache()
             for batch_idx, batch in enumerate(self.trainImgLoader, 1):
@@ -51,8 +52,21 @@ class Train:
                 self.global_step += 1
                 # torch.cuda.empty_cache()
 
-                lossesPairs = self._trainIt(batch=batch,
-                                            log=(self.global_step % self.logEvery == 0 and self.logEvery > 0))
+                doLog = self.global_step % self.logEvery == 0 and self.logEvery > 0
+                lossesPairs = self._trainIt(batch=batch, log=doLog)
+                if lossesAvg is None:
+                    lossesAvg = lossesPairs.values()
+                else:
+                    lossesAvg = [lossAvg + loss for lossAvg, loss in zip(lossesAvg, lossesPairs.values())]
+
+                # save Tensorboard logs to where checkpoint is.
+                if doLog:
+                    self.tensorboardLogger.init(self.model.logFolder)
+                    lossesAvg = [lossAvg / self.logEvery for lossAvg in lossesAvg]
+                    for name, value in zip(lossesPairs.names() + ['lr'], lossesAvg + [self.lrNow]):
+                        self.tensorboardLogger.writer.add_scalar(self.model.stage + '/trainLosses/' + name, value,
+                                                                 self.global_step)
+                    lossesAvg = None
 
                 totalTrainLoss += sum(lossesPairs.values()) / len(lossesPairs.values())
 

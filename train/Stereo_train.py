@@ -21,9 +21,6 @@ class Train(Base):
             # save Tensorboard logs to where checkpoint is.
             lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
             self.tensorboardLogger.init(self.model.logFolder)
-            for name, value in lossesPairs.pairs() + [('lr', self.lrNow), ]:
-                self.tensorboardLogger.writer.add_scalar(self.model.stage + '/trainLosses/' + name, value,
-                                                         self.global_step)
             for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), batch[2:4] + outputs):
                 self.tensorboardLogger.logFirstNIms(self.model.stage + '/trainImages/' + name, disp, self.model.maxdisp,
                                                     global_step=self.global_step, n=self.ndisLog)

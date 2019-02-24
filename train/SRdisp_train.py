@@ -33,12 +33,7 @@ class Train(Base):
                 output = myUtils.quantize(output, 1)
                 imgs = input + (gt, output)
 
-                # save Tensorboard logs to where checkpoint is.
                 self.tensorboardLogger.init(self.model.logFolder)
-                for name, value in [('loss' + suffix, loss), ('lr', self.lrNow)]:
-                    self.tensorboardLogger.writer.add_scalar(self.model.stage + '/trainLosses/' + name, value,
-                                                             self.global_step)
-
                 for name, im in zip(('input', 'warpTo', 'mask', 'gt', 'output'), imgs):
                     self.tensorboardLogger.logFirstNIms(self.model.stage + '/trainImages/' + name + suffix, im, 1,
                                                         global_step=self.global_step, n=self.ndisLog)

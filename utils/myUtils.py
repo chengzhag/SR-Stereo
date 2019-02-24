@@ -12,7 +12,7 @@ class NameValues:
         for name, value in zip(names, values):
             if value is not None:
                 self._pairs.append((prefix + name + suffix, value))
-                self._names.append(name)
+                self._names.append(prefix + name + suffix)
                 self._values.append(value)
 
     def strPrint(self, unit=''):
