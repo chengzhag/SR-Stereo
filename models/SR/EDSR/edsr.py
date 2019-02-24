@@ -52,7 +52,7 @@ class EDSR(nn.Module):
 
     def forward(self, x):
         # sub_mean only for RGB ims in the first 6 channels if x has 7 channels
-        for i in range(0, x.size()[1] - 3, 3):
+        for i in range(0, x.size()[1] - 2, 3):
             x[:, i:i + 3, :, :] = self.sub_mean(x[:, i:i + 3, :, :])
 
         x = self.head(x)
