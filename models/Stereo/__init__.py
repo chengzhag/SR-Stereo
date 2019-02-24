@@ -56,6 +56,8 @@ class Stereo(Model):
                 outputs.append(None)
                 continue
             dispOut = self.predict(imgL, imgR, mode)
+            if dispOut.dim() == 3:
+                dispOut = dispOut.unsqueeze(1)
             if output:
                 outputs.append(dispOut.cpu())
             if kitti:
@@ -123,9 +125,9 @@ class PSMNet(Stereo):
             mask.detach_()
 
             output1, output2, output3 = self.model(imgL, imgR)
-            output1 = torch.squeeze(output1, 1)
-            output2 = torch.squeeze(output2, 1)
-            output3 = torch.squeeze(output3, 1)
+            output1 = output1.unsqueeze(1)
+            output2 = output2.unsqueeze(1)
+            output3 = output3.unsqueeze(1)
             loss = 0.5 * F.smooth_l1_loss(output1[mask], disp_true[mask], reduction='mean') + 0.7 * F.smooth_l1_loss(
                 output2[mask], disp_true[mask], reduction='mean') + F.smooth_l1_loss(output3[mask], disp_true[mask],
                                                                                      reduction='mean')

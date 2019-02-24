@@ -113,7 +113,7 @@ class myImageFloder(data.Dataset):
                     raise Exception('No mode %s!' % self.mode)
 
             if not isRGBorDepth:
-                ims = [np.ascontiguousarray(im.squeeze(), dtype=np.float32) / self.dispScale * scaleRatio
+                ims = [np.ascontiguousarray(im, dtype=np.float32) / self.dispScale * scaleRatio
                        for im, scaleRatio in zip(ims, scaleRatios)]
             return ims
 
