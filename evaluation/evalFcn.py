@@ -2,9 +2,10 @@ import torch
 
 def getEvalFcn(type):
     if '_' in type:
-        param, type = type.split('_', 1)
-        param = float(param)
-        return lambda gt, output: globals()[type](gt, output, param)
+        params = type.split('_')
+        type = params[-1]
+        params = [float(param) for param in params[:-1]]
+        return lambda gt, output: globals()[type](gt, output, *params)
     else:
         return globals()[type]
 
