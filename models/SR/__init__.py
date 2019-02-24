@@ -40,7 +40,7 @@ class SR(Model):
         if self.cuda:
             imgL, imgH = imgL.cuda(), imgH.cuda()
         self.optimizer.zero_grad()
-        output = self.model(imgL * self.args.rgb_range)
+        output = P.data_parallel(self.model, imgL * self.args.rgb_range)
         loss = F.smooth_l1_loss(imgH * self.args.rgb_range, output, reduction='mean')
         loss.backward()
         self.optimizer.step()
