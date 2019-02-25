@@ -1,14 +1,7 @@
-from utils import myUtils
-import argparse
-import time
 import torch
 import os
 from models import SR
 from utils import myUtils
-from tensorboardX import SummaryWriter
-import skimage
-import skimage.io
-import skimage.transform
 from submission.Submission import Submission as Base
 import collections
 
@@ -42,7 +35,7 @@ class Submission(Base):
 
 def main():
     parser = myUtils.getBasicParser(
-        ['datapath', 'loadmodel', 'no_cuda', 'dataset', 'subtype', 'load_scale'],
+        ['datapath', 'loadmodel', 'no_cuda', 'dataset', 'subtype', 'load_scale', 'half'],
         description='generate png image for SR submission')
 
     args = parser.parse_args()
@@ -61,7 +54,7 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    sr = getattr(SR, 'SR')(cuda=args.cuda, stage=stage,
+    sr = getattr(SR, 'SR')(cuda=args.cuda, half=args.half, stage=stage,
                            dataset=args.dataset)
     if args.loadmodel is not None:
         sr.load(args.loadmodel)

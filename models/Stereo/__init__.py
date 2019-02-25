@@ -13,8 +13,8 @@ from ..Model import Model
 
 class Stereo(Model):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, maxdisp=192, dispScale=1, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
-        super(Stereo, self).__init__(cuda, stage, dataset, saveFolderSuffix)
+    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        super(Stereo, self).__init__(cuda, half, stage, dataset, saveFolderSuffix)
         self.maxdisp = maxdisp
         self.dispScale = dispScale
 
@@ -56,6 +56,8 @@ class Stereo(Model):
                 outputs.append(None)
                 continue
             dispOut = self.predict(imgL, imgR, mode)
+            if dispOut.dim() == 3:
+                dispOut = dispOut.unsqueeze(1)
             if output:
                 outputs.append(dispOut.cpu())
             if kitti:
@@ -106,8 +108,8 @@ class Stereo(Model):
 
 class PSMNet(Stereo):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, maxdisp=192, dispScale=1, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
-        super(PSMNet, self).__init__(maxdisp, dispScale, cuda, stage, dataset, saveFolderSuffix)
+    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        super(PSMNet, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet
 
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
@@ -123,9 +125,9 @@ class PSMNet(Stereo):
             mask.detach_()
 
             output1, output2, output3 = self.model(imgL, imgR)
-            output1 = torch.squeeze(output1, 1)
-            output2 = torch.squeeze(output2, 1)
-            output3 = torch.squeeze(output3, 1)
+            output1 = output1.unsqueeze(1)
+            output2 = output2.unsqueeze(1)
+            output3 = output3.unsqueeze(1)
             loss = 0.5 * F.smooth_l1_loss(output1[mask], disp_true[mask], reduction='mean') + 0.7 * F.smooth_l1_loss(
                 output2[mask], disp_true[mask], reduction='mean') + F.smooth_l1_loss(output3[mask], disp_true[mask],
                                                                                      reduction='mean')
@@ -192,8 +194,8 @@ class PSMNet(Stereo):
 
 class PSMNet_TieCheng(Stereo):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, maxdisp=192, dispScale=1, cuda=True, stage='unnamed', dataset=None, saveFolderSuffix=''):
-        super(PSMNet_TieCheng, self).__init__(maxdisp, dispScale, cuda, stage, dataset, saveFolderSuffix)
+    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        super(PSMNet_TieCheng, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet_TieCheng
 
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):

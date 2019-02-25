@@ -31,7 +31,7 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
                                  kitti=kitti, loadScale=loadScale,
                                  preprocess=preprocess,
                                  mode=mode, mask=mask),
-        batch_size=batchSizes[0], shuffle=True, num_workers=8, drop_last=False) if batchSizes[0] > 0 else None
+        batch_size=batchSizes[0], shuffle=True, num_workers=4, drop_last=False) if batchSizes[0] > 0 else None
 
     testImgLoader = torch.utils.data.DataLoader(
         fileLoader.myImageFloder(*pathsTest, trainCrop=trainCrop,
@@ -39,7 +39,7 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
                                  preprocess=preprocess,
                                  mode='testing' if mode == 'training' else mode,
                                  mask=mask),
-        batch_size=batchSizes[1], shuffle=False, num_workers=8, drop_last=False) if batchSizes[1] > 0 else None
+        batch_size=batchSizes[1], shuffle=False, num_workers=4, drop_last=False) if batchSizes[1] > 0 else None
 
     # Add dataset info to imgLoader objects
     # For KITTI, evaluation should exclude zero disparity pixels. A flag kitti will be added to imgLoader.

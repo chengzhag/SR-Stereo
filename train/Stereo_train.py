@@ -3,7 +3,6 @@ import torch.utils.data
 import time
 import os
 from models import Stereo
-from tensorboardX import SummaryWriter
 from evaluation import Stereo_eval
 from utils import myUtils
 import sys
@@ -11,7 +10,7 @@ from train.Train import Train as Base
 
 
 class Train(Base):
-    def __init__(self, trainImgLoader, nEpochs, lr=(0.001, ), logEvery=1, testEvery=1, ndisLog=1, Test=None):
+    def __init__(self, trainImgLoader, nEpochs, lr=(0.001,), logEvery=1, testEvery=1, ndisLog=1, Test=None):
         super(Train, self).__init__(trainImgLoader, nEpochs, lr, logEvery, testEvery, ndisLog, Test)
 
     def _trainIt(self, batch, log):
@@ -21,13 +20,10 @@ class Train(Base):
 
             # save Tensorboard logs to where checkpoint is.
             lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
-            writer = SummaryWriter(self.model.logFolder)
-            for name, value in lossesPairs.pairs() + [('lr', self.lrNow), ]:
-                writer.add_scalar(self.model.stage + '/trainLosses/' + name, value, self.global_step)
+            self.tensorboardLogger.set(self.model.logFolder)
             for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), batch[2:4] + outputs):
-                myUtils.logFirstNdis(writer, self.model.stage + '/trainImages/' + name, disp, self.model.maxdisp,
-                                     global_step=self.global_step, n=self.ndisLog)
-            writer.close()
+                self.tensorboardLogger.logFirstNIms(self.model.stage + '/trainImages/' + name, disp, self.model.maxdisp,
+                                                    global_step=self.global_step, n=self.ndisLog)
         else:
             losses = self.model.train(*batch, output=False, kitti=self.trainImgLoader.kitti)
 
@@ -40,7 +36,7 @@ def main():
     parser = myUtils.getBasicParser(
         ['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
-         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr'],
+         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half'],
         description='train or finetune Stereo net')
 
     args = parser.parse_args()
@@ -64,7 +60,9 @@ def main():
                                           (trainImgLoader.loadScale * 10,
                                            trainImgLoader.trainCrop,
                                            args.batchsize_train))
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage,
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale,
+                                         cuda=args.cuda, half=args.half,
+                                         stage=stage,
                                          dataset=args.dataset,
                                          saveFolderSuffix=saveFolderSuffix.strSuffix())
     if args.loadmodel is not None:

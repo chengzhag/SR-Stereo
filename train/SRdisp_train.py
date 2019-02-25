@@ -2,9 +2,10 @@ from __future__ import print_function
 import torch.utils.data
 import os
 from models import SR
-from evaluation import SR_eval
+from evaluation import SRdisp_eval
 from utils import myUtils
 from train.Train import Train as Base
+from models.SR.warp import warp
 
 
 class Train(Base):
@@ -14,25 +15,38 @@ class Train(Base):
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
 
-        batch = batch[0:2] + batch[4:6]
+        warpToL, warpToR, maskL, maskR = warp(*batch[4:8])
+
+        gts = batch[0:2]
+        inputs = []
+        for input in zip(batch[4:6], (warpToL, warpToR), (maskL, maskR)):
+            if self.model.args.n_inputs == 7:
+                inputs.append(input)
+            elif self.model.args.n_inputs == 6:
+                inputs.append(input[:2])
+            else:
+                raise Exception('Error: self.model.args.n_inputs = %d which is not supporty!' % self.model.args.n_inputs)
 
         losses = []
-        for input, gt, suffix in zip(batch[2:4], batch[0:2], ('L', 'R')):
-            if input is None or gt is None:
+        for input, gt, suffix in zip(inputs, gts, ('L', 'R')):
+            if gt is None:
                 losses.append(None)
                 continue
+            inputCat = torch.cat(input, 1)
             if log:
-                loss, output = self.model.train(input, gt)
+                loss, output = self.model.train(inputCat, gt)
                 output = myUtils.quantize(output, 1)
-                imgs = [input, gt, output]
+                imgs = input + (gt, output)
 
-                # save Tensorboard logs to where checkpoint is.
                 self.tensorboardLogger.set(self.model.logFolder)
-                for name, im in zip(('input', 'gt', 'output'), imgs):
+                names = ('input', 'warpTo', 'mask', 'gt', 'output') \
+                    if self.model.args.n_inputs == 7 \
+                    else ('input', 'warpTo', 'gt', 'output')
+                for name, im in zip(names, imgs):
                     self.tensorboardLogger.logFirstNIms(self.model.stage + '/trainImages/' + name + suffix, im, 1,
                                                         global_step=self.global_step, n=self.ndisLog)
             else:
-                loss, _ = self.model.train(input, gt)
+                loss, _ = self.model.train(inputCat, gt)
 
             losses.append(loss)
 
@@ -44,7 +58,7 @@ def main():
     parser = myUtils.getBasicParser(
         ['datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
-         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half'],
+         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half', 'withMask'],
         description='train or finetune SR net')
 
     args = parser.parse_args()
@@ -62,7 +76,7 @@ def main():
                                                              loadScale=(args.load_scale, args.load_scale / 2),
                                                              mode='training',
                                                              preprocess=False,
-                                                             mask=(1, 1, 0, 0))
+                                                             mask=(1, 1, 1, 1))
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
@@ -70,15 +84,16 @@ def main():
                                           (trainImgLoader.loadScale * 10,
                                            trainImgLoader.trainCrop,
                                            args.batchsize_train))
-    sr = getattr(SR, 'SR')(cuda=args.cuda, half=args.half, stage=stage,
+    sr = getattr(SR, 'SR')(cInput=7 if args.withMask else 6,
+                           cuda=args.cuda, half=args.half, stage=stage,
                            dataset=args.dataset,
                            saveFolderSuffix=saveFolderSuffix.strSuffix())
     if args.loadmodel is not None:
         sr.load(args.loadmodel)
 
     # Train
-    test = SR_eval.Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
-                              ndisLog=args.ndis_log)
+    test = SRdisp_eval.Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
+                                  ndisLog=args.ndis_log)
     train = Train(trainImgLoader=trainImgLoader, nEpochs=args.epochs, lr=args.lr,
                   logEvery=args.log_every, ndisLog=args.ndis_log,
                   testEvery=args.test_every, Test=test)

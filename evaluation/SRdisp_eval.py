@@ -1,42 +1,42 @@
-import time
 import torch
 import os
 from models import SR
 from utils import myUtils
 from evaluation.Evaluation import Evaluation as Base
+from models.SR.warp import warp
 
 
 # Evaluation for any stereo model including SR-Stereo
 class Evaluation(Base):
-    def __init__(self, testImgLoader, mode='both', evalFcn='l1', ndisLog=1):
+    def __init__(self, testImgLoader, evalFcn='l1', ndisLog=1):
         super(Evaluation, self).__init__(testImgLoader, evalFcn, ndisLog)
-        self.mode = myUtils.assertMode(testImgLoader.kitti, mode)
 
     def _evalIt(self, batch, log):
-        batch = batch[0:2] + batch[4:6]
-        if self.mode == 'left':
-            batch[1] = None
-            batch[3] = None
-        if self.mode == 'right':
-            batch[0] = None
-            batch[2] = None
+        warpToL, warpToR, maskL, maskR = warp(*batch[4:8])
+
+        gts = batch[0:2]
+        inputs = []
+        for input in zip(batch[4:6], (warpToL, warpToR), (maskL, maskR)):
+            inputs.append(input)
 
         scores = []
-        for input, gt, suffix in zip(batch[2:4], batch[0:2], ('L', 'R')):
-            if input is None or gt is None:
+        for input, gt, suffix in zip(inputs, gts, ('L', 'R')):
+            if gt is None:
                 scores.append(None)
                 continue
+            inputCat = torch.cat(input if self.model.args.n_inputs == 7 else input[:2], 1)
             if log:
-                score, output = self.model.test(input, gt, type=self.evalFcn)
-                imgs = [input, gt, output]
+                score, output = self.model.test(inputCat, gt, type=self.evalFcn)
+                output = myUtils.quantize(output, 1)
+                imgs = input + (gt, output)
 
                 # save Tensorboard logs to where checkpoint is.
                 self.tensorboardLogger.set(self.model.logFolder)
-                for name, im in zip(('input', 'gt', 'output'), imgs):
+                for name, im in zip(('input', 'warpTo', 'mask', 'gt', 'output'), imgs):
                     self.tensorboardLogger.logFirstNIms(self.model.stage + '/testImages/' + name + suffix, im, 1,
-                                                       global_step=1, n=self.ndisLog)
+                                                        global_step=1, n=self.ndisLog)
             else:
-                score, _ = self.model.test(input, gt, type=self.evalFcn)
+                score, _ = self.model.test(inputCat, gt, type=self.evalFcn)
 
             scores.append(score)
 
@@ -47,7 +47,7 @@ class Evaluation(Base):
 def main():
     parser = myUtils.getBasicParser(
         ['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
-         'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half'],
+         'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half', 'withMask'],
         description='evaluate Stereo net or SR-Stereo net')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -63,17 +63,18 @@ def main():
                                                 loadScale=(args.load_scale, args.load_scale / 2),
                                                 mode='testing',
                                                 preprocess=False,
-                                                mask=(1, 1, 0, 0))
+                                                mask=(1, 1, 1, 1))
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    sr = getattr(SR, 'SR')(cuda=args.cuda, half=args.half, stage=stage,
+    sr = getattr(SR, 'SR')(cInput=7 if args.withMask else 6,
+                           cuda=args.cuda, half=args.half, stage=stage,
                            dataset=args.dataset)
     if args.loadmodel is not None:
         sr.load(args.loadmodel)
 
     # Test
-    test = Evaluation(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn,
+    test = Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
                       ndisLog=args.ndis_log)
     test(model=sr)
     test.log()

@@ -11,7 +11,7 @@ import skimage.transform
 
 def main():
     parser = myUtils.getBasicParser(
-        ['datapath', 'loadmodel', 'no_cuda'],
+        ['datapath', 'loadmodel', 'no_cuda', 'half'],
         description='module test for class SR')
 
     args = parser.parse_args()
@@ -24,7 +24,7 @@ def main():
         batch_size=1, shuffle=False, num_workers=1, drop_last=False)
 
     # Load model
-    sr = SR(cuda=args.cuda, stage='SR_moduleTest', dataset='testImages', saveFolderSuffix='')
+    sr = SR(cuda=args.cuda, half=args.half, stage='SR_moduleTest', dataset='testImages', saveFolderSuffix='')
     if args.loadmodel is not None:
         sr.load(args.loadmodel)
 

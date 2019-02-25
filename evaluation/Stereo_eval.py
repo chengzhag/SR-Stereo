@@ -3,8 +3,8 @@ import torch
 import os
 from models import Stereo
 from utils import myUtils
-from tensorboardX import SummaryWriter
 from evaluation.Evaluation import Evaluation as Base
+
 
 # Evaluation for any stereo model including SR-Stereo
 class Evaluation(Base):
@@ -21,11 +21,10 @@ class Evaluation(Base):
             imgs = batch[2:4] + outputs
 
             # save Tensorboard logs to where checkpoint is.
-            writer = SummaryWriter(self.model.logFolder)
+            self.tensorboardLogger.set(self.model.logFolder)
             for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), imgs):
-                myUtils.logFirstNdis(writer, self.model.stage + '/testImages/' + name, disp, self.model.maxdisp,
-                                     global_step=1, n=self.ndisLog)
-            writer.close()
+                self.tensorboardLogger.logFirstNIms(self.model.stage + '/testImages/' + name, disp, self.model.maxdisp,
+                                                    global_step=1, n=self.ndisLog)
         else:
             scores = self.model.test(*batch, type=self.evalFcn, output=False, kitti=self.testImgLoader.kitti)
 
@@ -34,9 +33,10 @@ class Evaluation(Base):
 
 
 def main():
-    parser = myUtils.getBasicParser(['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
-                                     'ndis_log', 'dataset', 'load_scale', 'batchsize_test'],
-                                    description='evaluate Stereo net or SR-Stereo net')
+    parser = myUtils.getBasicParser(
+        ['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
+         'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half'],
+        description='evaluate Stereo net or SR-Stereo net')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -52,7 +52,8 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
-    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, cuda=args.cuda, stage=stage)
+    stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale,
+                                         half=args.half, cuda=args.cuda, stage=stage)
     if args.loadmodel is not None:
         stereo.load(args.loadmodel)
 

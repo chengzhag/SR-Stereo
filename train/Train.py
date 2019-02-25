@@ -2,12 +2,12 @@ from __future__ import print_function
 import torch.utils.data
 import time
 import os
-from tensorboardX import SummaryWriter
 from utils import myUtils
 import sys
 
+
 class Train:
-    def __init__(self, trainImgLoader, nEpochs, lr=[0.001,], logEvery=1, testEvery=1, ndisLog=1, Test=None):
+    def __init__(self, trainImgLoader, nEpochs, lr=(0.001, ), logEvery=1, testEvery=1, ndisLog=1, Test=None):
         self.trainImgLoader = trainImgLoader
         self.logEvery = logEvery
         self.testEvery = testEvery
@@ -18,7 +18,9 @@ class Train:
         self.lrNow = lr[0]
         self.nEpochs = nEpochs
         self.global_step = 0
-
+        self.tensorboardLogger = myUtils.TensorboardLogger()
+        self.test.tensorboardLogger = self.tensorboardLogger # should be initialized in _trainIt 
+        
     def _trainIt(self, batch, log):
         pass
 
@@ -28,7 +30,6 @@ class Train:
         if model.model is None:
             model.initModel()
         self.log()
-
         # Train
         ticFull = time.time()
 
@@ -37,23 +38,40 @@ class Train:
         self.global_step = 0
         for epoch in range(1, self.nEpochs + 1):
             print('This is %d-th epoch' % (epoch))
-            self.lrNow = myUtils.adjustLearningRate(model.optimizer, epoch, self.lr)
+            self.lrNow = myUtils.adjustLearningRate(self.model.optimizer, epoch, self.lr)
 
             # iteration
             totalTrainLoss = 0
+            lossesAvg = None
             tic = time.time()
             torch.cuda.empty_cache()
             for batch_idx, batch in enumerate(self.trainImgLoader, 1):
-                batch = [data if data.numel() else None for data in batch]
+                batch = [(data.half() if self.model.half else data) if data.numel() else None for data in batch]
+                batch = [(data.cuda() if self.model.cuda else data) if data is not None else None for data in batch]
+
                 self.global_step += 1
                 # torch.cuda.empty_cache()
 
-                lossesPairs = self._trainIt(batch=batch, log=(self.global_step % self.logEvery == 0 and self.logEvery > 0))
+                doLog = self.global_step % self.logEvery == 0 and self.logEvery > 0
+                lossesPairs = self._trainIt(batch=batch, log=doLog)
+                if lossesAvg is None:
+                    lossesAvg = lossesPairs.values()
+                else:
+                    lossesAvg = [lossAvg + loss for lossAvg, loss in zip(lossesAvg, lossesPairs.values())]
+
+                # save Tensorboard logs to where checkpoint is.
+                if doLog:
+                    self.tensorboardLogger.set(self.model.logFolder)
+                    lossesAvg = [lossAvg / self.logEvery for lossAvg in lossesAvg]
+                    for name, value in zip(lossesPairs.names() + ['lr'], lossesAvg + [self.lrNow]):
+                        self.tensorboardLogger.writer.add_scalar(self.model.stage + '/trainLosses/' + name, value,
+                                                                 self.global_step)
+                    lossesAvg = None
 
                 totalTrainLoss += sum(lossesPairs.values()) / len(lossesPairs.values())
 
                 timeLeft = (time.time() - tic) / 3600 * (
-                            (self.nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
+                        (self.nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
                 print('globalIt %d/%d, it %d/%d, epoch %d/%d, %sleft %.2fh' % (
                     self.global_step, len(self.trainImgLoader) * self.nEpochs,
                     batch_idx, len(self.trainImgLoader),
@@ -61,15 +79,15 @@ class Train:
                     lossesPairs.strPrint(''), timeLeft))
                 tic = time.time()
 
-            print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / len(self.trainImgLoader)))
+            print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / batch_idx))
             # save
             model.save(epoch=epoch, iteration=batch_idx,
-                        trainLoss=totalTrainLoss / len(self.trainImgLoader))
+                       trainLoss=totalTrainLoss / len(self.trainImgLoader))
             # test
             if ((self.testEvery > 0 and epoch % self.testEvery == 0)
                 or (self.testEvery == 0 and epoch == self.nEpochs)) \
                     and self.test is not None:
-                testScores = self.test(model=model).values()
+                testScores = self.test(model=self.model).values()
                 testScores = [score for score in testScores if score is not None]
                 testScore = sum(testScores) / len(testScores)
                 try:
@@ -82,7 +100,8 @@ class Train:
                 testReaults = myUtils.NameValues(
                     ('minTestScore', 'minTestScoreEpoch'), (minTestScore, minTestScoreEpoch))
                 print('Training status: %s' % testReaults.strPrint(''))
-                self.test.log(epoch=epoch, it=batch_idx, global_step=self.global_step, additionalValue=testReaults.pairs())
+                self.test.log(epoch=epoch, it=batch_idx, global_step=self.global_step,
+                              additionalValue=testReaults.pairs())
 
         endMessage = 'Full training time = %.2fh\n' % ((time.time() - ticFull) / 3600)
         print(endMessage)
@@ -96,7 +115,8 @@ class Train:
                 if value is not None: log.write(name + ': ' + str(value) + '\n')
 
             if endMessage is None:
-                log.write('---------------------- %s ----------------------\n\n' % time.asctime(time.localtime(time.time())))
+                log.write(
+                    '---------------------- %s ----------------------\n\n' % time.asctime(time.localtime(time.time())))
 
                 log.write('python ')
                 for arg in sys.argv:

@@ -3,7 +3,6 @@ import torch
 import os
 from models import Stereo
 from utils import myUtils
-from tensorboardX import SummaryWriter
 
 class Evaluation:
     def __init__(self, testImgLoader, evalFcn='outlier', ndisLog=1):
@@ -14,6 +13,7 @@ class Evaluation:
         self.testTime = None
         self.ndisLog = max(ndisLog, 0)
         self.model = None
+        self.tensorboardLogger = myUtils.TensorboardLogger() # should be initialized in _evalIt
 
     def _evalIt(self, batch, log):
         pass
@@ -25,7 +25,8 @@ class Evaluation:
         scoreUnit = '%' if 'outlier' in self.evalFcn else ''
 
         for batch_idx, batch in enumerate(self.testImgLoader, 1):
-            batch = [data if data.numel() else None for data in batch]
+            batch = [(data.half() if self.model.half else data) if data.numel() else None for data in batch]
+            batch = [(data.cuda() if self.model.cuda else data) if data is not None else None for data in batch]
 
             scoresPairs = self._evalIt(batch, log=(batch_idx == 1))
 
@@ -83,7 +84,5 @@ class Evaluation:
             log.write(logOld)
 
         # save Tensorboard logs to where checkpoint is.
-        writer = SummaryWriter(self.model.logFolder)
         for name, value in self.testResults:
-            writer.add_scalar(self.model.stage + '/testLosses/' + name, value, global_step)
-        writer.close()
+            self.tensorboardLogger.writer.add_scalar(self.model.stage + '/testLosses/' + name, value, global_step)

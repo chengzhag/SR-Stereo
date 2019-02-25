@@ -1,7 +1,7 @@
 import torch
 import os
 import argparse
-from collections import Iterable
+from tensorboardX import SummaryWriter
 
 
 class NameValues:
@@ -12,7 +12,7 @@ class NameValues:
         for name, value in zip(names, values):
             if value is not None:
                 self._pairs.append((prefix + name + suffix, value))
-                self._names.append(name)
+                self._names.append(prefix + name + suffix)
                 self._values.append(value)
 
     def strPrint(self, unit=''):
@@ -83,7 +83,7 @@ def assertDisp(dispL=None, dispR=None):
 
 # Log First n ims into tensorboard
 # Log All ims if n == 0
-def logFirstNdis(writer, name, im, range, global_step=None, n=0):
+def logFirstNIms(writer, name, im, range, global_step=None, n=0):
     if im is not None:
         n = min(n, im.size(0))
         if n > 0:
@@ -133,25 +133,31 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                  'load_scale': lambda: parser.add_argument('--load_scale', type=float, default=1,
                                                            help='scaling applied to data during loading'),
                  'trainCrop': lambda: parser.add_argument('--trainCrop', type=float, default=(256, 512), nargs=2,
-                                                           help='size of random crop (H x W) applied to data during training'),
+                                                          help='size of random crop (H x W) applied to data during training'),
                  'batchsize_test': lambda: parser.add_argument('--batchsize_test', type=int, default=3,
                                                                help='testing batch size'),
                  # training
                  'batchsize_train': lambda: parser.add_argument('--batchsize_train', type=int, default=3,
                                                                 help='training batch size'),
                  'log_every': lambda: parser.add_argument('--log_every', type=int, default=10,
-                                     help='log every log_every iterations. set to 0 to stop logging'),
+                                                          help='log every log_every iterations. set to 0 to stop logging'),
                  'test_every': lambda: parser.add_argument('--test_every', type=int, default=1,
-                                         help='test every test_every epochs. set to 0 to stop testing'),
+                                                           help='test every test_every epochs. set to 0 to stop testing'),
                  'epochs': lambda: parser.add_argument('--epochs', type=int, default=10,
-                                     help='number of epochs to train'),
+                                                       help='number of epochs to train'),
                  'lr': lambda: parser.add_argument('--lr', type=float, default=[0.001], help='', nargs='+'),
                  # submission
                  'subtype': lambda: parser.add_argument('--subtype', type=str, default='eval',
-                                     help='dataset type used for submission (eval/test)'),
+                                                        help='dataset type used for submission (eval/test)'),
                  # module test
                  'nsample_save': lambda: parser.add_argument('--nsample_save', type=int, default=5,
-                                     help='save n samples in module testing')
+                                                             help='save n samples in module testing'),
+                 # half precision
+                 'half': lambda: parser.add_argument('--half', action='store_true', default=False,
+                                                     help='enables half precision'),
+                 # SRdisp specified param
+                 'withMask': lambda:  parser.add_argument('--withMask', action='store_true', default=False,
+                                                     help='input 7 channels with mask to SRdisp instead of 6'),
                  }
 
     if len(includeKeys):
@@ -194,6 +200,32 @@ def assertMode(kitti, mode):
             raise Exception('No mode \'%s!\'' % mode)
         return mode
 
+
 def quantize(img, rgb_range):
     pixel_range = 255 / rgb_range
     return img.mul(pixel_range).clamp(0, 255).round().div(pixel_range)
+
+class TensorboardLogger:
+    def __init__(self):
+        self.writer = None
+        self._folder = None
+
+    def __del__(self):
+        if self.writer is not None:
+            self.writer.close()
+
+    def set(self, folder):
+        if self.writer is None:
+            self.writer = SummaryWriter(folder)
+        else:
+            if folder != self._folder:
+                self.writer.close()
+                self.writer = SummaryWriter(folder)
+        self._folder = folder
+
+    def logFirstNIms(self, name, im, range, global_step=None, n=0):
+        if self.writer is None:
+            raise Exception('Error: SummaryWriter is not initialized!')
+        logFirstNIms(self.writer, name, im, range, global_step, n)
+
+

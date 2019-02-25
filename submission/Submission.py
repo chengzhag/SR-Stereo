@@ -1,10 +1,6 @@
-from utils import myUtils
-import argparse
 import time
-import torch
 import os
 from utils import myUtils
-from tensorboardX import SummaryWriter
 import skimage
 import skimage.io
 import skimage.transform
@@ -28,7 +24,8 @@ class Submission:
         tic = time.time()
         ticFull = time.time()
         for iIm, batch in enumerate(self.subImgLoader, 1):
-            batch = [data if data.numel() else None for data in batch]
+            batch = [(data.half() if self.model.half else data) if data.numel() else None for data in batch]
+            batch = [(data.cuda() if self.model.cuda else data) if data is not None else None for data in batch]
             name = self.subImgLoader.dataset.name(iIm - 1)
             name, extension = os.path.splitext(name)
 
