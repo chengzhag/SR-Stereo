@@ -136,32 +136,22 @@ class PSMNet(Stereo):
 
             loss.backward()
             self.optimizer.step()
-            if output:
-                return loss.data.item(), output3
-            else:
-                return loss.data.item()
+
+            return loss.data.item(), output3 if output else None
 
         losses = []
-        if output:
-            outputs = []
-            for inputL, inputR, gt, preprocess in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
-                                                      (lambda im: im, myUtils.flipLR)):
-                if gt is not None:
-                    loss, dispOut = _train(preprocess(inputL), preprocess(inputR), preprocess(gt))
-                    losses.append(loss)
-                    outputs.append((preprocess(dispOut) * self.dispScale).cpu())
-                else:
-                    losses.append(None)
-                    outputs.append(None)
+        outputs = []
+        for inputL, inputR, gt, preprocess in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
+                                                  (lambda im: im, myUtils.flipLR)):
+            if gt is not None:
+                loss, dispOut = _train(preprocess(inputL), preprocess(inputR), preprocess(gt))
+                losses.append(loss)
+                outputs.append((preprocess(dispOut) * self.dispScale).cpu() if dispOut is not None else None)
+            else:
+                losses.append(None)
+                outputs.append(None)
 
-            return losses, outputs
-        else:
-            for inputL, inputR, gt, preprocess in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
-                                                      (lambda im: im, myUtils.flipLR)):
-                losses.append(_train(preprocess(inputL), preprocess(inputR), preprocess(gt))
-                              if dispL is not None else None)
-
-            return losses
+        return losses, outputs
 
     def predict(self, imgL, imgR, mode='both'):
         autoPad = super(PSMNet, self).predict(imgL, imgR, mode)

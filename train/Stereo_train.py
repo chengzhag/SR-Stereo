@@ -25,7 +25,7 @@ class Train(Base):
                 self.tensorboardLogger.logFirstNIms('trainImages/' + name, disp, self.model.maxdisp,
                                                     global_step=self.global_step, n=self.ndisLog)
         else:
-            losses = self.model.train(*batch, output=False, kitti=self.trainImgLoader.kitti)
+            losses, _ = self.model.train(*batch, output=False, kitti=self.trainImgLoader.kitti)
 
             lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
 
