@@ -60,7 +60,7 @@ def main():
     import dataloader
     _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
                                                 batchSizes=(0, args.batchsize_test),
-                                                loadScale=(args.load_scale, args.load_scale / 2),
+                                                loadScale=(args.load_scale[0], args.load_scale[0] / 2),
                                                 mode='testing',
                                                 preprocess=False,
                                                 mask=(1, 1, 1, 1))

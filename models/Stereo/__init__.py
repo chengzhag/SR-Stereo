@@ -13,7 +13,8 @@ from ..Model import Model
 
 class Stereo(Model):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
+    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
+                 saveFolderSuffix=''):
         super(Stereo, self).__init__(cuda, half, stage, dataset, saveFolderSuffix)
         self.maxdisp = maxdisp
         self.dispScale = dispScale
@@ -108,7 +109,8 @@ class Stereo(Model):
 
 class PSMNet(Stereo):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
+    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
+                 saveFolderSuffix=''):
         super(PSMNet, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet
 
@@ -142,30 +144,22 @@ class PSMNet(Stereo):
         losses = []
         if output:
             outputs = []
-            if dispL is not None:
-                loss, dispOut = _train(imgL, imgR, dispL)
-                losses.append(loss)
-                outputs.append((dispOut * self.dispScale).cpu())
-            else:
-                losses.append(None)
-                outputs.append(None)
-
-            if dispR is not None:
-                # swap and flip input for right disparity map
-                loss, dispOut = _train(myUtils.flipLR(imgR), myUtils.flipLR(imgL),
-                                       myUtils.flipLR(dispR))
-                losses.append(loss)
-                outputs.append((myUtils.flipLR(dispOut) * self.dispScale).cpu())
-            else:
-                losses.append(None)
-                outputs.append(None)
+            for inputL, inputR, gt, preprocess in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
+                                                      (lambda im: im, myUtils.flipLR)):
+                if gt is not None:
+                    loss, dispOut = _train(preprocess(inputL), preprocess(inputR), preprocess(gt))
+                    losses.append(loss)
+                    outputs.append((preprocess(dispOut) * self.dispScale).cpu())
+                else:
+                    losses.append(None)
+                    outputs.append(None)
 
             return losses, outputs
         else:
-            losses.append(_train(imgL, imgR, dispL) if dispL is not None else None)
-            # swap and flip input for right disparity map
-            losses.append(_train(myUtils.flipLR(imgR), myUtils.flipLR(imgL),
-                                 myUtils.flipLR(dispR)) if dispR is not None else None)
+            for inputL, inputR, gt, preprocess in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
+                                                      (lambda im: im, myUtils.flipLR)):
+                losses.append(_train(preprocess(inputL), preprocess(inputR), preprocess(gt))
+                              if dispL is not None else None)
 
             return losses
 
@@ -192,9 +186,14 @@ class PSMNet(Stereo):
                 raise Exception('No mode \'%s\'!' % mode)
 
 
+class PSMNetDown():
+    pass
+
+
 class PSMNet_TieCheng(Stereo):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
+    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
+                 saveFolderSuffix=''):
         super(PSMNet_TieCheng, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet_TieCheng
 

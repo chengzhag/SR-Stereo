@@ -73,7 +73,7 @@ def main():
     trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
                                                              trainCrop=args.trainCrop,
                                                              batchSizes=(args.batchsize_train, args.batchsize_test),
-                                                             loadScale=(args.load_scale, args.load_scale / 2),
+                                                             loadScale=(args.load_scale[0], args.load_scale[0] / 2),
                                                              mode='training',
                                                              preprocess=False,
                                                              mask=(1, 1, 1, 1))

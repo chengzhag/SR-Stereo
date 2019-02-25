@@ -13,6 +13,9 @@ class Evaluation(Base):
         self.mode = myUtils.assertMode(testImgLoader.kitti, mode)
 
     def _evalIt(self, batch, log):
+        if len(batch) > 4:
+            # use large scale for input and small scale for gt
+            batch = batch[0:2] + batch[4:6]
         if self.mode == 'left': batch[3] = None
         if self.mode == 'right': batch[2] = None
 
