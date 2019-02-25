@@ -43,7 +43,7 @@ class Train(Base):
                     if self.model.args.n_inputs == 7 \
                     else ('input', 'warpTo', 'gt', 'output')
                 for name, im in zip(names, imgs):
-                    self.tensorboardLogger.logFirstNIms(self.model.stage + '/trainImages/' + name + suffix, im, 1,
+                    self.tensorboardLogger.logFirstNIms('trainImages/' + name + suffix, im, 1,
                                                         global_step=self.global_step, n=self.ndisLog)
             else:
                 loss, _ = self.model.train(inputCat, gt)
