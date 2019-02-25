@@ -35,7 +35,7 @@ class Stereo(Model):
             dispR = dispR.cuda() if dispR is not None else None
         return imgL, imgR, dispL, dispR
 
-    def predict(self, imgL, imgR, mode='both'):
+    def predict(self, imgL, imgR, mask=(1, 1)):
         super(Stereo, self)._predict()
         autoPad = myUtils.AutoPad(imgL, self.multiple)
         return autoPad
@@ -49,28 +49,27 @@ class Stereo(Model):
             dispR = dispR.cuda() if dispR is not None else None
 
         # for kitti dataset, only consider loss of none zero disparity pixels in gt
+
         scores = []
         outputs = []
-        for gt, mode in zip([dispL, dispR], ['left', 'right']):
-            if gt is None:
-                scores.append(None)
-                outputs.append(None)
-                continue
-            dispOut = self.predict(imgL, imgR, mode)
-            if dispOut.dim() == 3:
-                dispOut = dispOut.unsqueeze(1)
-            if output:
+        dispOuts = self.predict(imgL, imgR, [disp is not None for disp in (dispL, dispR)])
+        for gt, dispOut in zip([dispL, dispR], dispOuts):
+            if dispOut is not None:
+                if dispOut.dim() == 3:
+                    dispOut = dispOut.unsqueeze(1)
                 outputs.append(dispOut.cpu())
-            if kitti:
-                mask = gt > 0
-                dispOut = dispOut[mask]
-                gt = gt[mask]
-            scores.append(evalFcn.getEvalFcn(type)(gt, dispOut))
 
-        if output:
-            return scores, outputs
-        else:
-            return scores
+                if kitti:
+                    mask = gt > 0
+                    dispOut = dispOut[mask]
+                    gt = gt[mask]
+                scores.append(evalFcn.getEvalFcn(type)(gt, dispOut))
+            else:
+                outputs.append(None)
+                scores.append(None)
+
+        return scores, outputs
+
 
     def load(self, checkpointDir):
         super(Stereo, self).load(checkpointDir)
@@ -82,7 +81,9 @@ class Stereo(Model):
                 value = state_dict[name]
                 if value != getattr(self, name):
                     print(
-                        f'Specified {name} \'{getattr(self, name)}\' from args is not equal to {name} \'{value}\' loaded from checkpoint! Using loaded {name} instead!')
+                        f'Specified {name} \'{getattr(self, name)}\' from args '
+                        f'is not equal to {name} \'{value}\' loaded from checkpoint!'
+                        f' Using loaded {name} instead!')
                 setattr(self, name, value)
             else:
                 print(f'No {name} found in checkpoint! Using {name} \'{getattr(self, name)}\' specified in args!')
@@ -143,37 +144,26 @@ class PSMNet(Stereo):
         outputs = []
         for inputL, inputR, gt, preprocess in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
                                                   (lambda im: im, myUtils.flipLR)):
-            if gt is not None:
-                loss, dispOut = _train(preprocess(inputL), preprocess(inputR), preprocess(gt))
-                losses.append(loss)
-                outputs.append((preprocess(dispOut) * self.dispScale).cpu() if dispOut is not None else None)
-            else:
-                losses.append(None)
-                outputs.append(None)
+            loss, dispOut = _train(preprocess(inputL), preprocess(inputR), preprocess(gt)) if gt is not None else (None, None)
+            losses.append(loss)
+            outputs.append((preprocess(dispOut) * self.dispScale).cpu() if dispOut is not None else None)
 
         return losses, outputs
 
-    def predict(self, imgL, imgR, mode='both'):
-        autoPad = super(PSMNet, self).predict(imgL, imgR, mode)
+    def predict(self, imgL, imgR, mask=(1, 1)):
+        autoPad = super(PSMNet, self).predict(imgL, imgR, mask)
 
         with torch.no_grad():
-            def predictL():
-                return autoPad.unpad(self.model(imgL, imgR)) * self.dispScale
-
-            def predictR():
-                return autoPad.unpad(
-                    myUtils.flipLR(self.model(myUtils.flipLR(imgR), myUtils.flipLR(imgL)))
-                ) * self.dispScale
-
             imgL, imgR = autoPad.pad(imgL, self.cuda), autoPad.pad(imgR, self.cuda)
-            if mode == 'left':
-                return predictL()
-            elif mode == 'right':
-                return predictR()
-            elif mode == 'both':
-                return predictL(), predictR()
-            else:
-                raise Exception('No mode \'%s\'!' % mode)
+            outputs = []
+            for inputL, inputR, preprocess, do in zip((imgL, imgR), (imgR, imgL),
+                                                      (lambda im: im, myUtils.flipLR), mask):
+                outputs.append(preprocess(autoPad.unpad(
+                    self.model(preprocess(imgL),
+                               preprocess(imgR))
+                ) * self.dispScale) if do else None)
+
+            return tuple(outputs)
 
 
 class PSMNetDown():

@@ -29,7 +29,7 @@ class Evaluation(Base):
                 self.tensorboardLogger.logFirstNIms('testImages/' + name, disp, self.model.maxdisp,
                                                     global_step=1, n=self.ndisLog)
         else:
-            scores = self.model.test(*batch, type=self.evalFcn, output=False, kitti=self.testImgLoader.kitti)
+            scores, _ = self.model.test(*batch, type=self.evalFcn, output=False, kitti=self.testImgLoader.kitti)
 
         scoresPairs = myUtils.NameValues(('L', 'R'), scores, prefix=self.evalFcn)
         return scoresPairs
