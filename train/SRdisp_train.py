@@ -20,21 +20,29 @@ class Train(Base):
         gts = batch[0:2]
         inputs = []
         for input in zip(batch[4:6], (warpToL, warpToR), (maskL, maskR)):
-            inputs.append(input)
+            if self.model.args.n_inputs == 7:
+                inputs.append(input)
+            elif self.model.args.n_inputs == 6:
+                inputs.append(input[:2])
+            else:
+                raise Exception('Error: self.model.args.n_inputs = %d which is not supporty!' % self.model.args.n_inputs)
 
         losses = []
         for input, gt, suffix in zip(inputs, gts, ('L', 'R')):
             if gt is None:
                 losses.append(None)
                 continue
-            inputCat = torch.cat(input if self.model.args.n_inputs == 7 else input[:2], 1)
+            inputCat = torch.cat(input, 1)
             if log:
                 loss, output = self.model.train(inputCat, gt)
                 output = myUtils.quantize(output, 1)
                 imgs = input + (gt, output)
 
                 self.tensorboardLogger.set(self.model.logFolder)
-                for name, im in zip(('input', 'warpTo', 'mask', 'gt', 'output'), imgs):
+                names = ('input', 'warpTo', 'mask', 'gt', 'output') \
+                    if self.model.args.n_inputs == 7 \
+                    else ('input', 'warpTo', 'gt', 'output')
+                for name, im in zip(names, imgs):
                     self.tensorboardLogger.logFirstNIms(self.model.stage + '/trainImages/' + name + suffix, im, 1,
                                                         global_step=self.global_step, n=self.ndisLog)
             else:
