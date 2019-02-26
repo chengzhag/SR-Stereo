@@ -144,13 +144,16 @@ class PSMNet(Stereo):
 
         losses = []
         outputs = []
-        for inputL, inputR, gt, preprocess in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
+        for inputL, inputR, gt, process in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
                                                   (lambda im: im, myUtils.flipLR)):
             loss, dispOut = self._train_original(
-                preprocess(inputL), preprocess(inputR), preprocess(gt), output, kitti
+                process(inputL), process(inputR), process(gt), output, kitti
             ) if gt is not None else (None, None)
             losses.append(loss)
-            outputs.append((preprocess(dispOut) * self.dispScale).cpu() if dispOut is not None else None)
+            outputs.append(
+                (process(dispOut) * self.dispScale).cpu()
+                if dispOut is not None else None
+            )
 
         return losses, outputs
 
@@ -160,30 +163,56 @@ class PSMNet(Stereo):
         with torch.no_grad():
             imgL, imgR = autoPad.pad(imgL, self.cuda), autoPad.pad(imgR, self.cuda)
             outputs = []
-            for inputL, inputR, preprocess, do in zip((imgL, imgR), (imgR, imgL),
+            for inputL, inputR, process, do in zip((imgL, imgR), (imgR, imgL),
                                                       (lambda im: im, myUtils.flipLR), mask):
-                outputs.append(preprocess(autoPad.unpad(
-                    self.model(preprocess(imgL),
-                               preprocess(imgR))
-                ) * self.dispScale) if do else None)
+                outputs.append(
+                    autoPad.unpad(
+                        process(
+                            self.model(process(inputL),
+                                       process(inputR)
+                                       )
+                        ) * self.dispScale
+                    ) if do else None
+                )
 
             return tuple(outputs)
 
 
 class PSMNetDown(PSMNet):
+
+
     # dataset: only used for suffix of saveFolderName
     def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
                  saveFolderSuffix=''):
         super(PSMNetDown, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
+
+        # Downsampling net
+        class AvgDownSample(torch.nn.Module):
+            def __init__(self):
+                super(AvgDownSample, self).__init__()
+                self.pool = nn.AvgPool2d((2, 2))
+
+            def forward(self, x):
+                return self.pool(x) / 2
+
+        self.down = AvgDownSample()
+
+    def initModel(self):
+        super(PSMNetDown, self).initModel()
+        if self.cuda:
+            self.down = nn.DataParallel(self.down)
+            self.down.cuda()
 
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
         raise Exception('Error: fcn train() not completed yet!')
 
     def predict(self, imgL, imgR, mask=(1, 1)):
         outputs = super(PSMNetDown, self).predict(imgL, imgR, mask)
+        downsampled = []
         for output in outputs:
             # Down sample to half size
-            pass
+            downsampled.append(self.down(output) if output is not None else None)
+        return downsampled
 
 
 class PSMNet_TieCheng(Stereo):
