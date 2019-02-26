@@ -35,7 +35,7 @@ class Submission(Base):
 
 def main():
     parser = myUtils.getBasicParser(
-        ['datapath', 'loadmodel', 'no_cuda', 'dataset', 'subtype', 'load_scale', 'half'],
+        ['outputFolder', 'datapath', 'loadmodel', 'no_cuda', 'dataset', 'subtype', 'load_scale', 'half'],
         description='generate png image for SR submission')
 
     args = parser.parse_args()
@@ -54,6 +54,7 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
+    stage = os.path.join(args.outputFolder, stage) if args.outputFolder is not None else stage
     sr = getattr(SR, 'SR')(cuda=args.cuda, half=args.half, stage=stage,
                            dataset=args.dataset)
     if args.loadmodel is not None:

@@ -54,8 +54,9 @@ def main():
     from utils import myUtils
     import dataloader
 
-    parser = myUtils.getBasicParser(['maxdisp', 'seed', 'datapath', 'load_scale', 'nsample_save'],
-                                    description='listCarlaKittiFiles module test')
+    parser = myUtils.getBasicParser(
+        ['outputFolder', 'maxdisp', 'seed', 'datapath', 'load_scale', 'nsample_save'],
+        description='listCarlaKittiFiles module test')
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)

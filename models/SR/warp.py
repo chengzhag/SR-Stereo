@@ -92,9 +92,10 @@ def main():
     import os
     from evaluation import evalFcn
     import dataloader
-    parser = myUtils.getBasicParser(['maxdisp', 'datapath', 'no_cuda', 'seed', 'eval_fcn',
-                                     'dataset', 'load_scale', 'nsample_save'],
-                                    description='warp module test')
+    parser = myUtils.getBasicParser(
+        ['outputFolder', 'maxdisp', 'datapath', 'no_cuda', 'seed', 'eval_fcn',
+         'dataset', 'load_scale', 'nsample_save'],
+        description='warp module test')
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
