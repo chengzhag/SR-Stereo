@@ -19,12 +19,13 @@ def warp(left, right, displ, dispr):
     # print(x.shape,y.shape)
     grid = np.concatenate((x, y), 1)
 
+    grid = torch.from_numpy(grid).type_as(displ)
+    y_zeros = torch.zeros(displ.size()).type_as(displ)
+
     if displ.is_cuda:
-        grid = torch.from_numpy(grid).type_as(displ).cuda()
-        y_zeros = torch.zeros(displ.size()).type_as(displ).cuda()
-    else:
-        grid = torch.from_numpy(grid)
-        y_zeros = torch.zeros(displ.size())
+        grid = grid.cuda()
+        y_zeros = y_zeros.cuda()
+
     flol = torch.cat((displ, y_zeros), 1)
     flor = torch.cat((dispr, y_zeros), 1)
     gridl = grid - flol
@@ -56,12 +57,14 @@ def warp(left, right, displ, dispr):
 
     Irwarp2l = nn.functional.grid_sample(right, vgridl)
     Ilwarp2r = nn.functional.grid_sample(left, vgridr)
+
+    maskl_ = torch.autograd.Variable(torch.ones(displ.size())).type_as(displ).cuda()
+    maskr_ = torch.autograd.Variable(torch.ones(displ.size())).type_as(displ).cuda()
+
     if displ.is_cuda:
-        maskl_ = torch.autograd.Variable(torch.ones(displ.size())).type_as(displ).cuda()
-        maskr_ = torch.autograd.Variable(torch.ones(displ.size())).type_as(displ).cuda()
-    else:
-        maskl_ = torch.autograd.Variable(torch.ones(displ.size()))
-        maskr_ = torch.autograd.Variable(torch.ones(displ.size()))
+        maskl_ = maskl_.cuda()
+        maskr_ = maskr_.cuda()
+
     maskl_ = nn.functional.grid_sample(maskl_, vgridl)
     maskr_ = nn.functional.grid_sample(maskr_, vgridr)
     maskl_[maskl_ < 0.999] = 0
@@ -76,9 +79,6 @@ def warp(left, right, displ, dispr):
     maskl[maskl > 0] = 1
     maskr[maskr < 0.999] = 0
     maskr[maskr > 0] = 1
-
-    # outimgl = torch.cat([left, imglw, maskl], 1)
-    # outimgr = torch.cat([right, imgrw, maskr], 1)
 
     for x in list(locals()):
         del locals()[x]

@@ -3,9 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="5af41d42-9f6a-4e3f-b5e4-a4d9632ca140" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo.sh" beforeDir="false" afterPath="$PROJECT_DIR$/demo.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/SR/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/SR/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/Stereo/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/Stereo/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/SR/warp.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/SR/warp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/myUtils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/myUtils.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -56,7 +55,7 @@
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_train_PSMNet_kitti2015.coverage" NAME="Stereo_train_PSMNet_kitti2015 Coverage Results" MODIFIED="1550911510166" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$edsr_demo_test_image.coverage" NAME="edsr_demo_test_image Coverage Results" MODIFIED="1550720969511" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/models/EDSR/src" />
     <SUITE FILE_PATH="coverage/SR_Stereo$SR_eval_EDSR_kitti2015.coverage" NAME="SR_eval_EDSR_kitti2015 Coverage Results" MODIFIED="1550978159233" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
-    <SUITE FILE_PATH="coverage/SR_Stereo$warp_sceneflow.coverage" NAME="warp_sceneflow Coverage Results" MODIFIED="1551163696163" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
+    <SUITE FILE_PATH="coverage/SR_Stereo$warp_sceneflow.coverage" NAME="warp_sceneflow Coverage Results" MODIFIED="1551165823590" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$SRdisp_train_EDSR_carla_kitti.coverage" NAME="SRdisp_train_EDSR_carla_kitti Coverage Results" MODIFIED="1551161646815" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_eval_sceneflow.coverage" NAME="Stereo_eval_sceneflow Coverage Results" MODIFIED="1550548498351" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_eval_PSMNet_carla_kitti.coverage" NAME="Stereo_eval_PSMNet_carla_kitti Coverage Results" MODIFIED="1550995344939" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
@@ -84,9 +83,21 @@
     <select />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.5">
+    <splitter split-orientation="horizontal" split-proportion="0.4936034">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+          <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/utils/myUtils.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="457">
+                  <caret line="160" column="77" selection-start-line="160" selection-start-column="77" selection-end-line="160" selection-end-column="77" />
+                  <folding>
+                    <element signature="e#0#12#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/demo.sh">
               <provider selected="true" editor-type-id="text-editor">
@@ -96,11 +107,11 @@
               </provider>
             </entry>
           </file>
-          <file pinned="false" current-in-tab="true">
+          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/models/SR/__init__.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="418">
-                  <caret line="123" column="57" selection-start-line="123" selection-start-column="46" selection-end-line="123" selection-end-column="57" />
+                <state relative-caret-position="304">
+                  <caret line="117" column="24" selection-start-line="117" selection-start-column="24" selection-end-line="117" selection-end-column="24" />
                   <folding>
                     <element signature="e#0#9#0" expanded="true" />
                   </folding>
@@ -161,7 +172,7 @@
             <entry file="file://$PROJECT_DIR$/models/SR/warp.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="190">
-                  <caret line="46" column="8" selection-start-line="46" selection-start-column="4" selection-end-line="46" selection-end-column="8" />
+                  <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
                   <folding>
                     <element signature="e#0#12#0" expanded="true" />
                   </folding>
@@ -270,15 +281,15 @@
         <option value="$PROJECT_DIR$/submission/SR_sub.py" />
         <option value="$PROJECT_DIR$/train/SR_train.py" />
         <option value="$PROJECT_DIR$/evaluation/Stereo_eval.py" />
-        <option value="$PROJECT_DIR$/utils/myUtils.py" />
         <option value="$PROJECT_DIR$/train/Stereo_train.py" />
         <option value="$PROJECT_DIR$/dataloader/listCarlaKittiFiles.py" />
-        <option value="$PROJECT_DIR$/models/SR/warp.py" />
         <option value="$PROJECT_DIR$/demo.sh" />
         <option value="$PROJECT_DIR$/models/Stereo/__init__.py" />
         <option value="$PROJECT_DIR$/evaluation/SRdisp_eval.py" />
         <option value="$PROJECT_DIR$/train/SRdisp_train.py" />
         <option value="$PROJECT_DIR$/models/SR/__init__.py" />
+        <option value="$PROJECT_DIR$/utils/myUtils.py" />
+        <option value="$PROJECT_DIR$/models/SR/warp.py" />
       </list>
     </option>
   </component>
@@ -1411,7 +1422,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="396922000" />
+    <option name="totallyTimeSpent" value="399106000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1431,7 +1442,7 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.2657267" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49840087" weight="0.2570499" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49840087" visible="true" weight="0.2570499" />
       <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49928367" weight="0.29284164" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -1762,16 +1773,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/myUtils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="115">
-          <caret line="112" column="96" selection-start-line="112" selection-start-column="89" selection-end-line="112" selection-end-column="96" />
-          <folding>
-            <element signature="e#0#12#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/dataloader/listCarlaKittiFiles.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="520">
@@ -1835,10 +1836,20 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/models/SR/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="418">
-          <caret line="123" column="57" selection-start-line="123" selection-start-column="46" selection-end-line="123" selection-end-column="57" />
+        <state relative-caret-position="304">
+          <caret line="117" column="24" selection-start-line="117" selection-start-column="24" selection-end-line="117" selection-end-column="24" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/myUtils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="457">
+          <caret line="160" column="77" selection-start-line="160" selection-start-column="77" selection-end-line="160" selection-end-column="77" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1846,7 +1857,7 @@
     <entry file="file://$PROJECT_DIR$/models/SR/warp.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="190">
-          <caret line="46" column="8" selection-start-line="46" selection-start-column="4" selection-end-line="46" selection-end-column="8" />
+          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
           </folding>
