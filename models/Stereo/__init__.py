@@ -70,7 +70,6 @@ class Stereo(Model):
 
         return scores, outputs
 
-
     def load(self, checkpointDir):
         super(Stereo, self).load(checkpointDir)
 
@@ -140,12 +139,10 @@ class PSMNet(Stereo):
         dispL, dispR = dispL / self.dispScale if dispL is not None else None, \
                        dispR / self.dispScale if dispR is not None else None
 
-
-
         losses = []
         outputs = []
         for inputL, inputR, gt, process in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
-                                                  (lambda im: im, myUtils.flipLR)):
+                                               (lambda im: im, myUtils.flipLR)):
             loss, dispOut = self._train_original(
                 process(inputL), process(inputR), process(gt), output, kitti
             ) if gt is not None else (None, None)
@@ -164,7 +161,7 @@ class PSMNet(Stereo):
             imgL, imgR = autoPad.pad(imgL, self.cuda), autoPad.pad(imgR, self.cuda)
             outputs = []
             for inputL, inputR, process, do in zip((imgL, imgR), (imgR, imgL),
-                                                      (lambda im: im, myUtils.flipLR), mask):
+                                                   (lambda im: im, myUtils.flipLR), mask):
                 outputs.append(
                     autoPad.unpad(
                         process(
@@ -179,7 +176,6 @@ class PSMNet(Stereo):
 
 
 class PSMNetDown(PSMNet):
-
 
     # dataset: only used for suffix of saveFolderName
     def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
