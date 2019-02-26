@@ -152,7 +152,7 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                  'subtype': lambda: parser.add_argument('--subtype', type=str, default='eval',
                                                         help='dataset type used for submission (eval/test)'),
                  # module test
-                 'nsample_save': lambda: parser.add_argument('--nsample_save', type=int, default=5,
+                 'nsample_save': lambda: parser.add_argument('--nsample_save', type=int, default=1,
                                                              help='save n samples in module testing'),
                  # half precision
                  'half': lambda: parser.add_argument('--half', action='store_true', default=False,

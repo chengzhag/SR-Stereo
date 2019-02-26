@@ -57,7 +57,7 @@ class Stereo(Model):
             if dispOut is not None:
                 if dispOut.dim() == 3:
                     dispOut = dispOut.unsqueeze(1)
-                outputs.append(dispOut.cpu())
+                outputs.append(dispOut if output else None)
 
                 if kitti:
                     mask = gt > 0
@@ -69,7 +69,6 @@ class Stereo(Model):
                 scores.append(None)
 
         return scores, outputs
-
 
     def load(self, checkpointDir):
         super(Stereo, self).load(checkpointDir)
@@ -115,7 +114,7 @@ class PSMNet(Stereo):
         super(PSMNet, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet
 
-    def _train_original(self, imgL, imgR, disp_true, output=True, kitti=False):
+    def _train_original(self, imgL, imgR, disp_true, output=False, kitti=False):
         self.optimizer.zero_grad()
 
         # for kitti dataset, only consider loss of none zero disparity pixels in gt
@@ -135,17 +134,15 @@ class PSMNet(Stereo):
 
         return loss.data.item(), output3 if output else None
 
-    def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
+    def train(self, imgL, imgR, dispL=None, dispR=None, output=False, kitti=False):
         imgL, imgR, dispL, dispR = super(PSMNet, self).train(imgL, imgR, dispL, dispR)
         dispL, dispR = dispL / self.dispScale if dispL is not None else None, \
                        dispR / self.dispScale if dispR is not None else None
 
-
-
         losses = []
         outputs = []
         for inputL, inputR, gt, process in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
-                                                  (lambda im: im, myUtils.flipLR)):
+                                               (lambda im: im, myUtils.flipLR)):
             loss, dispOut = self._train_original(
                 process(inputL), process(inputR), process(gt), output, kitti
             ) if gt is not None else (None, None)
@@ -164,7 +161,7 @@ class PSMNet(Stereo):
             imgL, imgR = autoPad.pad(imgL, self.cuda), autoPad.pad(imgR, self.cuda)
             outputs = []
             for inputL, inputR, process, do in zip((imgL, imgR), (imgR, imgL),
-                                                      (lambda im: im, myUtils.flipLR), mask):
+                                                   (lambda im: im, myUtils.flipLR), mask):
                 outputs.append(
                     autoPad.unpad(
                         process(
@@ -179,7 +176,6 @@ class PSMNet(Stereo):
 
 
 class PSMNetDown(PSMNet):
-
 
     # dataset: only used for suffix of saveFolderName
     def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
@@ -203,7 +199,7 @@ class PSMNetDown(PSMNet):
             self.down = nn.DataParallel(self.down)
             self.down.cuda()
 
-    def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
+    def train(self, imgL, imgR, dispL=None, dispR=None, output=False, kitti=False):
         raise Exception('Error: fcn train() not completed yet!')
 
     def predict(self, imgL, imgR, mask=(1, 1)):
@@ -222,7 +218,7 @@ class PSMNet_TieCheng(Stereo):
         super(PSMNet_TieCheng, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet_TieCheng
 
-    def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
+    def train(self, imgL, imgR, dispL=None, dispR=None, output=False, kitti=False):
         imgL, imgR, dispL, dispR = super(PSMNet_TieCheng, self).train(imgL, imgR, dispL, dispR)
         raise Exception('Fcn \'train\' not done yet...')
 
