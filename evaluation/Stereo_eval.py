@@ -13,6 +13,9 @@ class Evaluation(Base):
         self.mode = myUtils.assertMode(testImgLoader.kitti, mode)
 
     def _evalIt(self, batch, log):
+        if len(batch) > 4:
+            # use large scale for input and small scale for gt
+            batch = batch[0:2] + batch[6:8]
         if self.mode == 'left': batch[3] = None
         if self.mode == 'right': batch[2] = None
 
@@ -23,10 +26,10 @@ class Evaluation(Base):
             # save Tensorboard logs to where checkpoint is.
             self.tensorboardLogger.set(self.model.logFolder)
             for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), imgs):
-                self.tensorboardLogger.logFirstNIms(self.model.stage + '/testImages/' + name, disp, self.model.maxdisp,
+                self.tensorboardLogger.logFirstNIms('testImages/' + name, disp, self.model.maxdisp,
                                                     global_step=1, n=self.ndisLog)
         else:
-            scores = self.model.test(*batch, type=self.evalFcn, output=False, kitti=self.testImgLoader.kitti)
+            scores, _ = self.model.test(*batch, type=self.evalFcn, output=False, kitti=self.testImgLoader.kitti)
 
         scoresPairs = myUtils.NameValues(('L', 'R'), scores, prefix=self.evalFcn)
         return scoresPairs

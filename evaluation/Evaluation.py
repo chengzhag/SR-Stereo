@@ -85,4 +85,4 @@ class Evaluation:
 
         # save Tensorboard logs to where checkpoint is.
         for name, value in self.testResults:
-            self.tensorboardLogger.writer.add_scalar(self.model.stage + '/testLosses/' + name, value, global_step)
+            self.tensorboardLogger.writer.add_scalar('testLosses/' + name, value, global_step)

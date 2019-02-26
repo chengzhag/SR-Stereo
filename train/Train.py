@@ -64,7 +64,7 @@ class Train:
                     self.tensorboardLogger.set(self.model.logFolder)
                     lossesAvg = [lossAvg / self.logEvery for lossAvg in lossesAvg]
                     for name, value in zip(lossesPairs.names() + ['lr'], lossesAvg + [self.lrNow]):
-                        self.tensorboardLogger.writer.add_scalar(self.model.stage + '/trainLosses/' + name, value,
+                        self.tensorboardLogger.writer.add_scalar('trainLosses/' + name, value,
                                                                  self.global_step)
                     lossesAvg = None
 

@@ -130,7 +130,7 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                                                          help='number of disparity maps to log'),
                  'dataset': lambda: parser.add_argument('--dataset', type=str, default='sceneflow',
                                                         help='(sceneflow/kitti2012/kitti2015/carla_kitti)'),
-                 'load_scale': lambda: parser.add_argument('--load_scale', type=float, default=1,
+                 'load_scale': lambda: parser.add_argument('--load_scale', type=float, default=[1], nargs='+',
                                                            help='scaling applied to data during loading'),
                  'trainCrop': lambda: parser.add_argument('--trainCrop', type=float, default=(256, 512), nargs=2,
                                                           help='size of random crop (H x W) applied to data during training'),

@@ -29,7 +29,7 @@ class Train(Base):
                 # save Tensorboard logs to where checkpoint is.
                 self.tensorboardLogger.set(self.model.logFolder)
                 for name, im in zip(('input', 'gt', 'output'), imgs):
-                    self.tensorboardLogger.logFirstNIms(self.model.stage + '/trainImages/' + name + suffix, im, 1,
+                    self.tensorboardLogger.logFirstNIms('trainImages/' + name + suffix, im, 1,
                                                         global_step=self.global_step, n=self.ndisLog)
             else:
                 loss, _ = self.model.train(input, gt)
@@ -59,7 +59,7 @@ def main():
     trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
                                                              trainCrop=args.trainCrop,
                                                              batchSizes=(args.batchsize_train, args.batchsize_test),
-                                                             loadScale=(args.load_scale, args.load_scale / 2),
+                                                             loadScale=(args.load_scale[0], args.load_scale[0] / 2),
                                                              mode='training',
                                                              preprocess=False,
                                                              mask=(1, 1, 0, 0))
