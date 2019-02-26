@@ -19,7 +19,6 @@ class Train(Base):
             losses, outputs = self.model.train(*batch, output=True, kitti=self.trainImgLoader.kitti)
 
             # save Tensorboard logs to where checkpoint is.
-            lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
             self.tensorboardLogger.set(self.model.logFolder)
             for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), batch[2:4] + outputs):
                 self.tensorboardLogger.logFirstNIms('trainImages/' + name, disp, self.model.maxdisp,
@@ -27,7 +26,7 @@ class Train(Base):
         else:
             losses, _ = self.model.train(*batch, output=False, kitti=self.trainImgLoader.kitti)
 
-            lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
+        lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
 
         return lossesPairs
 

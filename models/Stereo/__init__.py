@@ -57,7 +57,7 @@ class Stereo(Model):
             if dispOut is not None:
                 if dispOut.dim() == 3:
                     dispOut = dispOut.unsqueeze(1)
-                outputs.append(dispOut.cpu())
+                outputs.append(dispOut if output else None)
 
                 if kitti:
                     mask = gt > 0
@@ -114,7 +114,7 @@ class PSMNet(Stereo):
         super(PSMNet, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet
 
-    def _train_original(self, imgL, imgR, disp_true, output=True, kitti=False):
+    def _train_original(self, imgL, imgR, disp_true, output=False, kitti=False):
         self.optimizer.zero_grad()
 
         # for kitti dataset, only consider loss of none zero disparity pixels in gt
@@ -134,7 +134,7 @@ class PSMNet(Stereo):
 
         return loss.data.item(), output3 if output else None
 
-    def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
+    def train(self, imgL, imgR, dispL=None, dispR=None, output=False, kitti=False):
         imgL, imgR, dispL, dispR = super(PSMNet, self).train(imgL, imgR, dispL, dispR)
         dispL, dispR = dispL / self.dispScale if dispL is not None else None, \
                        dispR / self.dispScale if dispR is not None else None
@@ -199,7 +199,7 @@ class PSMNetDown(PSMNet):
             self.down = nn.DataParallel(self.down)
             self.down.cuda()
 
-    def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
+    def train(self, imgL, imgR, dispL=None, dispR=None, output=False, kitti=False):
         raise Exception('Error: fcn train() not completed yet!')
 
     def predict(self, imgL, imgR, mask=(1, 1)):
@@ -218,7 +218,7 @@ class PSMNet_TieCheng(Stereo):
         super(PSMNet_TieCheng, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet_TieCheng
 
-    def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
+    def train(self, imgL, imgR, dispL=None, dispR=None, output=False, kitti=False):
         imgL, imgR, dispL, dispR = super(PSMNet_TieCheng, self).train(imgL, imgR, dispL, dispR)
         raise Exception('Fcn \'train\' not done yet...')
 
