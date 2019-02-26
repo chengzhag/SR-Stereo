@@ -115,36 +115,40 @@ class PSMNet(Stereo):
         super(PSMNet, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet
 
+    def _train_original(self, imgL, imgR, disp_true, output=True, kitti=False):
+        self.optimizer.zero_grad()
+
+        # for kitti dataset, only consider loss of none zero disparity pixels in gt
+        mask = (disp_true > 0) if kitti else (disp_true < self.maxdisp)
+        mask.detach_()
+
+        output1, output2, output3 = self.model(imgL, imgR)
+        output1 = output1.unsqueeze(1)
+        output2 = output2.unsqueeze(1)
+        output3 = output3.unsqueeze(1)
+        loss = 0.5 * F.smooth_l1_loss(output1[mask], disp_true[mask], reduction='mean') + 0.7 * F.smooth_l1_loss(
+            output2[mask], disp_true[mask], reduction='mean') + F.smooth_l1_loss(output3[mask], disp_true[mask],
+                                                                                 reduction='mean')
+
+        loss.backward()
+        self.optimizer.step()
+
+        return loss.data.item(), output3 if output else None
+
     def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
         imgL, imgR, dispL, dispR = super(PSMNet, self).train(imgL, imgR, dispL, dispR)
         dispL, dispR = dispL / self.dispScale if dispL is not None else None, \
                        dispR / self.dispScale if dispR is not None else None
 
-        def _train(imgL, imgR, disp_true):
-            self.optimizer.zero_grad()
 
-            # for kitti dataset, only consider loss of none zero disparity pixels in gt
-            mask = (disp_true > 0) if kitti else (disp_true < self.maxdisp)
-            mask.detach_()
-
-            output1, output2, output3 = self.model(imgL, imgR)
-            output1 = output1.unsqueeze(1)
-            output2 = output2.unsqueeze(1)
-            output3 = output3.unsqueeze(1)
-            loss = 0.5 * F.smooth_l1_loss(output1[mask], disp_true[mask], reduction='mean') + 0.7 * F.smooth_l1_loss(
-                output2[mask], disp_true[mask], reduction='mean') + F.smooth_l1_loss(output3[mask], disp_true[mask],
-                                                                                     reduction='mean')
-
-            loss.backward()
-            self.optimizer.step()
-
-            return loss.data.item(), output3 if output else None
 
         losses = []
         outputs = []
         for inputL, inputR, gt, preprocess in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
                                                   (lambda im: im, myUtils.flipLR)):
-            loss, dispOut = _train(preprocess(inputL), preprocess(inputR), preprocess(gt)) if gt is not None else (None, None)
+            loss, dispOut = self._train_original(
+                preprocess(inputL), preprocess(inputR), preprocess(gt), output, kitti
+            ) if gt is not None else (None, None)
             losses.append(loss)
             outputs.append((preprocess(dispOut) * self.dispScale).cpu() if dispOut is not None else None)
 
@@ -166,8 +170,20 @@ class PSMNet(Stereo):
             return tuple(outputs)
 
 
-class PSMNetDown():
-    pass
+class PSMNetDown(PSMNet):
+    # dataset: only used for suffix of saveFolderName
+    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
+                 saveFolderSuffix=''):
+        super(PSMNetDown, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
+
+    def train(self, imgL, imgR, dispL=None, dispR=None, output=True, kitti=False):
+        raise Exception('Error: fcn train() not completed yet!')
+
+    def predict(self, imgL, imgR, mask=(1, 1)):
+        outputs = super(PSMNetDown, self).predict(imgL, imgR, mask)
+        for output in outputs:
+            # Down sample to half size
+            pass
 
 
 class PSMNet_TieCheng(Stereo):
