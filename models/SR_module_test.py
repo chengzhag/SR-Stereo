@@ -11,7 +11,7 @@ import skimage.transform
 
 def main():
     parser = myUtils.getBasicParser(
-        ['datapath', 'loadmodel', 'no_cuda', 'half'],
+        ['outputFolder', 'datapath', 'loadmodel', 'no_cuda', 'half'],
         description='module test for class SR')
 
     args = parser.parse_args()

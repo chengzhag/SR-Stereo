@@ -34,7 +34,7 @@ class Train(Base):
 
 def main():
     parser = myUtils.getBasicParser(
-        ['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
+        ['outputFolder', 'maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
          'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half'],
         description='train or finetune Stereo net')
@@ -56,6 +56,7 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
+    stage = os.path.join(args.outputFolder, stage) if args.outputFolder is not None else stage
     saveFolderSuffix = myUtils.NameValues(('loadScale', 'trainCrop', 'batchSize'),
                                           (trainImgLoader.loadScale * 10,
                                            trainImgLoader.trainCrop,

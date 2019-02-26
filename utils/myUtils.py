@@ -110,7 +110,9 @@ def checkDir(dir):
 def getBasicParser(includeKeys=['all'], description='Stereo'):
     parser = argparse.ArgumentParser(description=description)
 
-    addParams = {'maxdisp': lambda: parser.add_argument('--maxdisp', type=int, default=192,
+    addParams = {'outputFolder': lambda: parser.add_argument('--outputFolder', type=str, default=None,
+                                                      help='output checkpoints and logs to foleder logs/outputFolder'),
+                 'maxdisp': lambda: parser.add_argument('--maxdisp', type=int, default=192,
                                                         help='maxium disparity of dataset (before scaling)'),
                  'dispscale': lambda: parser.add_argument('--dispscale', type=float, default=1,
                                                           help='scale disparity when training and predicting (real disparity range of stereo net will be set as maxdisp/dispscale)'),

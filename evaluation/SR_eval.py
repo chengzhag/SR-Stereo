@@ -46,7 +46,7 @@ class Evaluation(Base):
 
 def main():
     parser = myUtils.getBasicParser(
-        ['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
+        ['outputFolder', 'maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half'],
         description='evaluate Stereo net or SR-Stereo net')
     args = parser.parse_args()
@@ -67,6 +67,7 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
+    stage = os.path.join(args.outputFolder, stage) if args.outputFolder is not None else stage
     sr = getattr(SR, 'SR')(cuda=args.cuda, half=args.half, stage=stage,
                            dataset=args.dataset)
     if args.loadmodel is not None:

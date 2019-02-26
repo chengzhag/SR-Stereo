@@ -28,7 +28,7 @@ class Submission(Base):
 
 def main():
     parser = myUtils.getBasicParser(
-        ['maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'dataset', 'subtype', 'load_scale', 'half'],
+        ['outputFolder', 'maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'dataset', 'subtype', 'load_scale', 'half'],
         description='generate png image for kitti final submission')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -45,6 +45,7 @@ def main():
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
+    stage = os.path.join(args.outputFolder, stage) if args.outputFolder is not None else stage
     stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale, 
                                          cuda=args.cuda, half=args.half, stage=stage)
     stereo.load(args.loadmodel)
