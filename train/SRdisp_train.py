@@ -14,43 +14,22 @@ class Train(Base):
 
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
+        inputs = batch[4:8] + batch[0:2]
+        if log:
+            losses, outputs = self.model.train(*inputs, output=True)
+            imgs = inputs + outputs
 
-        warpToL, warpToR, maskL, maskR = warp(*batch[4:8])
-
-        gts = batch[0:2]
-        inputs = []
-        for input in zip(batch[4:6], (warpToL, warpToR), (maskL, maskR)):
-            if self.model.args.n_inputs == 7:
-                inputs.append(input)
-            elif self.model.args.n_inputs == 6:
-                inputs.append(input[:2])
-            else:
-                raise Exception('Error: self.model.args.n_inputs = %d which is not supporty!' % self.model.args.n_inputs)
-
-        losses = []
-        for input, gt, suffix in zip(inputs, gts, ('L', 'R')):
-            if gt is None:
-                losses.append(None)
-                continue
-            inputCat = torch.cat(input, 1)
-            if log:
-                loss, output = self.model.train(inputCat, gt)
-                output = myUtils.quantize(output, 1)
-                imgs = input + (gt, output)
-
-                self.tensorboardLogger.set(self.model.logFolder)
-                names = ('input', 'warpTo', 'mask', 'gt', 'output') \
-                    if self.model.args.n_inputs == 7 \
-                    else ('input', 'warpTo', 'gt', 'output')
-                for name, im in zip(names, imgs):
-                    self.tensorboardLogger.logFirstNIms('trainImages/' + name + suffix, im, 1,
+            # save Tensorboard logs to where checkpoint is.
+            self.tensorboardLogger.set(self.model.logFolder)
+            for imsSide, side in zip((imgs[0::2], imgs[1::2]), ('L', 'R')):
+                for name, im in zip(('input', 'dis', 'gt', 'output'), imsSide):
+                    self.tensorboardLogger.logFirstNIms('testImages/' + name + side, im, 1,
                                                         global_step=self.global_step, n=self.ndisLog)
-            else:
-                loss, _ = self.model.train(inputCat, gt)
-
-            losses.append(loss)
+        else:
+            losses, _ = self.model.train(*inputs, output=False)
 
         lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
+
         return lossesPairs
 
 
@@ -85,10 +64,10 @@ def main():
                                           (trainImgLoader.loadScale * 10,
                                            trainImgLoader.trainCrop,
                                            args.batchsize_train))
-    sr = getattr(SR, 'SR')(cInput=7 if args.withMask else 6,
-                           cuda=args.cuda, half=args.half, stage=stage,
-                           dataset=args.dataset,
-                           saveFolderSuffix=saveFolderSuffix.strSuffix())
+    sr = getattr(SR, 'SRdisp')(args.withMask,
+                               cuda=args.cuda, half=args.half, stage=stage,
+                               dataset=args.dataset,
+                               saveFolderSuffix=saveFolderSuffix.strSuffix())
     if args.loadmodel is not None:
         sr.load(args.loadmodel)
 

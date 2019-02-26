@@ -12,33 +12,20 @@ class Evaluation(Base):
         super(Evaluation, self).__init__(testImgLoader, evalFcn, ndisLog)
 
     def _evalIt(self, batch, log):
-        warpToL, warpToR, maskL, maskR = warp(*batch[4:8])
+        inputs = batch[4:8] + batch[0:2]
 
-        gts = batch[0:2]
-        inputs = []
-        for input in zip(batch[4:6], (warpToL, warpToR), (maskL, maskR)):
-            inputs.append(input)
+        if log:
+            scores, outputs = self.model.test(*inputs, type=self.evalFcn, output=True)
+            imgs = inputs + outputs
 
-        scores = []
-        for input, gt, suffix in zip(inputs, gts, ('L', 'R')):
-            if gt is None:
-                scores.append(None)
-                continue
-            inputCat = torch.cat(input if self.model.args.n_inputs == 7 else input[:2], 1)
-            if log:
-                score, output = self.model.test(inputCat, gt, type=self.evalFcn)
-                output = myUtils.quantize(output, 1)
-                imgs = input + (gt, output)
-
-                # save Tensorboard logs to where checkpoint is.
-                self.tensorboardLogger.set(self.model.logFolder)
-                for name, im in zip(('input', 'warpTo', 'mask', 'gt', 'output'), imgs):
-                    self.tensorboardLogger.logFirstNIms('testImages/' + name + suffix, im, 1,
+            # save Tensorboard logs to where checkpoint is.
+            self.tensorboardLogger.set(self.model.logFolder)
+            for imsSide, side in zip((imgs[0::2], imgs[1::2]), ('L', 'R')):
+                for name, im in zip(('input', 'dis', 'gt', 'output'), imsSide):
+                    self.tensorboardLogger.logFirstNIms('testImages/' + name + side, im, 1,
                                                         global_step=1, n=self.ndisLog)
-            else:
-                score, _ = self.model.test(inputCat, gt, type=self.evalFcn)
-
-            scores.append(score)
+        else:
+            scores, _ = self.model.test(*inputs, type=self.evalFcn, output=False)
 
         scoresPairs = myUtils.NameValues(('L', 'R'), scores, prefix=self.evalFcn)
         return scoresPairs
@@ -68,7 +55,7 @@ def main():
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
     stage = os.path.join(args.outputFolder, stage) if args.outputFolder is not None else stage
-    sr = getattr(SR, 'SR')(cInput=7 if args.withMask else 6,
+    sr = getattr(SR, 'SRdisp')(args.withMask,
                            cuda=args.cuda, half=args.half, stage=stage,
                            dataset=args.dataset)
     if args.loadmodel is not None:
