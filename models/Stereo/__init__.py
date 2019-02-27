@@ -193,11 +193,11 @@ class PSMNetDown(PSMNet):
             self.down = nn.DataParallel(self.down)
             self.down.cuda()
 
-    def train(self, imgL, imgR, dispL=None, dispR=None, output=False, kitti=False):
+    def train(self, batch, output=False, kitti=False):
         raise Exception('Error: fcn train() not completed yet!')
 
-    def predict(self, imgL, imgR, mask=(1, 1)):
-        outputs = super(PSMNetDown, self).predict(imgL, imgR, mask)
+    def predict(self, batch, mask=(1, 1)):
+        outputs = super(PSMNetDown, self).predict(batch, mask)
         downsampled = []
         for output in outputs:
             # Down sample to half size
