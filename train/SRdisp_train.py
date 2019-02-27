@@ -2,7 +2,7 @@ from __future__ import print_function
 import torch.utils.data
 import os
 from models import SR
-from evaluation import SRdisp_eval
+from evaluation import SR_eval
 from utils import myUtils
 from train.Train import Train as Base
 
@@ -61,7 +61,7 @@ def main():
                                           (trainImgLoader.loadScale * 10,
                                            trainImgLoader.trainCrop,
                                            args.batchsize_train))
-    sr = getattr(SR, 'SRdisp')(args.withMask,
+    sr = getattr(SR, 'SRdisp')(cInput=7 if args.withMask else 6,
                                cuda=args.cuda, half=args.half, stage=stage,
                                dataset=args.dataset,
                                saveFolderSuffix=saveFolderSuffix.strSuffix())
@@ -69,8 +69,8 @@ def main():
         sr.load(args.loadmodel)
 
     # Train
-    test = SRdisp_eval.Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
-                                  ndisLog=args.ndis_log)
+    test = SR_eval.Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
+                              ndisLog=args.ndis_log)
     train = Train(trainImgLoader=trainImgLoader, nEpochs=args.epochs, lr=args.lr,
                   logEvery=args.log_every, ndisLog=args.ndis_log,
                   testEvery=args.test_every, Test=test)

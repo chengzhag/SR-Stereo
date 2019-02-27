@@ -131,9 +131,8 @@ class SR(Model):
 
 class SRdisp(SR):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, withMask=False, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
-        super(SRdisp, self).__init__(7 if withMask else 6, cuda, half, stage, dataset, saveFolderSuffix)
-        self.withMask = withMask
+    def __init__(self, cInput=6, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        super(SRdisp, self).__init__(cInput, cuda, half, stage, dataset, saveFolderSuffix)
 
     def initModel(self):
         super(SRdisp, self).initModel()
