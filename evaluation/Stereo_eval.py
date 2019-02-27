@@ -17,8 +17,8 @@ class Evaluation(Base):
             batch = batch[0:2] + batch[6:8]
 
         if log:
-            scores, outputs = self.model.test(*batch, type=self.evalFcn, returnOutputs=True, kitti=self.testImgLoader.kitti)
-            imgs = batch[2:4] + outputs
+            scores, outputs = self.model.test(batch, type=self.evalFcn, returnOutputs=True, kitti=self.testImgLoader.kitti)
+            imgs = batch[-2:] + outputs
 
             # save Tensorboard logs to where checkpoint is.
             self.tensorboardLogger.set(self.model.logFolder)
@@ -26,7 +26,7 @@ class Evaluation(Base):
                 self.tensorboardLogger.logFirstNIms('testImages/' + name, disp, self.model.maxdisp,
                                                     global_step=1, n=self.ndisLog)
         else:
-            scores, _ = self.model.test(*batch, type=self.evalFcn, returnOutputs=False, kitti=self.testImgLoader.kitti)
+            scores, _ = self.model.test(batch, type=self.evalFcn, returnOutputs=False, kitti=self.testImgLoader.kitti)
 
         scoresPairs = myUtils.NameValues(('L', 'R'), scores, prefix=self.evalFcn)
         return scoresPairs

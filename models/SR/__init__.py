@@ -120,7 +120,7 @@ class SR(Model):
         print('Loading complete! Number of model parameters: %d' % self.nParams())
 
     def save(self, epoch, iteration, trainLoss):
-        super(SR, self)._save(epoch, iteration)
+        super(SR, self).beforeSave(epoch, iteration)
 
         torch.save({
             'epoch': epoch,

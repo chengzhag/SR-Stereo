@@ -34,15 +34,26 @@ class Model:
     def initModel(self):
         pass
 
-    def trainPrepare(self):
+    def trainPrepare(self, batch=()):
         if self.model is None:
             self.initModel()
         # When training, log files should be saved to saveFolder.
         self.logFolder = os.path.join(self.saveFolder, 'logs')
         self.model.train()
+        if self.cuda:
+            batch = [im.cuda() if im is not None else None for im in batch]
+        if self.half:
+            batch = [im.half() if im is not None else None for im in batch]
+        return batch
 
-    def predictPrepare(self):
+
+    def predictPrepare(self, batch=()):
         self.model.eval()
+        if self.cuda:
+            batch = [im.cuda() if im is not None else None for im in batch]
+        if self.half:
+            batch = [im.half() if im is not None else None for im in batch]
+        return batch
 
     def load(self, checkpointDir):
         if checkpointDir is not None:
@@ -60,7 +71,7 @@ class Model:
     def nParams(self):
         return sum([p.data.nelement() for p in self.model.parameters()])
 
-    def _save(self, epoch, iteration):
+    def beforeSave(self, epoch, iteration):
         # update checkpointDir
         self.checkpointDir = os.path.join(self.saveFolder, 'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
         self.checkpointFolder = self.saveFolder
