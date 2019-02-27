@@ -68,7 +68,7 @@ def main():
                                                  mode='rawScaledTensor')
 
     logFolder = [folder for folder in args.datapath.split('/') if folder != '']
-    logFolder[-1] += '_moduleTest'
+    logFolder[-1] += '_listTest'
     writer = SummaryWriter(os.path.join(*logFolder))
 
     for iSample, sample in enumerate(trainImgLoader, 1):
