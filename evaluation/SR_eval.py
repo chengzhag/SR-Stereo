@@ -32,7 +32,7 @@ class Evaluation(Base):
 
 def main():
     parser = myUtils.getBasicParser(
-        ['outputFolder', 'maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
+        ['outputFolder', 'datapath', 'model', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half', 'withMask'],
         description='evaluate Stereo net or SR-Stereo net')
     args = parser.parse_args()

@@ -40,7 +40,7 @@ class Stereo(Model):
         autoPad = myUtils.AutoPad(imgL, self.multiple)
         return autoPad
 
-    def test(self, imgL, imgR, dispL=None, dispR=None, type='l1', output=False, kitti=False):
+    def test(self, imgL, imgR, dispL=None, dispR=None, type='l1', returnOutputs=False, kitti=False):
         myUtils.assertDisp(dispL, dispR)
 
         if self.cuda:
@@ -57,7 +57,7 @@ class Stereo(Model):
             if dispOut is not None:
                 if dispOut.dim() == 3:
                     dispOut = dispOut.unsqueeze(1)
-                outputs.append(dispOut if output else None)
+                outputs.append(dispOut if returnOutputs else None)
 
                 if kitti:
                     mask = gt > 0

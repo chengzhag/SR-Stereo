@@ -32,9 +32,9 @@ class Train(Base):
 
 def main():
     parser = myUtils.getBasicParser(
-        ['outputFolder', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
+        ['outputFolder', 'datapath', 'model', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
-         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half'],
+         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half', 'withMask'],
         description='train or finetune SR net')
 
     args = parser.parse_args()
@@ -46,13 +46,21 @@ def main():
 
     # Dataset
     import dataloader
+    if args.model in ('SR',):
+        mask = (1, 1, 0, 0)
+        cInput = 3
+    elif args.model in ('SRdisp',):
+        mask = (1, 1, 1, 1)
+        cInput = 7 if args.withMask else 6
+    else:
+        raise Exception('Error: No model named \'%s\'!' % args.model)
     trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
                                                              trainCrop=args.trainCrop,
                                                              batchSizes=(args.batchsize_train, args.batchsize_test),
                                                              loadScale=(args.load_scale[0], args.load_scale[0] / 2),
                                                              mode='training',
                                                              preprocess=False,
-                                                             mask=(1, 1, 0, 0))
+                                                             mask=mask)
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
@@ -61,9 +69,10 @@ def main():
                                           (trainImgLoader.loadScale * 10,
                                            trainImgLoader.trainCrop,
                                            args.batchsize_train))
-    sr = getattr(SR, 'SR')(cuda=args.cuda, half=args.half, stage=stage,
-                           dataset=args.dataset,
-                           saveFolderSuffix=saveFolderSuffix.strSuffix())
+    sr = getattr(SR, args.model)(cInput=cInput, cuda=args.cuda,
+                                 half=args.half, stage=stage,
+                                 dataset=args.dataset,
+                                 saveFolderSuffix=saveFolderSuffix.strSuffix())
     if args.loadmodel is not None:
         sr.load(args.loadmodel)
 
