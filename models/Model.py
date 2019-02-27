@@ -34,14 +34,14 @@ class Model:
     def initModel(self):
         pass
 
-    def _train(self):
+    def trainPrepare(self):
         if self.model is None:
             self.initModel()
         # When training, log files should be saved to saveFolder.
         self.logFolder = os.path.join(self.saveFolder, 'logs')
         self.model.train()
 
-    def _predict(self):
+    def predictPrepare(self):
         self.model.eval()
 
     def load(self, checkpointDir):

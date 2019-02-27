@@ -27,7 +27,7 @@ class Stereo(Model):
             self.model.cuda()
 
     def train(self, imgL, imgR, dispL=None, dispR=None):
-        super(Stereo, self)._train()
+        super(Stereo, self).trainPrepare()
         myUtils.assertDisp(dispL, dispR)
         if self.cuda:
             imgL, imgR = imgL.cuda(), imgR.cuda()
@@ -36,7 +36,7 @@ class Stereo(Model):
         return imgL, imgR, dispL, dispR
 
     def predict(self, imgL, imgR, mask=(1, 1)):
-        super(Stereo, self)._predict()
+        super(Stereo, self).predictPrepare()
         autoPad = myUtils.AutoPad(imgL, self.multiple)
         return autoPad
 

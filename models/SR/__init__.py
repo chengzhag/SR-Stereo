@@ -38,7 +38,7 @@ class SR(Model):
     # imgL: RGB value range 0~1
     # imgH: RGB value range 0~1
     def train(self, imgL, imgH):
-        super(SR, self)._train()
+        super(SR, self).trainPrepare()
 
         if self.cuda:
             imgL, imgH = imgL.cuda(), imgH.cuda()
@@ -54,7 +54,7 @@ class SR(Model):
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
     def predict(self, imgL):
-        super(SR, self)._predict()
+        super(SR, self).predictPrepare()
         with torch.no_grad():
             output = P.data_parallel(self.model, imgL * self.args.rgb_range)
             output = myUtils.quantize(output, self.args.rgb_range) / self.args.rgb_range
