@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="5af41d42-9f6a-4e3f-b5e4-a4d9632ca140" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/demo.sh" beforeDir="false" afterPath="$PROJECT_DIR$/demo.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/Stereo/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/Stereo/__init__.py" afterDir="false" />
-    </list>
+    <list default="true" id="5af41d42-9f6a-4e3f-b5e4-a4d9632ca140" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -103,24 +100,15 @@
             </entry>
           </file>
           <file pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/demo.sh">
+            <entry file="file://$PROJECT_DIR$/experiments.sh">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="494">
-                  <caret line="26" column="91" lean-forward="true" selection-start-line="26" selection-start-column="91" selection-end-line="26" selection-end-column="91" />
+                <state relative-caret-position="439">
+                  <caret line="47" column="37" selection-start-line="47" selection-start-column="37" selection-end-line="47" selection-end-column="37" />
                 </state>
               </provider>
             </entry>
           </file>
           <file pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/experiments.sh">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="467">
-                  <caret line="52" lean-forward="true" selection-start-line="52" selection-end-line="52" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/moduletest.sh">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="38">
@@ -236,7 +224,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>--lr 0.001 2 0.0001</find>
       <find>--log_every 10</find>
       <find>model.stage</find>
       <find>load_scale</find>
@@ -266,6 +253,7 @@
       <find>batch[-2:0]</find>
       <find>batch</find>
       <find>batch[</find>
+      <find>Stereo_eval.py</find>
     </findStrings>
     <replaceStrings>
       <replace>stereo.model</replace>
@@ -285,6 +273,7 @@
       <replace>log_every 1.</replace>
       <replace>batch[-2:]</replace>
       <replace>log_every 1</replace>
+      <replace>Stereo_eval.py --model PSMNetDown</replace>
     </replaceStrings>
     <dirStrings>
       <dir>C:\Users\85057\OneDrive - std.uestc.edu.cn\projects\SR-Stereo\SR-Stereo</dir>
@@ -466,7 +455,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.Stereo_train_moduletest">
+  <component name="RunManager" selected="Python.Stereo_sub_PSMNet_kitti2015_eval_half">
     <configuration name="SR_eval_EDSR_carla_kitti" type="PythonConfigurationType" factoryName="Python" folderName="SR_eval">
       <module name="SR-Stereo" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -482,7 +471,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/SR_eval.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --eval_fcn l1" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --eval_fcn l1" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -505,7 +494,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/SR_eval.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --eval_fcn l1 --half" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --eval_fcn l1 --half" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -528,7 +517,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/SR_eval.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --eval_fcn l1" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --eval_fcn l1" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -574,7 +563,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/submission/SR_sub.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --subtype eval" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --subtype eval" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -597,7 +586,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/submission/SR_sub.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --subtype eval --half" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --subtype eval --half" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -620,7 +609,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train/SR_train.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --epochs 10 --log_every 1 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 2 --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --trainCrop 192 192 --lr 0.0001" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --epochs 10 --log_every 1 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 2 --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --trainCrop 192 192 --lr 0.0001" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -643,7 +632,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train/SR_train.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --epochs 300 --log_every 1 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 4 --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --trainCrop 192 192 --lr 0.0001" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --epochs 300 --log_every 1 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 4 --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --trainCrop 192 192 --lr 0.0001" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -666,7 +655,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train/SR_train.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --epochs 300 --log_every 1 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 4 --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --trainCrop 192 192 --lr 0.0001 --half" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --epochs 300 --log_every 1 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 4 --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --trainCrop 192 192 --lr 0.0001 --half" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -712,7 +701,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/SR_eval.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --model SRdisp --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --eval_fcn l1" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --model SRdisp --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --eval_fcn l1" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -735,7 +724,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/SR_eval.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --model SRdisp --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --eval_fcn l1 --half" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --model SRdisp --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --eval_fcn l1 --half" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -758,7 +747,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/SR_eval.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --model SRdisp --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --eval_fcn l1 --load_scale 0.25 --batchsize_test 1 --half" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --model SRdisp --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --eval_fcn l1 --load_scale 0.25 --batchsize_test 1 --half" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -781,7 +770,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train/SR_train.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --epochs 10 --log_every 1 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 2 --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --trainCrop 112 1136 --lr 0.0001" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --epochs 10 --log_every 1 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 2 --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --trainCrop 112 1136 --lr 0.0001" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -804,7 +793,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train/SR_train.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --epochs 10 --log_every 1 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 2 --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --trainCrop 112 1136 --lr 0.0001 --half" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --epochs 10 --log_every 1 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 2 --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt --trainCrop 112 1136 --lr 0.0001 --half" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -850,7 +839,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/Stereo_eval.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel /media/omnisky/zc/SR-Stereo/PSMNet-LR-TieCheng/trained_batchsize4/finetune_188.tar --model PSMNet_TieCheng --eval_fcn outlier" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel /media/omnisky/zc/SR-Stereo/PSMNet-LR-TieCheng/trained_batchsize4/finetune_188.tar --model PSMNet_TieCheng --eval_fcn outlier" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -873,7 +862,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/Stereo_eval.py" />
-      <option name="PARAMETERS" value="--maxdisp 384 --dispscale 2 --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --loadmodel logs/Stereo_train/190223080508_PSMNet_loadScale_10_trainCrop_112_1136_batchSize_4_carla_kitti/checkpoint_epoch_0003_it_01000.tar --batchsize_test 1 --eval_fcn 6_outlier" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --maxdisp 384 --dispscale 2 --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --loadmodel logs/Stereo_train/190223080508_PSMNet_loadScale_10_trainCrop_112_1136_batchSize_4_carla_kitti/checkpoint_epoch_0003_it_01000.tar --batchsize_test 1 --eval_fcn 6_outlier" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -896,7 +885,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/Stereo_eval.py" />
-      <option name="PARAMETERS" value="--maxdisp 384 --dispscale 2 --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --model PSMNetDown --loadmodel logs/Stereo_train/190225142733_PSMNet_loadScale_10_trainCrop_128_1024_batchSize_4_carla_kitti/checkpoint_epoch_0005_it_01000.tar --load_scale 1 0.5 --batchsize_test 2 --eval_fcn outlier --half" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --maxdisp 384 --dispscale 2 --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --model PSMNetDown --loadmodel logs/Stereo_train/190225142733_PSMNet_loadScale_10_trainCrop_128_1024_batchSize_4_carla_kitti/checkpoint_epoch_0005_it_01000.tar --load_scale 1 0.5 --batchsize_test 2 --eval_fcn outlier --half" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -919,7 +908,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/Stereo_eval.py" />
-      <option name="PARAMETERS" value="--maxdisp 384 --dispscale 2 --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --loadmodel logs/Stereo_train/190225190145_PSMNet_loadScale_5_trainCrop_128_1024_batchSize_4_carla_kitti/checkpoint_epoch_0005_it_01000.tar --batchsize_test 2 --eval_fcn 6_outlier --half" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --maxdisp 384 --dispscale 2 --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --loadmodel logs/Stereo_train/190225190145_PSMNet_loadScale_5_trainCrop_128_1024_batchSize_4_carla_kitti/checkpoint_epoch_0005_it_01000.tar --batchsize_test 2 --eval_fcn 6_outlier --half" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -942,7 +931,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/Stereo_eval.py" />
-      <option name="PARAMETERS" value="--maxdisp 384 --dispscale 2 --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --loadmodel logs/Stereo_train/190225190145_PSMNet_loadScale_5_trainCrop_128_1024_batchSize_4_carla_kitti/checkpoint_epoch_0005_it_01000.tar --load_scale 0.5 --batchsize_test 2 --eval_fcn outlier --half" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --maxdisp 384 --dispscale 2 --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --loadmodel logs/Stereo_train/190225190145_PSMNet_loadScale_5_trainCrop_128_1024_batchSize_4_carla_kitti/checkpoint_epoch_0005_it_01000.tar --load_scale 0.5 --batchsize_test 2 --eval_fcn outlier --half" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -965,7 +954,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/Stereo_eval.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/kitti/data_stereo_flow/training/ --dataset kitti2012 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2012/PSMNet_pretrained_model_KITTI2012.tar --eval_fcn outlier" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/kitti/data_stereo_flow/training/ --dataset kitti2012 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2012/PSMNet_pretrained_model_KITTI2012.tar --eval_fcn outlier" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -988,7 +977,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/Stereo_eval.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2015/PSMNet_pretrained_model_KITTI2015.tar --eval_fcn outlier" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2015/PSMNet_pretrained_model_KITTI2015.tar --eval_fcn outlier" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -1011,7 +1000,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/Stereo_eval.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2015/PSMNet_pretrained_model_KITTI2015.tar --load_scale 0.5 --batchsize_test 1 --eval_fcn 1.5_outlier" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2015/PSMNet_pretrained_model_KITTI2015.tar --load_scale 0.5 --batchsize_test 1 --eval_fcn 1.5_outlier" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -1034,7 +1023,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/Stereo_eval.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2015/PSMNet_pretrained_model_KITTI2015.tar --load_scale 0.5 --batchsize_test 1 --eval_fcn 1.5_outlier --half" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2015/PSMNet_pretrained_model_KITTI2015.tar --load_scale 0.5 --batchsize_test 1 --eval_fcn 1.5_outlier --half" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -1057,7 +1046,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluation/Stereo_eval.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/sceneflow/ --dataset sceneflow --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --eval_fcn outlier" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/sceneflow/ --dataset sceneflow --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --eval_fcn outlier" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -1080,7 +1069,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/submission/Stereo_sub.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel /media/omnisky/zc/SR-Stereo/PSMNet-LR-TieCheng/trained_batchsize4/finetune_188.tar --subtype eval --model PSMNet_TieCheng" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel /media/omnisky/zc/SR-Stereo/PSMNet-LR-TieCheng/trained_batchsize4/finetune_188.tar --subtype eval --model PSMNet_TieCheng" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -1103,7 +1092,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/submission/Stereo_sub.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2015/PSMNet_pretrained_model_KITTI2015.tar --subtype eval" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2015/PSMNet_pretrained_model_KITTI2015.tar --subtype eval" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -1126,7 +1115,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/submission/Stereo_sub.py" />
-      <option name="PARAMETERS" value="--datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2015/PSMNet_pretrained_model_KITTI2015.tar --subtype eval --half" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2015/PSMNet_pretrained_model_KITTI2015.tar --subtype eval --half" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -1149,7 +1138,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train/Stereo_train.py" />
-      <option name="PARAMETERS" value="--maxdisp 384 --dispscale 2 --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --epochs 1 --log_every 1 --eval_fcn outlier --batchsize_train 3 --batchsize_test 3 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2015/PSMNet_pretrained_model_KITTI2015.tar" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --maxdisp 384 --dispscale 2 --datapath ../datasets/carla_kitti/carla_kitti_sr_lowquality --dataset carla_kitti --epochs 1 --log_every 1 --eval_fcn outlier --batchsize_train 3 --batchsize_test 3 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2015/PSMNet_pretrained_model_KITTI2015.tar" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -1172,7 +1161,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train/Stereo_train.py" />
-      <option name="PARAMETERS" value="--maxdisp 192 --datapath ../datasets/kitti/data_stereo_flow/training/ --dataset kitti2012 --epochs 3 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2012/PSMNet_pretrained_model_KITTI2012.tar --log_every 1 --eval_fcn outlier" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --maxdisp 192 --datapath ../datasets/kitti/data_stereo_flow/training/ --dataset kitti2012 --epochs 3 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2012/PSMNet_pretrained_model_KITTI2012.tar --log_every 1 --eval_fcn outlier" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -1195,7 +1184,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train/Stereo_train.py" />
-      <option name="PARAMETERS" value="--maxdisp 192 --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --epochs 3 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2015/PSMNet_pretrained_model_KITTI2015.tar --log_every 1 --eval_fcn outlier" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --maxdisp 192 --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --epochs 3 --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2015/PSMNet_pretrained_model_KITTI2015.tar --log_every 1 --eval_fcn outlier" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -1218,7 +1207,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train/Stereo_train.py" />
-      <option name="PARAMETERS" value="--maxdisp 96 --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --epochs 300 --log_every 1 --load_scale 0.5 --trainCrop 128 256 --batchsize_train 4 --batchsize_test 4 --lr 0.001 200 0.0001 --eval_fcn 1.5_outlier" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --maxdisp 96 --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --epochs 300 --log_every 1 --load_scale 0.5 --trainCrop 128 256 --batchsize_train 4 --batchsize_test 4 --lr 0.001 200 0.0001 --eval_fcn 1.5_outlier" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -1241,7 +1230,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train/Stereo_train.py" />
-      <option name="PARAMETERS" value="--maxdisp 96 --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --epochs 300 --log_every 1 --load_scale 0.5 --trainCrop 128 256 --batchsize_train 2 --batchsize_test 2 --lr 0.001 200 0.0001 --eval_fcn 1.5_outlier --half" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --maxdisp 96 --datapath ../datasets/kitti/data_scene_flow/training/ --dataset kitti2015 --epochs 300 --log_every 1 --load_scale 0.5 --trainCrop 128 256 --batchsize_train 2 --batchsize_test 2 --lr 0.001 200 0.0001 --eval_fcn 1.5_outlier --half" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -1264,7 +1253,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train/Stereo_train.py" />
-      <option name="PARAMETERS" value="--maxdisp 192 --datapath ../datasets/sceneflow/ --dataset sceneflow --epochs 1 --log_every 1 --eval_fcn outlier" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --maxdisp 192 --datapath ../datasets/sceneflow/ --dataset sceneflow --epochs 1 --log_every 1 --eval_fcn outlier" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -1287,7 +1276,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train/Stereo_train.py" />
-      <option name="PARAMETERS" value="--maxdisp 96 --datapath ../datasets/sceneflow/ --dataset sceneflow --epochs 10 --log_every 10 --load_scale 0.5 --trainCrop 128 256 --batchsize_train 32 --batchsize_test 32 --lr 0.001 --eval_fcn 1.5_outlier" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --maxdisp 96 --datapath ../datasets/sceneflow/ --dataset sceneflow --epochs 10 --log_every 10 --load_scale 0.5 --trainCrop 128 256 --batchsize_train 32 --batchsize_test 32 --lr 0.001 --eval_fcn 1.5_outlier" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -1310,7 +1299,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train/Stereo_train.py" />
-      <option name="PARAMETERS" value="--maxdisp 96 --datapath ../datasets/sceneflow/ --dataset sceneflow --epochs 10 --log_every 10 --load_scale 0.5 --trainCrop 128 256 --batchsize_train 32 --batchsize_test 32 --lr 0.001 --eval_fcn 1.5_outlier --half" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns --maxdisp 96 --datapath ../datasets/sceneflow/ --dataset sceneflow --epochs 10 --log_every 10 --load_scale 0.5 --trainCrop 128 256 --batchsize_train 32 --batchsize_test 32 --lr 0.001 --eval_fcn 1.5_outlier --half" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -1572,12 +1561,12 @@
       <workItem from="1551102903028" duration="8431000" />
       <workItem from="1551146178138" duration="6794000" />
       <workItem from="1551157536930" duration="130000" />
-      <workItem from="1551242527567" duration="15029000" />
+      <workItem from="1551242527567" duration="15783000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="423286000" />
+    <option name="totallyTimeSpent" value="424040000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -2008,13 +1997,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/moduletest.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="38">
-          <caret line="2" selection-start-line="2" selection-end-line="2" selection-end-column="109" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/demo.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="494">
@@ -2024,8 +2006,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/experiments.sh">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="467">
-          <caret line="52" lean-forward="true" selection-start-line="52" selection-end-line="52" />
+        <state relative-caret-position="439">
+          <caret line="47" column="37" selection-start-line="47" selection-start-column="37" selection-end-line="47" selection-end-column="37" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/moduletest.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="38">
+          <caret line="2" selection-start-line="2" selection-end-line="2" selection-end-column="109" />
         </state>
       </provider>
     </entry>
