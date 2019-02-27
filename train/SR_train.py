@@ -14,27 +14,18 @@ class Train(Base):
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
 
-        batch = batch[0:2] + batch[4:6]
+        if log:
+            losses, outputs = self.model.train(batch, output=True)
+            imgs = batch[4:6] + batch[0:2] + outputs
 
-        losses = []
-        for input, gt, suffix in zip(batch[2:4], batch[0:2], ('L', 'R')):
-            if input is None or gt is None:
-                losses.append(None)
-                continue
-            if log:
-                loss, output = self.model.train(input, gt)
-                output = myUtils.quantize(output, 1)
-                imgs = [input, gt, output]
-
-                # save Tensorboard logs to where checkpoint is.
-                self.tensorboardLogger.set(self.model.logFolder)
-                for name, im in zip(('input', 'gt', 'output'), imgs):
-                    self.tensorboardLogger.logFirstNIms('trainImages/' + name + suffix, im, 1,
+            # save Tensorboard logs to where checkpoint is.
+            self.tensorboardLogger.set(self.model.logFolder)
+            for imsSide, side in zip((imgs[0::2], imgs[1::2]), ('L', 'R')):
+                for name, im in zip(('input', 'gt', 'output'), imsSide):
+                    self.tensorboardLogger.logFirstNIms('testImages/' + name + side, im, 1,
                                                         global_step=self.global_step, n=self.ndisLog)
-            else:
-                loss, _ = self.model.train(input, gt)
-
-            losses.append(loss)
+        else:
+            losses, _ = self.model.train(batch, output=False)
 
         lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
         return lossesPairs

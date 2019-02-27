@@ -37,7 +37,17 @@ class SR(Model):
 
     # imgL: RGB value range 0~1
     # imgH: RGB value range 0~1
-    def train(self, imgL, imgH):
+    def train(self, batch, output=False):
+        losses = []
+        outputs = []
+        for input, gt in zip(batch[4:6], batch[0:2]):
+            loss, predict = self.trainOneSide(input, gt) if gt is not None else (None, None)
+            losses.append(loss)
+            outputs.append(myUtils.quantize(predict, 1) if output and predict is not None else None)
+
+        return losses, outputs
+
+    def trainOneSide(self, imgL, imgH):
         super(SR, self).trainPrepare()
 
         if self.cuda:
@@ -117,8 +127,7 @@ class SRdisp(SR):
     def initModel(self):
         super(SRdisp, self).initModel()
 
-
-    def _preProcess(self, inputL, inputR, dispL, dispR):
+    def preProcess(self, inputL, inputR, dispL, dispR):
         with torch.no_grad():
             warpToL, warpToR, maskL, maskR = warp(inputL, inputR, dispL, dispR)
 
@@ -132,24 +141,17 @@ class SRdisp(SR):
                     raise Exception(
                         'Error: self.model.args.n_inputs = %d which is not supporty!' % self.model.args.n_inputs)
             return inputs
-    # imgL: RGB value range 0~1
-    # imgH: RGB value range 0~1
+
     def train(self, batch, output=False):
-        inputs = self._preProcess(*batch[4:8])
+        batch = batch[:]
+        batch[4:6] = self.preProcess(*batch[4:8])
+        return super(SRdisp, self).train(batch, output)
 
-        losses = []
-        outputs = []
-        for input, gt in zip(inputs, batch[0:2]):
-            loss, predict = super(SRdisp, self).train(input, gt) if gt is not None else (None, None)
-            losses.append(loss)
-            outputs.append(myUtils.quantize(predict, 1) if output and predict is not None else None)
-
-        return losses, outputs
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
     def predict(self, batch, mask=(1,1)):
-        inputs = self._preProcess(*batch)
+        inputs = self.preProcess(*batch)
         outputs = []
         for input, do in zip(inputs, mask):
             outputs.append(super(SRdisp, self).predict(input) if do else None)
