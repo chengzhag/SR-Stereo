@@ -212,21 +212,15 @@ class PSMNet_TieCheng(Stereo):
         super(PSMNet_TieCheng, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet_TieCheng
 
-    def train(self, imgL, imgR, dispL=None, dispR=None, output=False, kitti=False):
-        imgL, imgR, dispL, dispR = super(PSMNet_TieCheng, self).train(imgL, imgR, dispL, dispR)
+    def train(self, batch, output=False, kitti=False):
         raise Exception('Fcn \'train\' not done yet...')
 
-    def predict(self, imgL, imgR, mode='both'):
-        autoPad = super(PSMNet_TieCheng, self).predict(imgL, imgR, mode)
+    def predict(self, batch, mask=(1, 1)):
+        batch, autoPad = super(PSMNet_TieCheng, self).predictPrepare(batch)
+        imgL, imgR = batch[-4:-2]
 
         with torch.no_grad():
             imgL, imgR = autoPad.pad(imgL, self.cuda), autoPad.pad(imgR, self.cuda)
-            pl, pr = self.model(imgL, imgR)
-            if mode == 'left':
-                return autoPad.unpad(pl) * self.dispScale
-            elif mode == 'right':
-                return autoPad.unpad(pr) * self.dispScale
-            elif mode == 'both':
-                return autoPad.unpad(pl) * self.dispScale, autoPad.unpad(pr) * self.dispScale
-            else:
-                raise Exception('No mode \'%s\'!' % mode)
+            outputs = self.model(imgL, imgR)
+            outputs = autoPad.unpad(outputs)
+            return tuple(outputs)

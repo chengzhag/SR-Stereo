@@ -61,13 +61,19 @@ class AutoPad:
         self.WPad = ((self.W - 1) // multiple + 1) * multiple
 
     def pad(self, imgs, cuda):
-        imgsPad = torch.zeros([self.N, self.C, self.HPad, self.WPad], dtype=imgs.dtype,
-                              device='cuda' if cuda else 'cpu')
-        imgsPad[:, :, (self.HPad - self.H):, (self.WPad - self.W):] = imgs
+        if type(imgs) in (list, tuple):
+            imgsPad = [self.unpad(im) for im in imgs]
+        else:
+            imgsPad = torch.zeros([self.N, self.C, self.HPad, self.WPad], dtype=imgs.dtype,
+                                  device='cuda' if cuda else 'cpu')
+            imgsPad[:, :, (self.HPad - self.H):, (self.WPad - self.W):] = imgs
         return imgsPad
 
     def unpad(self, imgs):
-        imgs = imgs[:, (self.HPad - self.H):, (self.WPad - self.W):]
+        if type(imgs) in (list, tuple):
+            imgs = [self.unpad(im) for im in imgs]
+        else:
+            imgs = imgs[:, (self.HPad - self.H):, (self.WPad - self.W):]
         return imgs
 
 
