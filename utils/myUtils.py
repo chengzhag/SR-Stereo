@@ -62,7 +62,7 @@ class AutoPad:
 
     def pad(self, imgs, cuda):
         if type(imgs) in (list, tuple):
-            imgsPad = [self.unpad(im) for im in imgs]
+            imgsPad = [self.pad(im) for im in imgs]
         else:
             imgsPad = torch.zeros([self.N, self.C, self.HPad, self.WPad], dtype=imgs.dtype,
                                   device='cuda' if cuda else 'cpu')
