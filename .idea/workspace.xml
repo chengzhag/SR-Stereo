@@ -1,17 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/evaluation/SRdisp_eval.py" line="21" />
+    <bookmark url="file://$PROJECT_DIR$/evaluation/SRdisp_eval.py" line="20" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5af41d42-9f6a-4e3f-b5e4-a4d9632ca140" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/evaluation/SR_eval.py" beforeDir="false" afterPath="$PROJECT_DIR$/evaluation/SR_eval.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/evaluation/SRdisp_eval.py" beforeDir="false" afterPath="$PROJECT_DIR$/evaluation/SRdisp_eval.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/evaluation/Stereo_eval.py" beforeDir="false" afterPath="$PROJECT_DIR$/evaluation/Stereo_eval.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/SR/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/SR/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train/SR_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train/SR_train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train/SRdisp_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train/SRdisp_train.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -127,10 +121,10 @@
               </provider>
             </entry>
           </file>
-          <file pinned="false" current-in-tab="false">
+          <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/evaluation/SR_eval.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="603">
+                <state relative-caret-position="1178">
                   <caret line="62" column="50" selection-start-line="62" selection-start-column="50" selection-end-line="62" selection-end-column="50" />
                   <folding>
                     <element signature="e#0#11#0" expanded="true" />
@@ -139,11 +133,11 @@
               </provider>
             </entry>
           </file>
-          <file pinned="false" current-in-tab="true">
+          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/train/SR_train.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="323">
-                  <caret line="23" column="92" lean-forward="true" selection-start-line="23" selection-start-column="92" selection-end-line="23" selection-end-column="92" />
+                <state relative-caret-position="266">
+                  <caret line="14" column="47" lean-forward="true" selection-start-line="14" selection-start-column="47" selection-end-line="14" selection-end-column="47" />
                   <folding>
                     <element signature="e#0#37#0" expanded="true" />
                   </folding>
@@ -179,20 +173,23 @@
               </provider>
             </entry>
           </file>
-          <file pinned="false" current-in-tab="false">
+          <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/evaluation/SRdisp_eval.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="204">
-                  <caret line="42" column="26" selection-start-line="42" selection-start-column="26" selection-end-line="42" selection-end-column="26" />
+                <state relative-caret-position="437">
+                  <caret line="23" column="39" selection-start-line="23" selection-start-column="39" selection-end-line="23" selection-end-column="39" />
+                  <folding>
+                    <element signature="e#0#12#0" expanded="true" />
+                  </folding>
                 </state>
               </provider>
             </entry>
           </file>
-          <file pinned="false" current-in-tab="true">
+          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/train/SRdisp_train.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="366">
-                  <caret line="24" column="57" selection-start-line="24" selection-start-column="57" selection-end-line="24" selection-end-column="62" />
+                <state relative-caret-position="133">
+                  <caret line="7" selection-start-line="7" selection-end-line="7" />
                   <folding>
                     <element signature="e#0#37#0" expanded="true" />
                   </folding>
@@ -203,8 +200,8 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/models/SR/__init__.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="789">
-                  <caret line="81" column="12" selection-start-line="81" selection-start-column="8" selection-end-line="81" selection-end-column="12" />
+                <state relative-caret-position="252">
+                  <caret line="73" column="33" lean-forward="true" selection-start-line="73" selection-start-column="33" selection-end-line="73" selection-end-column="33" />
                   <folding>
                     <element signature="e#0#9#0" expanded="true" />
                   </folding>
@@ -324,10 +321,10 @@
         <option value="$PROJECT_DIR$/demo.sh" />
         <option value="$PROJECT_DIR$/moduletest.sh" />
         <option value="$PROJECT_DIR$/models/SR/__init__.py" />
+        <option value="$PROJECT_DIR$/train/SR_train.py" />
         <option value="$PROJECT_DIR$/train/SRdisp_train.py" />
         <option value="$PROJECT_DIR$/evaluation/SRdisp_eval.py" />
         <option value="$PROJECT_DIR$/evaluation/SR_eval.py" />
-        <option value="$PROJECT_DIR$/train/SR_train.py" />
       </list>
     </option>
   </component>
@@ -412,11 +409,11 @@
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../PSMNet-LR-TieCheng" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/evaluation/SR_eval.py" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="web.server" />
-    <property name="two.files.diff.last.used.file" value="$PROJECT_DIR$/dataloader/KittiLoader.py" />
+    <property name="two.files.diff.last.used.file" value="$PROJECT_DIR$/evaluation/SR_eval.py" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -1528,12 +1525,12 @@
       <workItem from="1551102903028" duration="8431000" />
       <workItem from="1551146178138" duration="6794000" />
       <workItem from="1551157536930" duration="130000" />
-      <workItem from="1551242527567" duration="10772000" />
+      <workItem from="1551242527567" duration="11038000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="419029000" />
+    <option name="totallyTimeSpent" value="419295000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1546,14 +1543,13 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4991119" visible="true" weight="0.1380597" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.4991119" visible="true" weight="0.1380597" />
       <window_info id="Structure" order="1" sideWeight="0.5008881" side_tool="true" weight="0.1325215" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.2657267" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49840087" visible="true" weight="0.2570499" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49840087" visible="true" weight="0.2570499" />
       <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49928367" weight="0.28958786" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -1929,16 +1925,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/SR/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="789">
-          <caret line="81" column="12" selection-start-line="81" selection-start-column="8" selection-end-line="81" selection-end-column="12" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/evaluation/Stereo_eval.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="361">
@@ -1949,9 +1935,39 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/models/SR/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="252">
+          <caret line="73" column="33" lean-forward="true" selection-start-line="73" selection-start-column="33" selection-end-line="73" selection-end-column="33" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train/SR_train.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="266">
+          <caret line="14" column="47" lean-forward="true" selection-start-line="14" selection-start-column="47" selection-end-line="14" selection-end-column="47" />
+          <folding>
+            <element signature="e#0#37#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train/SRdisp_train.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="133">
+          <caret line="7" selection-start-line="7" selection-end-line="7" />
+          <folding>
+            <element signature="e#0#37#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/evaluation/SR_eval.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="603">
+        <state relative-caret-position="1178">
           <caret line="62" column="50" selection-start-line="62" selection-start-column="50" selection-end-line="62" selection-end-column="50" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
@@ -1961,27 +1977,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/evaluation/SRdisp_eval.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="42" column="26" selection-start-line="42" selection-start-column="26" selection-end-line="42" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/train/SRdisp_train.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="366">
-          <caret line="24" column="57" selection-start-line="24" selection-start-column="57" selection-end-line="24" selection-end-column="62" />
+        <state relative-caret-position="437">
+          <caret line="23" column="39" selection-start-line="23" selection-start-column="39" selection-end-line="23" selection-end-column="39" />
           <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/train/SR_train.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="23" column="92" lean-forward="true" selection-start-line="23" selection-start-column="92" selection-end-line="23" selection-end-column="92" />
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
+            <element signature="e#0#12#0" expanded="true" />
           </folding>
         </state>
       </provider>
