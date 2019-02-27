@@ -5,7 +5,6 @@ from models import SR
 from evaluation import SRdisp_eval
 from utils import myUtils
 from train.Train import Train as Base
-from models.SR.warp import warp
 
 
 class Train(Base):
@@ -28,7 +27,6 @@ class Train(Base):
             losses, _ = self.model.train(batch, output=False)
 
         lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
-
         return lossesPairs
 
 

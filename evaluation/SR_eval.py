@@ -8,37 +8,23 @@ from evaluation.Evaluation import Evaluation as Base
 
 # Evaluation for any stereo model including SR-Stereo
 class Evaluation(Base):
-    def __init__(self, testImgLoader, mode='both', evalFcn='l1', ndisLog=1):
+    def __init__(self, testImgLoader, evalFcn='l1', ndisLog=1):
         super(Evaluation, self).__init__(testImgLoader, evalFcn, ndisLog)
-        self.mode = myUtils.assertMode(testImgLoader.kitti, mode)
 
     def _evalIt(self, batch, log):
-        batch = batch[0:2] + batch[4:6]
-        if self.mode == 'left':
-            batch[1] = None
-            batch[3] = None
-        if self.mode == 'right':
-            batch[0] = None
-            batch[2] = None
 
-        scores = []
-        for input, gt, suffix in zip(batch[2:4], batch[0:2], ('L', 'R')):
-            if input is None or gt is None:
-                scores.append(None)
-                continue
-            if log:
-                score, output = self.model.test(input, gt, type=self.evalFcn)
-                imgs = [input, gt, output]
+        if log:
+            scores, outputs = self.model.test(batch, type=self.evalFcn, returnOutputs=True)
+            imgs = batch[4:6] + batch[0:2] + outputs
 
-                # save Tensorboard logs to where checkpoint is.
-                self.tensorboardLogger.set(self.model.logFolder)
-                for name, im in zip(('input', 'gt', 'output'), imgs):
-                    self.tensorboardLogger.logFirstNIms('testImages/' + name + suffix, im, 1,
-                                                       global_step=1, n=self.ndisLog)
-            else:
-                score, _ = self.model.test(input, gt, type=self.evalFcn)
-
-            scores.append(score)
+            # save Tensorboard logs to where checkpoint is.
+            self.tensorboardLogger.set(self.model.logFolder)
+            for imsSide, side in zip((imgs[0::2], imgs[1::2]), ('L', 'R')):
+                for name, im in zip(('input', 'gt', 'output'), imsSide):
+                    self.tensorboardLogger.logFirstNIms('testImages/' + name + side, im, 1,
+                                                        global_step=1, n=self.ndisLog)
+        else:
+            scores, _ = self.model.test(batch, type=self.evalFcn, returnOutputs=False)
 
         scoresPairs = myUtils.NameValues(('L', 'R'), scores, prefix=self.evalFcn)
         return scoresPairs
@@ -74,7 +60,7 @@ def main():
         sr.load(args.loadmodel)
 
     # Test
-    test = Evaluation(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn,
+    test = Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
                       ndisLog=args.ndis_log)
     test(model=sr)
     test.log()

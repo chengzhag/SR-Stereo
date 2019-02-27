@@ -13,7 +13,6 @@ class Train(Base):
 
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
-
         if log:
             losses, outputs = self.model.train(batch, output=True)
             imgs = batch[4:6] + batch[0:2] + outputs
@@ -22,7 +21,7 @@ class Train(Base):
             self.tensorboardLogger.set(self.model.logFolder)
             for imsSide, side in zip((imgs[0::2], imgs[1::2]), ('L', 'R')):
                 for name, im in zip(('input', 'gt', 'output'), imsSide):
-                    self.tensorboardLogger.logFirstNIms('testImages/' + name + side, im, 1,
+                    self.tensorboardLogger.logFirstNIms('trainImages/' + name + side, im, 1,
                                                         global_step=self.global_step, n=self.ndisLog)
         else:
             losses, _ = self.model.train(batch, output=False)

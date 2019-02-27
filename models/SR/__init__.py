@@ -63,21 +63,32 @@ class SR(Model):
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
-    def predict(self, imgL):
+    def predict(self, batch, mask=(1,1)):
+        outputs = []
+        for input, do in zip(batch[0:2], mask):
+            outputs.append(self.predictOneSide(input) if do else None)
+
+        return tuple(outputs)
+
+    # imgL: RGB value range 0~1
+    # output: RGB value range 0~1
+    def predictOneSide(self, imgL):
         super(SR, self).predictPrepare()
         with torch.no_grad():
             output = P.data_parallel(self.model, imgL * self.args.rgb_range)
             output = myUtils.quantize(output, self.args.rgb_range) / self.args.rgb_range
             return output
 
-    def test(self, imgL, imgH, type='l1'):
-        if self.cuda:
-            imgL, imgH = imgL.cuda(), imgH.cuda()
+    def test(self, batch, type='l1', returnOutputs=False):
+        scores = []
+        outputs = self.predict(batch[4:8], mask=[gt is not None for gt in batch[0:2]])
+        for gt, output in zip(batch[0:2], outputs):
+            if output is not None:
+                scores.append(evalFcn.getEvalFcn(type)(gt * self.args.rgb_range, output * self.args.rgb_range))
+            else:
+                scores.append(None)
 
-        output = self.predict(imgL)
-        score = evalFcn.getEvalFcn(type)(imgH * self.args.rgb_range, output * self.args.rgb_range)
-
-        return score, output
+        return scores, list(outputs)
 
     def load(self, checkpointDir):
         super(SR, self).load(checkpointDir)
@@ -127,9 +138,10 @@ class SRdisp(SR):
     def initModel(self):
         super(SRdisp, self).initModel()
 
-    def preProcess(self, inputL, inputR, dispL, dispR):
+    def preProcess(self, batch):
+        inputL, inputR, dispL, dispR = batch
         with torch.no_grad():
-            warpToL, warpToR, maskL, maskR = warp(inputL, inputR, dispL, dispR)
+            warpToL, warpToR, maskL, maskR = warp(*batch)
 
             inputs = []
             for input in zip((inputL, inputR), (warpToL, warpToR), (maskL, maskR)):
@@ -144,31 +156,13 @@ class SRdisp(SR):
 
     def train(self, batch, output=False):
         batch = batch[:]
-        batch[4:6] = self.preProcess(*batch[4:8])
+        batch[4:6] = self.preProcess(batch[4:8])
         return super(SRdisp, self).train(batch, output)
-
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
     def predict(self, batch, mask=(1,1)):
-        inputs = self.preProcess(*batch)
-        outputs = []
-        for input, do in zip(inputs, mask):
-            outputs.append(super(SRdisp, self).predict(input) if do else None)
-
-        return tuple(outputs)
-
-    def test(self, batch, type='l1', output=False):
-        scores = []
-        outputs = []
-        predicts = self.predict(batch[4:8], mask=[gt is not None for gt in batch[0:2]])
-        for gt, predict in zip(batch[0:2], predicts):
-            if predict is not None:
-                scores.append(evalFcn.getEvalFcn(type)(gt * self.args.rgb_range, predict * self.args.rgb_range))
-                outputs.append(predict if output else None)
-            else:
-                outputs.append(None)
-                scores.append(None)
-
-        return scores, outputs
+        batch = batch[:]
+        batch[0:4] = self.preProcess(batch[0:4])
+        return super(SRdisp, self).predict(batch, mask)
 

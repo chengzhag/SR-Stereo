@@ -3,7 +3,6 @@ import os
 from models import SR
 from utils import myUtils
 from evaluation.Evaluation import Evaluation as Base
-from models.SR.warp import warp
 
 
 # Evaluation for any stereo model including SR-Stereo
@@ -14,7 +13,7 @@ class Evaluation(Base):
     def _evalIt(self, batch, log):
 
         if log:
-            scores, outputs = self.model.test(batch, type=self.evalFcn, output=True)
+            scores, outputs = self.model.test(batch, type=self.evalFcn, returnOutputs=True)
             imgs = batch[4:6] + batch[0:2] + outputs
 
             # save Tensorboard logs to where checkpoint is.
@@ -24,7 +23,7 @@ class Evaluation(Base):
                     self.tensorboardLogger.logFirstNIms('testImages/' + name + side, im, 1,
                                                         global_step=1, n=self.ndisLog)
         else:
-            scores, _ = self.model.test(batch, type=self.evalFcn, output=False)
+            scores, _ = self.model.test(batch, type=self.evalFcn, returnOutputs=False)
 
         scoresPairs = myUtils.NameValues(('L', 'R'), scores, prefix=self.evalFcn)
         return scoresPairs
