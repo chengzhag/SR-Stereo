@@ -134,12 +134,12 @@ class SRdisp(SR):
             return inputs
     # imgL: RGB value range 0~1
     # imgH: RGB value range 0~1
-    def train(self, inputL, inputR, dispL, dispR, gtL=None, gtR=None, output=False):
-        inputs = self._preProcess(inputL, inputR, dispL, dispR)
+    def train(self, batch, output=False):
+        inputs = self._preProcess(*batch[4:8])
 
         losses = []
         outputs = []
-        for input, gt in zip(inputs, (gtL, gtR)):
+        for input, gt in zip(inputs, batch[0:2]):
             loss, predict = super(SRdisp, self).train(input, gt) if gt is not None else (None, None)
             losses.append(loss)
             outputs.append(myUtils.quantize(predict, 1) if output and predict is not None else None)
@@ -148,25 +148,19 @@ class SRdisp(SR):
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
-    def predict(self, inputL, inputR, dispL, dispR, mask=(1,1)):
-        inputs = self._preProcess(inputL, inputR, dispL, dispR)
+    def predict(self, batch, mask=(1,1)):
+        inputs = self._preProcess(*batch)
         outputs = []
         for input, do in zip(inputs, mask):
             outputs.append(super(SRdisp, self).predict(input) if do else None)
 
         return tuple(outputs)
 
-    def test(self, inputL, inputR, dispL, dispR, gtL=None, gtR=None, type='l1', output=False):
-        if self.cuda:
-            inputL, inputR = inputL.cuda(), inputR.cuda()
-            dispL, dispR = dispL.cuda(), dispR.cuda()
-            gtL = gtL.cuda() if gtL is not None else None
-            gtR = gtR.cuda() if gtR is not None else None
-
+    def test(self, batch, type='l1', output=False):
         scores = []
         outputs = []
-        predicts = self.predict(inputL, inputR, dispL, dispR, mask=[gt is not None for gt in (gtL, gtR)])
-        for gt, predict in zip((gtL, gtR), predicts):
+        predicts = self.predict(batch[4:8], mask=[gt is not None for gt in batch[0:2]])
+        for gt, predict in zip(batch[0:2], predicts):
             if predict is not None:
                 scores.append(evalFcn.getEvalFcn(type)(gt * self.args.rgb_range, predict * self.args.rgb_range))
                 outputs.append(predict if output else None)

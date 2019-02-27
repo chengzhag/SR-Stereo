@@ -14,19 +14,18 @@ class Train(Base):
 
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
-        inputs = batch[4:8] + batch[0:2]
         if log:
-            losses, outputs = self.model.train(*inputs, output=True)
-            imgs = inputs + outputs
+            losses, outputs = self.model.train(batch, output=True)
+            imgs = batch[4:6] + batch[0:2] + outputs
 
             # save Tensorboard logs to where checkpoint is.
             self.tensorboardLogger.set(self.model.logFolder)
             for imsSide, side in zip((imgs[0::2], imgs[1::2]), ('L', 'R')):
-                for name, im in zip(('input', 'dis', 'gt', 'output'), imsSide):
-                    self.tensorboardLogger.logFirstNIms('testImages/' + name + side, im, 1,
+                for name, im in zip(('input', 'gt', 'output'), imsSide):
+                    self.tensorboardLogger.logFirstNIms('trainImages/' + name + side, im, 1,
                                                         global_step=self.global_step, n=self.ndisLog)
         else:
-            losses, _ = self.model.train(*inputs, output=False)
+            losses, _ = self.model.train(batch, output=False)
 
         lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
 

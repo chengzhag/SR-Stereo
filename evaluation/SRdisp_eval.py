@@ -12,20 +12,19 @@ class Evaluation(Base):
         super(Evaluation, self).__init__(testImgLoader, evalFcn, ndisLog)
 
     def _evalIt(self, batch, log):
-        inputs = batch[4:8] + batch[0:2]
 
         if log:
-            scores, outputs = self.model.test(*inputs, type=self.evalFcn, output=True)
-            imgs = inputs + outputs
+            scores, outputs = self.model.test(batch, type=self.evalFcn, output=True)
+            imgs = batch[4:6] + batch[0:2] + outputs
 
             # save Tensorboard logs to where checkpoint is.
             self.tensorboardLogger.set(self.model.logFolder)
             for imsSide, side in zip((imgs[0::2], imgs[1::2]), ('L', 'R')):
-                for name, im in zip(('input', 'dis', 'gt', 'output'), imsSide):
+                for name, im in zip(('input', 'gt', 'output'), imsSide):
                     self.tensorboardLogger.logFirstNIms('testImages/' + name + side, im, 1,
                                                         global_step=1, n=self.ndisLog)
         else:
-            scores, _ = self.model.test(*inputs, type=self.evalFcn, output=False)
+            scores, _ = self.model.test(batch, type=self.evalFcn, output=False)
 
         scoresPairs = myUtils.NameValues(('L', 'R'), scores, prefix=self.evalFcn)
         return scoresPairs
