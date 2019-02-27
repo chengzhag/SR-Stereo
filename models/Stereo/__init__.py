@@ -28,8 +28,8 @@ class Stereo(Model):
 
     def trainPrepare(self, batch=()):
         batch = super(Stereo, self).trainPrepare(batch)
-        batch[2::4] = [disp / self.dispScale if disp is not None else None for disp in batch[2::4]]
-        batch[3::4] = [disp / self.dispScale if disp is not None else None for disp in batch[3::4]]
+        if len(batch) != 0:
+            batch.allDisps([disp / self.dispScale if disp is not None else None for disp in batch.allDisps()])
         return batch
 
     def predictPrepare(self, batch=()):
@@ -41,13 +41,13 @@ class Stereo(Model):
         super(Stereo, self).predict(batch)
 
     def test(self, batch, type='l1', returnOutputs=False, kitti=False):
-        disps = batch[-2:]
+        disps = batch.lowestResDisps()
         myUtils.assertDisp(*disps)
 
         # for kitti dataset, only consider loss of none zero disparity pixels in gt
         scores = []
         outputs = []
-        dispOuts = self.predict(batch[-4:], [disp is not None for disp in disps])
+        dispOuts = self.predict(batch.lastScaleBatch(), [disp is not None for disp in disps])
         for gt, dispOut in zip(disps, dispOuts):
             if dispOut is not None:
                 if dispOut.dim() == 3:
@@ -151,10 +151,10 @@ class PSMNet(Stereo):
     def predict(self, batch, mask=(1, 1)):
         myUtils.assertBatchLen(batch, 4)
         batch, autoPad = super(PSMNet, self).predictPrepare(batch)
-        imgL, imgR = batch[-4:-2]
+        imgs = batch.lowestResRGBs()
 
         with torch.no_grad():
-            imgL, imgR = autoPad.pad(imgL, self.cuda), autoPad.pad(imgR, self.cuda)
+            imgL, imgR = autoPad.pad(imgs)
             outputs = []
             for inputL, inputR, process, do in zip((imgL, imgR), (imgR, imgL),
                                                    (lambda im: im, myUtils.flipLR), mask):
@@ -214,10 +214,10 @@ class PSMNet_TieCheng(Stereo):
 
     def predict(self, batch, mask=(1, 1)):
         batch, autoPad = super(PSMNet_TieCheng, self).predictPrepare(batch)
-        imgL, imgR = batch[-4:-2]
+        inputs = batch.lowestResRGBs()
 
         with torch.no_grad():
-            imgL, imgR = autoPad.pad(imgL, self.cuda), autoPad.pad(imgR, self.cuda)
+            imgL, imgR = autoPad.pad(inputs)
             outputs = self.model(imgL, imgR)
             outputs = autoPad.unpad(outputs)
             return tuple(outputs)

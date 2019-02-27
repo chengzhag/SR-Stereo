@@ -14,8 +14,8 @@ class Evaluation(Base):
     def _evalIt(self, batch, log):
 
         if log:
-            scores, outputs = self.model.test(batch, type=self.evalFcn, returnOutputs=True)
-            imgs = batch[4:6] + batch[0:2] + outputs
+            scores, outputs = self.model.test(batch.deattach(), type=self.evalFcn, returnOutputs=True)
+            imgs = batch.lowResRGBs() + batch.highResRGBs() + outputs
 
             # save Tensorboard logs to where checkpoint is.
             self.tensorboardLogger.set(self.model.logFolder)

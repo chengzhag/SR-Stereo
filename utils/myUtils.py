@@ -60,12 +60,12 @@ class AutoPad:
         self.HPad = ((self.H - 1) // multiple + 1) * multiple
         self.WPad = ((self.W - 1) // multiple + 1) * multiple
 
-    def pad(self, imgs, cuda):
+    def pad(self, imgs):
         if type(imgs) in (list, tuple):
             imgsPad = [self.pad(im) for im in imgs]
         else:
             imgsPad = torch.zeros([self.N, self.C, self.HPad, self.WPad], dtype=imgs.dtype,
-                                  device='cuda' if cuda else 'cpu')
+                                  device=imgs.device.type)
             imgsPad[:, :, (self.HPad - self.H):, (self.WPad - self.W):] = imgs
         return imgsPad
 
@@ -117,7 +117,7 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
     parser = argparse.ArgumentParser(description=description)
 
     addParams = {'outputFolder': lambda: parser.add_argument('--outputFolder', type=str, default=None,
-                                                      help='output checkpoints and logs to foleder logs/outputFolder'),
+                                                             help='output checkpoints and logs to foleder logs/outputFolder'),
                  'maxdisp': lambda: parser.add_argument('--maxdisp', type=int, default=192,
                                                         help='maxium disparity of dataset (before scaling)'),
                  'dispscale': lambda: parser.add_argument('--dispscale', type=float, default=1,
@@ -164,8 +164,8 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                  'half': lambda: parser.add_argument('--half', action='store_true', default=False,
                                                      help='enables half precision'),
                  # SRdisp specified param
-                 'withMask': lambda:  parser.add_argument('--withMask', action='store_true', default=False,
-                                                     help='input 7 channels with mask to SRdisp instead of 6'),
+                 'withMask': lambda: parser.add_argument('--withMask', action='store_true', default=False,
+                                                         help='input 7 channels with mask to SRdisp instead of 6'),
                  }
 
     if len(includeKeys):
@@ -197,15 +197,18 @@ def adjustLearningRate(optimizer, epoch, lr):
         param_group['lr'] = lr
     return lr
 
+
 def assertBatchLen(batch, length):
-    if type(batch) not in (list, tuple):
-        raise Exception('Error: batch must be list or tuple!')
+    if type(batch) is not Batch:
+        raise Exception('Error: batch must be class Batch!')
     elif len(batch) != length:
         raise Exception(f'Error: input batch with length {len(batch)} doesnot match required {length}!')
+
 
 def quantize(img, rgb_range):
     pixel_range = 255 / rgb_range
     return img.mul(pixel_range).clamp(0, 255).round().div(pixel_range)
+
 
 class TensorboardLogger:
     def __init__(self):
@@ -231,3 +234,79 @@ class TensorboardLogger:
         logFirstNIms(self.writer, name, im, range, global_step, n)
 
 
+class Batch:
+    def __init__(self, batch, cuda=None, half=None):
+        if type(batch) not in (list, tuple, Batch):
+            raise Exception('Error: batch must be class list, tuple or Batch!')
+        if len(batch) % 4 != 0:
+            raise Exception(f'Error: input batch with length {len(batch)} doesnot match required 4n!')
+
+        if type(batch) in (list, tuple):
+            self.batch = batch[:]  # deattach with initial list
+        elif type(batch) is Batch:
+            self.batch = batch.batch[:]
+
+        if cuda is not None:
+            self.batch = [(im.half() if half else im) if im.numel() else None for im in self.batch]
+        if half is not None:
+            self.batch = [(im.cuda() if cuda else im) if im is not None else None for im in self.batch]
+
+    def __len__(self):
+        return len(self.batch)
+
+    def __getitem__(self, item):
+        return self.batch[item]
+
+    def __setitem__(self, key, value):
+        self.batch[key] = value
+
+    def deattach(self):
+        return Batch(self)
+
+    def lastScaleBatch(self):
+        return Batch(self.batch[-4:])
+
+    def firstScaleBatch(self):
+        return Batch(self.batch[:4])
+
+    def highResRGBs(self, set=None):
+        if set is not None:
+            self.batch[0:2] = set
+        return self.batch[0:2]
+
+    def highResDisps(self, set=None):
+        if set is not None:
+            self.batch[2:4] = set
+        return self.batch[2:4]
+
+    def lowResRGBs(self, set=None):
+        if set is not None:
+            self.batch[4:6] = set
+        return self.batch[4:6]
+
+    def lowResDisps(self, set=None):
+        if set is not None:
+            self.batch[6:8] = set
+        return self.batch[6:8]
+
+    def lowestResRGBs(self, set=None):
+        if set is not None:
+            self.batch[-4:-2] = set
+        return self.batch[-4:-2]
+
+    def lowestResDisps(self, set=None):
+        if set is not None:
+            self.batch[-2:] = set
+        return self.batch[-2:]
+
+    def allRGBs(self, set=None):
+        if set is not None:
+            self.batch[0::4] = set[:len(set) // 2]
+            self.batch[1::4] = set[len(set) // 2:]
+        return self.batch[0::4] + self.batch[1::4]
+
+    def allDisps(self, set=None):
+        if set is not None:
+            self.batch[2::4] = set[:len(set) // 2]
+            self.batch[3::4] = set[len(set) // 2:]
+        return self.batch[2::4] + self.batch[3::4]

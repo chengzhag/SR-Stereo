@@ -40,21 +40,16 @@ class Model:
         # When training, log files should be saved to saveFolder.
         self.logFolder = os.path.join(self.saveFolder, 'logs')
         self.model.train()
-        if self.cuda:
-            batch = [im.cuda() if im is not None else None for im in batch]
-        if self.half:
-            batch = [im.half() if im is not None else None for im in batch]
         return batch
+
+    def loss(self, outputs, gts, weights=(1,)):
+        raise Exception('Error: please overtide \'Model.loss()\' without calling it!')
 
     def train(self, batch):
         raise Exception('Error: please overtide \'Model.train()\' without calling it!')
 
     def predictPrepare(self, batch=()):
         self.model.eval()
-        if self.cuda:
-            batch = [im.cuda() if im is not None else None for im in batch]
-        if self.half:
-            batch = [im.half() if im is not None else None for im in batch]
         return batch
 
     def predict(self, batch):

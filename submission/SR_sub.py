@@ -13,7 +13,8 @@ class Submission(Base):
 
     def _subIt(self, batch):
         outputs = collections.OrderedDict()
-        inputs = batch[4:6]
+        inputs = batch.lowResRGBs()
+        gts = batch.highResRGBs()
 
         def preprocess(im):
             output = im.squeeze()
@@ -27,8 +28,8 @@ class Submission(Base):
                 output = self.model.predict(inputs[i])
                 outputs['output' + suffix] = preprocess(output)
                 outputs['input' + suffix] = preprocess(inputs[i])
-            if batch[i] is not None:
-                outputs['gt' + suffix] = preprocess(batch[i])
+            if gts[i] is not None:
+                outputs['gt' + suffix] = preprocess(gts[i])
 
         return outputs
 

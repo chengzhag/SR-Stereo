@@ -16,11 +16,11 @@ class Train(Base):
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
         if log:
-            losses, outputs = self.model.train(batch, output=True, kitti=self.trainImgLoader.kitti)
+            losses, outputs = self.model.train(batch.deattach(), output=True, kitti=self.trainImgLoader.kitti)
 
             # save Tensorboard logs to where checkpoint is.
             self.tensorboardLogger.set(self.model.logFolder)
-            for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), batch[2:4] + outputs):
+            for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), batch.lowestResDisps() + outputs):
                 self.tensorboardLogger.logFirstNIms('trainImages/' + name, disp, self.model.maxdisp,
                                                     global_step=self.global_step, n=self.ndisLog)
         else:

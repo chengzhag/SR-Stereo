@@ -14,8 +14,8 @@ class Train(Base):
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
         if log:
-            losses, outputs = self.model.train(batch, output=True)
-            imgs = batch[4:6] + batch[0:2] + outputs
+            losses, outputs = self.model.train(batch.deattach(), output=True)
+            imgs = batch.lowResRGBs() + batch.highResRGBs() + outputs
 
             # save Tensorboard logs to where checkpoint is.
             self.tensorboardLogger.set(self.model.logFolder)

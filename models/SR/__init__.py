@@ -40,7 +40,7 @@ class SR(Model):
     def train(self, batch, output=False):
         losses = []
         outputs = []
-        for input, gt in zip(batch[4:6], batch[0:2]):
+        for input, gt in zip(batch.lowResRGBs(), batch.highResRGBs()):
             loss, predict = self.trainOneSide(input, gt) if gt is not None else (None, None)
             losses.append(loss)
             outputs.append(myUtils.quantize(predict, 1) if output and predict is not None else None)
@@ -66,7 +66,7 @@ class SR(Model):
     def predict(self, batch, mask=(1,1)):
         myUtils.assertBatchLen(batch, 4)
         outputs = []
-        for input, do in zip(batch[0:2], mask):
+        for input, do in zip(batch.highResRGBs(), mask):
             outputs.append(self.predictOneSide(input) if do else None)
 
         return tuple(outputs)
@@ -83,8 +83,8 @@ class SR(Model):
     def test(self, batch, type='l1', returnOutputs=False):
         myUtils.assertBatchLen(batch, 8)
         scores = []
-        outputs = self.predict(batch[-4:], mask=[gt is not None for gt in batch[0:2]])
-        for gt, output in zip(batch[0:2], outputs):
+        outputs = self.predict(batch.lastScaleBatch(), mask=[gt is not None for gt in batch.highResRGBs()])
+        for gt, output in zip(batch.highResRGBs(), outputs):
             if output is not None:
                 scores.append(evalFcn.getEvalFcn(type)(gt * self.args.rgb_range, output * self.args.rgb_range))
             else:
@@ -140,7 +140,6 @@ class SRdisp(SR):
         super(SRdisp, self).initModel()
 
     def warpAndCat(self, batch):
-        myUtils.assertBatchLen(batch, 4)
         inputL, inputR, dispL, dispR = batch
         with torch.no_grad():
             warpToL, warpToR, maskL, maskR = warp(*batch)
@@ -158,15 +157,13 @@ class SRdisp(SR):
 
     def train(self, batch, output=False):
         myUtils.assertBatchLen(batch, 8)
-        batch = batch[:]
-        batch[4:6] = self.warpAndCat(batch[4:8])
+        batch.lowResRGBs(self.warpAndCat(batch.lastScaleBatch()))
         return super(SRdisp, self).train(batch, output)
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
     def predict(self, batch, mask=(1,1)):
         myUtils.assertBatchLen(batch, 4)
-        batch = batch[:]
-        batch[0:2] = self.warpAndCat(batch[0:4])
+        batch.highResRGBs(self.warpAndCat(batch.firstScaleBatch()))
         return super(SRdisp, self).predict(batch, mask)
 

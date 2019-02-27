@@ -18,11 +18,11 @@ class Submission(Base):
             dispOut = (dispOut * 256).astype('uint16')
             return dispOut
 
-        dispOut = self.model.predict(*batch[0:2], mode='left')
+        dispOut = self.model.predict(*batch.deattach().lowResRGBs(), mode='left')
 
         outputs = collections.OrderedDict()
         outputs['dispOutL'] = preprocess(dispOut)
-        outputs['gtL'] = preprocess(batch[2])
+        outputs['gtL'] = preprocess(batch.highResDisps()[0])
         return outputs
 
 

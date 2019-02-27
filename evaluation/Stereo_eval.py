@@ -12,13 +12,13 @@ class Evaluation(Base):
         super(Evaluation, self).__init__(testImgLoader, evalFcn, ndisLog)
 
     def _evalIt(self, batch, log):
-        if len(batch) > 4:
+        if len(batch) == 8:
             # use large scale for input and small scale for gt
-            batch = batch[0:2] + batch[6:8]
+            batch = batch.highResRGBs() + batch.lowResDisps()
 
         if log:
-            scores, outputs = self.model.test(batch, type=self.evalFcn, returnOutputs=True, kitti=self.testImgLoader.kitti)
-            imgs = batch[-2:] + outputs
+            scores, outputs = self.model.test(batch.deattach(), type=self.evalFcn, returnOutputs=True, kitti=self.testImgLoader.kitti)
+            imgs = batch.lowestResDisps() + outputs
 
             # save Tensorboard logs to where checkpoint is.
             self.tensorboardLogger.set(self.model.logFolder)
