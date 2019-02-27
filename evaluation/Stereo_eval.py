@@ -8,16 +8,13 @@ from evaluation.Evaluation import Evaluation as Base
 
 # Evaluation for any stereo model including SR-Stereo
 class Evaluation(Base):
-    def __init__(self, testImgLoader, mode='both', evalFcn='outlier', ndisLog=1):
+    def __init__(self, testImgLoader, evalFcn='outlier', ndisLog=1):
         super(Evaluation, self).__init__(testImgLoader, evalFcn, ndisLog)
-        self.mode = myUtils.assertMode(testImgLoader.kitti, mode)
 
     def _evalIt(self, batch, log):
         if len(batch) > 4:
             # use large scale for input and small scale for gt
             batch = batch[0:2] + batch[6:8]
-        if self.mode == 'left': batch[3] = None
-        if self.mode == 'right': batch[2] = None
 
         if log:
             scores, outputs = self.model.test(*batch, type=self.evalFcn, returnOutputs=True, kitti=self.testImgLoader.kitti)
@@ -62,7 +59,7 @@ def main():
         stereo.load(args.loadmodel)
 
     # Test
-    test = Evaluation(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn,
+    test = Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
                       ndisLog=args.ndis_log)
     test(model=stereo)
     test.log()
