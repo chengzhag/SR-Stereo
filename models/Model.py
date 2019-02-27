@@ -46,6 +46,8 @@ class Model:
             batch = [im.half() if im is not None else None for im in batch]
         return batch
 
+    def train(self, batch):
+        raise Exception('Error: please overtide \'Model.train()\' without calling it!')
 
     def predictPrepare(self, batch=()):
         self.model.eval()
@@ -54,6 +56,9 @@ class Model:
         if self.half:
             batch = [im.half() if im is not None else None for im in batch]
         return batch
+
+    def predict(self, batch):
+        raise Exception('Error: please overtide \'Model.predict()\' without calling it!')
 
     def load(self, checkpointDir):
         if checkpointDir is not None:

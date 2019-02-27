@@ -37,8 +37,8 @@ class Stereo(Model):
         autoPad = myUtils.AutoPad(batch[0], self.multiple)
         return batch, autoPad
 
-    def predict(self, batch, mask):
-        pass
+    def predict(self, batch, mask=(1, 1)):
+        super(Stereo, self).predict(batch)
 
     def test(self, batch, type='l1', returnOutputs=False, kitti=False):
         disps = batch[-2:]
@@ -130,6 +130,7 @@ class PSMNet(Stereo):
         return loss.data.item(), output3 if output else None
 
     def train(self, batch, output=False, kitti=False):
+        myUtils.assertBatchLen(batch, 4)
         imgL, imgR, dispL, dispR = super(PSMNet, self).trainPrepare(batch)
 
         losses = []
@@ -148,6 +149,7 @@ class PSMNet(Stereo):
         return losses, outputs
 
     def predict(self, batch, mask=(1, 1)):
+        myUtils.assertBatchLen(batch, 4)
         batch, autoPad = super(PSMNet, self).predictPrepare(batch)
         imgL, imgR = batch[-4:-2]
 
@@ -193,10 +195,8 @@ class PSMNetDown(PSMNet):
             self.down = nn.DataParallel(self.down)
             self.down.cuda()
 
-    def train(self, batch, output=False, kitti=False):
-        raise Exception('Error: fcn train() not completed yet!')
-
     def predict(self, batch, mask=(1, 1)):
+        myUtils.assertBatchLen(batch, 4)
         outputs = super(PSMNetDown, self).predict(batch, mask)
         downsampled = []
         for output in outputs:
@@ -211,9 +211,6 @@ class PSMNet_TieCheng(Stereo):
                  saveFolderSuffix=''):
         super(PSMNet_TieCheng, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet_TieCheng
-
-    def train(self, batch, output=False, kitti=False):
-        raise Exception('Fcn \'train\' not done yet...')
 
     def predict(self, batch, mask=(1, 1)):
         batch, autoPad = super(PSMNet_TieCheng, self).predictPrepare(batch)

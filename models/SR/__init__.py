@@ -64,6 +64,7 @@ class SR(Model):
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
     def predict(self, batch, mask=(1,1)):
+        myUtils.assertBatchLen(batch, 4)
         outputs = []
         for input, do in zip(batch[0:2], mask):
             outputs.append(self.predictOneSide(input) if do else None)
@@ -80,8 +81,9 @@ class SR(Model):
             return output
 
     def test(self, batch, type='l1', returnOutputs=False):
+        myUtils.assertBatchLen(batch, 8)
         scores = []
-        outputs = self.predict(batch[4:8], mask=[gt is not None for gt in batch[0:2]])
+        outputs = self.predict(batch[-4:], mask=[gt is not None for gt in batch[0:2]])
         for gt, output in zip(batch[0:2], outputs):
             if output is not None:
                 scores.append(evalFcn.getEvalFcn(type)(gt * self.args.rgb_range, output * self.args.rgb_range))
@@ -137,7 +139,8 @@ class SRdisp(SR):
     def initModel(self):
         super(SRdisp, self).initModel()
 
-    def preProcess(self, batch):
+    def warpAndCat(self, batch):
+        myUtils.assertBatchLen(batch, 4)
         inputL, inputR, dispL, dispR = batch
         with torch.no_grad():
             warpToL, warpToR, maskL, maskR = warp(*batch)
@@ -154,14 +157,16 @@ class SRdisp(SR):
             return inputs
 
     def train(self, batch, output=False):
+        myUtils.assertBatchLen(batch, 8)
         batch = batch[:]
-        batch[4:6] = self.preProcess(batch[4:8])
+        batch[4:6] = self.warpAndCat(batch[4:8])
         return super(SRdisp, self).train(batch, output)
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
     def predict(self, batch, mask=(1,1)):
+        myUtils.assertBatchLen(batch, 4)
         batch = batch[:]
-        batch[0:4] = self.preProcess(batch[0:4])
+        batch[0:2] = self.warpAndCat(batch[0:4])
         return super(SRdisp, self).predict(batch, mask)
 

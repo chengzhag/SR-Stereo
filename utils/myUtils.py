@@ -197,17 +197,11 @@ def adjustLearningRate(optimizer, epoch, lr):
         param_group['lr'] = lr
     return lr
 
-
-def assertMode(kitti, mode):
-    if kitti:
-        print(
-            'Using dataset KITTI. Evaluation will exclude zero disparity pixels. And only left disparity map will be considered.')
-        return 'left'
-    else:
-        if mode not in ('left', 'right', 'both'):
-            raise Exception('No mode \'%s!\'' % mode)
-        return mode
-
+def assertBatchLen(batch, length):
+    if type(batch) not in (list, tuple):
+        raise Exception('Error: batch must be list or tuple!')
+    elif len(batch) != length:
+        raise Exception(f'Error: input batch with length {len(batch)} doesnot match required {length}!')
 
 def quantize(img, rgb_range):
     pixel_range = 255 / rgb_range
