@@ -52,7 +52,6 @@ def main():
                                                 batchSizes=(0, args.batchsize_test),
                                                 loadScale=(args.load_scale[0], args.load_scale[0] / 2),
                                                 mode='testing',
-                                                preprocess=False,
                                                 mask=mask)
 
     # Load model

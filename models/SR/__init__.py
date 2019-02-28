@@ -39,6 +39,8 @@ class SR(Model):
     # imgL: RGB value range 0~1
     # imgH: RGB value range 0~1
     def train(self, batch, returnOutputs=False):
+        batch = self.trainPrepare(batch)
+
         losses = myUtils.NameValues()
         outputs = collections.OrderedDict()
         for input, gt, side in zip(batch.lowResRGBs(), batch.highResRGBs(), ('L', 'R')):
@@ -50,8 +52,6 @@ class SR(Model):
         return losses, outputs
 
     def trainOneSide(self, imgL, imgH):
-        super(SR, self).trainPrepare()
-
         if self.cuda:
             imgL, imgH = imgL.cuda(), imgH.cuda()
         self.optimizer.zero_grad()
@@ -66,6 +66,7 @@ class SR(Model):
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
     def predict(self, batch, mask=(1,1)):
+        batch = self.predictPrepare(batch)
         myUtils.assertBatchLen(batch, 4)
         outputs = []
         for input, do in zip(batch.highResRGBs(), mask):
@@ -76,7 +77,6 @@ class SR(Model):
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
     def predictOneSide(self, imgL):
-        super(SR, self).predictPrepare()
         with torch.no_grad():
             output = P.data_parallel(self.model, imgL * self.args.rgb_range)
             output = myUtils.quantize(output, self.args.rgb_range) / self.args.rgb_range

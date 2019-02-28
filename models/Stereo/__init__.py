@@ -11,6 +11,7 @@ from .PSMNet_TieCheng import stackhourglass as getPSMNet_TieCheng
 from ..Model import Model
 from .. import SR
 import collections
+from utils import preprocess
 
 
 class Stereo(Model):
@@ -27,7 +28,7 @@ class Stereo(Model):
         super(Stereo, self).__init__(cuda, half, stage, dataset, saveFolderSuffix)
         self.maxdisp = maxdisp
         self.dispScale = dispScale
-        self.outputMaxDisp = maxdisp * dispScale # final output value range of disparity map
+        self.outputMaxDisp = maxdisp * dispScale  # final output value range of disparity map
 
     def initModel(self):
         self.model = self.getModel(self.maxdisp)
@@ -36,13 +37,13 @@ class Stereo(Model):
             self.model = nn.DataParallel(self.model)
             self.model.cuda()
 
-    def trainPrepare(self, batch=()):
+    def trainPrepare(self, batch):
         batch = super(Stereo, self).trainPrepare(batch)
         if len(batch) != 0:
             batch.allDisps([disp / self.dispScale if disp is not None else None for disp in batch.allDisps()])
         return batch
 
-    def predictPrepare(self, batch=()):
+    def predictPrepare(self, batch):
         batch = super(Stereo, self).predictPrepare(batch)
         autoPad = myUtils.AutoPad(batch[0], self.multiple)
         return batch, autoPad
@@ -119,6 +120,18 @@ class PSMNet(Stereo):
                  saveFolderSuffix=''):
         super(PSMNet, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet
+        self.__imagenet_stats = {'mean': [0.485, 0.456, 0.406],
+                                 'std': [0.229, 0.224, 0.225]}
+
+    def _preprocess(self, batch):
+        def normalize(nTensor):
+            for tensor in nTensor:
+                for t, m, s in zip(tensor, self.__imagenet_stats['mean'], self.__imagenet_stats['std']):
+                    t = (t - m) / s
+            return nTensor
+
+        batch.allRGBs([normalize(im) for im in batch.allRGBs()])
+        return batch
 
     def loss(self, outputs, gts, kitti=False):
         outputs = [output.unsqueeze(1) for output in outputs]
@@ -127,7 +140,7 @@ class PSMNet(Stereo):
         mask.detach_()
         loss = 0.5 * F.smooth_l1_loss(outputs[0][mask], gts[mask], reduction='mean') + 0.7 * F.smooth_l1_loss(
             outputs[1][mask], gts[mask], reduction='mean') + F.smooth_l1_loss(outputs[2][mask], gts[mask],
-                                                                                 reduction='mean')
+                                                                              reduction='mean')
         return loss
 
     def trainOneSide(self, imgL, imgR, gt, returnOutputs=False, kitti=False):
@@ -141,26 +154,36 @@ class PSMNet(Stereo):
 
         return loss.data.item(), outputs[2] if returnOutputs else None
 
+    def trainPrepare(self, batch):
+        batch = super(PSMNet, self).trainPrepare(batch)
+        batch = self._preprocess(batch)
+        return batch
+
     def train(self, batch, returnOutputs=False, kitti=False, weights=()):
         myUtils.assertBatchLen(batch, 4)
-        imgL, imgR, dispL, dispR = super(PSMNet, self).trainPrepare(batch)
+        imgL, imgR, dispL, dispR = self.trainPrepare(batch)
 
         losses = myUtils.NameValues()
         outputs = collections.OrderedDict()
         for inputL, inputR, gt, process, side in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
-                                               (lambda im: im, myUtils.flipLR), ('L', 'R')):
+                                                     (lambda im: im, myUtils.flipLR), ('L', 'R')):
             loss, dispOut = self.trainOneSide(
                 process(inputL), process(inputR), process(gt), returnOutputs, kitti
             ) if gt is not None else (None, None)
             losses['loss' + side] = loss
-            outputs['output' + side] = (process(dispOut) * self.dispScale / self.outputMaxDisp).cpu()\
+            outputs['output' + side] = (process(dispOut) * self.dispScale / self.outputMaxDisp).cpu() \
                 if dispOut is not None else None
 
         return losses, outputs
 
+    def predictPrepare(self, batch):
+        batch, autoPad = super(PSMNet, self).predictPrepare(batch)
+        batch = self._preprocess(batch)
+        return batch, autoPad
+
     def predict(self, batch, mask=(1, 1)):
         myUtils.assertBatchLen(batch, 4)
-        batch, autoPad = super(PSMNet, self).predictPrepare(batch)
+        batch, autoPad = self.predictPrepare(batch)
         imgs = batch.lowestResRGBs()
 
         with torch.no_grad():
@@ -228,7 +251,7 @@ class PSMNetDown(PSMNet):
                 rOutput = self.down(outputs[2])
         else:
             rOutput = None
-        losses = [loss,] + losses
+        losses = [loss, ] + losses
         return [loss.data.item() for loss in losses], rOutput
 
     def train(self, batch, returnOutputs=False, kitti=False, weights=(1, 0)):
@@ -239,15 +262,15 @@ class PSMNetDown(PSMNet):
         outputs = collections.OrderedDict()
         imgL, imgR = batch.highResRGBs()
         for inputL, inputR, gts, process, side in zip((imgL, imgR), (imgR, imgL),
-                                               zip(batch.highResDisps(), batch.lowResDisps()),
-                                               (lambda im: im, myUtils.flipLR), ('L', 'R')):
+                                                      zip(batch.highResDisps(), batch.lowResDisps()),
+                                                      (lambda im: im, myUtils.flipLR), ('L', 'R')):
             lossN, dispOut = self.trainOneSide(
                 process(inputL), process(inputR), process(gts), returnOutputs, kitti, weights=weights
             ) if gts is not None else (None, None)
             for i, loss in enumerate(lossN):
                 losses['loss' + side + ('' if i == 0 else str(i))] = loss
 
-            outputs['output' + side] =(process(dispOut) * self.dispScale / self.outputMaxDisp).cpu() \
+            outputs['output' + side] = (process(dispOut) * self.dispScale / self.outputMaxDisp).cpu() \
                 if dispOut is not None else None
 
         return losses, outputs
@@ -266,14 +289,16 @@ class PSMNetDown(PSMNet):
         batch = myUtils.Batch(batch.highResRGBs() + batch.lowestResDisps())
         return super(PSMNetDown, self).test(batch, type, returnOutputs, kitti)
 
+
 class SRStereo(Model):
     # dataset: only used for suffix of saveFolderName
     def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
                  saveFolderSuffix=''):
         super(SRStereo, self).__init__(cuda, half, stage, dataset, saveFolderSuffix)
         self.sr = SR.SR(cuda=cuda, half=half, stage=stage, dataset=dataset, saveFolderSuffix=saveFolderSuffix)
-        self.stereo = PSMNetDown(maxdisp=maxdisp, dispScale=dispScale, cuda=cuda, half=half, stage=stage, dataset=dataset,
-                 saveFolderSuffix=saveFolderSuffix)
+        self.stereo = PSMNetDown(maxdisp=maxdisp, dispScale=dispScale, cuda=cuda, half=half, stage=stage,
+                                 dataset=dataset,
+                                 saveFolderSuffix=saveFolderSuffix)
         self.outputMaxDisp = self.stereo.outputMaxDisp
 
     def initModel(self):
@@ -304,7 +329,6 @@ class SRStereo(Model):
             raise Exception('Error: SRStereo need two checkpoints (SR/Stereo) to load!')
         self.sr.load(checkpointDir[0])
         self.stereo.load(checkpointDir[1])
-
 
 
 class PSMNet_TieCheng(Stereo):

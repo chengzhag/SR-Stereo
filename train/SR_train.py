@@ -55,7 +55,6 @@ def main():
                                                              batchSizes=(args.batchsize_train, args.batchsize_test),
                                                              loadScale=(args.load_scale[0], args.load_scale[0] / 2),
                                                              mode='training',
-                                                             preprocess=False,
                                                              mask=mask)
 
     # Load model

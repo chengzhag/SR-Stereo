@@ -35,7 +35,7 @@ class Model:
     def initModel(self):
         pass
 
-    def trainPrepare(self, batch=()):
+    def trainPrepare(self, batch):
         if self.model is None:
             self.initModel()
         # When training, log files should be saved to saveFolder.
@@ -49,7 +49,7 @@ class Model:
     def train(self, batch):
         raise Exception('Error: please overtide \'Model.train()\' without calling it!')
 
-    def predictPrepare(self, batch=()):
+    def predictPrepare(self, batch):
         self.model.eval()
         return batch
 
