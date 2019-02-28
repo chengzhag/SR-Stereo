@@ -2,24 +2,20 @@ import torch
 import os
 import argparse
 from tensorboardX import SummaryWriter
+import collections
 
-
-class NameValues:
-    def __init__(self, names, values, prefix='', suffix=''):
-        self._pairs = []
-        self._names = []
-        self._values = []
+class NameValues(collections.OrderedDict):
+    def __init__(self, names=(), values=(), prefix='', suffix=''):
+        super(NameValues, self).__init__()
         for name, value in zip(names, values):
             if value is not None:
-                self._pairs.append((prefix + name + suffix, value))
-                self._names.append(prefix + name + suffix)
-                self._values.append(value)
+                super(NameValues, self).__setitem__(prefix + name + suffix, value)
 
-    def strPrint(self, unit=''):
+    def strPrint(self, unit='', prefix='', suffix=''):
         str = ''
-        for name, value in self._pairs:
-            str += '%s: ' % (name)
-            if hasattr(value, '__iter__'):
+        for name, value in super(NameValues, self).items():
+            str += '%s: ' % (prefix + name + suffix)
+            if type(value) in (list, tuple):
                 for v in value:
                     str += '%.2f%s, ' % (v, unit)
             else:
@@ -27,31 +23,17 @@ class NameValues:
 
         return str
 
-    def strSuffix(self):
+    def strSuffix(self, prefix='', suffix=''):
         str = ''
-        for name, value in self._pairs:
-            str += '_%s' % (name)
-            if hasattr(value, '__iter__'):
+        for name, value in super(NameValues, self).items():
+            str += '_%s' % (prefix + name + suffix)
+            if type(value) in (list, tuple):
                 for v in value:
                     str += '_%.0f' % (v)
             else:
                 str += '_%.0f' % (value)
         return str
 
-    def dic(self):
-        dic = {}
-        for name, value in self._pairs:
-            dic[name] = value
-        return dic
-
-    def pairs(self):
-        return self._pairs
-
-    def values(self):
-        return self._values
-
-    def names(self):
-        return self._names
 
 
 class AutoPad:

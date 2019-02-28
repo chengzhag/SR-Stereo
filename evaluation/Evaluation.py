@@ -15,7 +15,7 @@ class Evaluation:
         self.tensorboardLogger = myUtils.TensorboardLogger() # should be initialized in _evalIt
 
     def _evalIt(self, batch, log):
-        pass
+        return None, None
 
     def __call__(self, model):
         self.model = model
@@ -26,29 +26,38 @@ class Evaluation:
         for batch_idx, batch in enumerate(self.testImgLoader, 1):
             batch = myUtils.Batch(batch, cuda=self.model.cuda, half=self.model.half)
 
-            scoresPairs = self._evalIt(batch, log=(batch_idx == 1))
+            doLog = batch_idx == 1
+            scoresPairs, ims = self._evalIt(batch, log=doLog)
 
             try:
-                totalTestScores = [(total + batch) for total, batch in zip(totalTestScores, scoresPairs.values())]
+                for name in totalTestScores.keys():
+                    totalTestScores[name] += scoresPairs[name]
             except NameError:
-                totalTestScores = scoresPairs.values()
+                totalTestScores = scoresPairs.copy()
 
-            scoresTotalPairs = myUtils.NameValues(scoresPairs.names(),
-                                                  [score / batch_idx for score in totalTestScores],
-                                                  suffix='Total')
+            # save Tensorboard logs to where checkpoint is.
+            if doLog:
+                self.tensorboardLogger.set(self.model.logFolder)
+                for name, im in ims.items():
+                    self.tensorboardLogger.logFirstNIms('testImages/' + name, im, 1,
+                                                        global_step=1, n=self.ndisLog)
 
             timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
 
+            avgTestScores = totalTestScores.copy()
+            for name in avgTestScores.keys():
+                avgTestScores[name] /= batch_idx
+
             print('it %d/%d, %s%sleft %.2fh' % (
                 batch_idx, len(self.testImgLoader),
-                scoresPairs.strPrint(scoreUnit), scoresTotalPairs.strPrint(scoreUnit), timeLeft))
+                scoresPairs.strPrint(scoreUnit), avgTestScores.strPrint(scoreUnit, suffix='Avg'), timeLeft))
             tic = time.time()
 
         self.testTime = time.time() - ticFull
         print('Full testing time = %.2fh' % (self.testTime / 3600))
-        self.testResults = scoresTotalPairs.pairs()
+        self.testResults = avgTestScores
         self.localtime = time.asctime(time.localtime(time.time()))
-        return scoresTotalPairs
+        return avgTestScores
 
     # log file will be saved to where chkpoint file is
     def log(self, epoch=None, it=None, global_step=None, additionalValue=()):
@@ -70,7 +79,7 @@ class Evaluation:
                 log.write(arg + ' ')
             log.write('\n\n')
 
-            baseInfos = (('data', self.testImgLoader.datapath ),
+            baseInfos = (('data', self.testImgLoader.datapath),
                          ('loadScale', self.testImgLoader.loadScale),
                          ('trainCrop', self.testImgLoader.trainCrop),
                          ('checkpoint', self.model.checkpointDir),
@@ -80,7 +89,7 @@ class Evaluation:
                          ('global_step', global_step),
                          ('testTime', self.testTime),
                          )
-            for pairs in (baseInfos, self.testResults, additionalValue):
+            for pairs in (baseInfos, self.testResults.items(), additionalValue.items()):
                 for (name, value) in pairs:
                     writeNotNone(name, value)
                 log.write('\n')
@@ -88,5 +97,5 @@ class Evaluation:
             log.write(logOld)
 
         # save Tensorboard logs to where checkpoint is.
-        for name, value in self.testResults:
+        for name, value in self.testResults.items():
             self.tensorboardLogger.writer.add_scalar('testLosses/' + name, value, global_step)
