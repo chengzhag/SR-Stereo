@@ -2,13 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5af41d42-9f6a-4e3f-b5e4-a4d9632ca140" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/SR/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/SR/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/models/Stereo/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/Stereo/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/moduletest.sh" beforeDir="false" afterPath="$PROJECT_DIR$/moduletest.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train/SR_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train/SR_train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train/Stereo_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train/Stereo_train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/myUtils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/myUtils.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -67,7 +61,7 @@
     <SUITE FILE_PATH="coverage/SR_Stereo$SRdisp_train_EDSR_carla_kitti.coverage" NAME="SRdisp_train_EDSR_carla_kitti Coverage Results" MODIFIED="1551161646815" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_eval_sceneflow.coverage" NAME="Stereo_eval_sceneflow Coverage Results" MODIFIED="1550548498351" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_eval_PSMNet_carla_kitti.coverage" NAME="Stereo_eval_PSMNet_carla_kitti Coverage Results" MODIFIED="1550995344939" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
-    <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_train_moduletest.coverage" NAME="Stereo_train_moduletest Coverage Results" MODIFIED="1551320293643" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
+    <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_train_moduletest.coverage" NAME="Stereo_train_moduletest Coverage Results" MODIFIED="1551322451347" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$PSMNetDown_train_moduletest.coverage" NAME="PSMNetDown_train_moduletest Coverage Results" MODIFIED="1551321597321" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$SRdisp_eval_EDSR_carla_kitti_half.coverage" NAME="SRdisp_eval_EDSR_carla_kitti_half Coverage Results" MODIFIED="1550989763388" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$SR_train_moduletest.coverage" NAME="SR_train_moduletest Coverage Results" MODIFIED="1551320696665" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
@@ -170,8 +164,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/models/Stereo/__init__.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="243">
-                  <caret line="203" column="42" selection-start-line="203" selection-start-column="42" selection-end-line="203" selection-end-column="43" />
+                <state relative-caret-position="380">
+                  <caret line="20" column="7" lean-forward="true" selection-start-line="20" selection-start-column="7" selection-end-line="20" selection-end-column="7" />
                   <folding>
                     <element signature="e#0#9#0" expanded="true" />
                   </folding>
@@ -328,8 +322,8 @@
         <option value="$PROJECT_DIR$/models/SR/__init__.py" />
         <option value="$PROJECT_DIR$/dataloader/__init__.py" />
         <option value="$PROJECT_DIR$/utils/myUtils.py" />
-        <option value="$PROJECT_DIR$/models/Stereo/__init__.py" />
         <option value="$PROJECT_DIR$/moduletest.sh" />
+        <option value="$PROJECT_DIR$/models/Stereo/__init__.py" />
       </list>
     </option>
   </component>
@@ -448,7 +442,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.PSMNetDown_train_moduletest">
+  <component name="RunManager" selected="Python.Stereo_train_moduletest">
     <configuration name="PSMNetDown_train_moduletest" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_train">
       <module name="SR-Stereo" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -1460,12 +1454,12 @@
       <workItem from="1551157536930" duration="130000" />
       <workItem from="1551242527567" duration="19015000" />
       <workItem from="1551269266706" duration="1972000" />
-      <workItem from="1551271314429" duration="15827000" />
+      <workItem from="1551271314429" duration="16572000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="445071000" />
+    <option name="totallyTimeSpent" value="445816000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1480,7 +1474,7 @@
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4991119" visible="true" weight="0.141258" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4991119" weight="0.141258" />
       <window_info id="Structure" order="1" sideWeight="0.5008881" side_tool="true" weight="0.1325215" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -1551,6 +1545,26 @@
   <component name="debuggerHistoryManager">
     <expressions id="evaluateExpression">
       <expression>
+        <expression-string>self.maxdisp</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>self.maxdisp.max()</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>self.maxdisp.max</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>gts.max()</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
         <expression-string>batch</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
@@ -1572,26 +1586,6 @@
       </expression>
       <expression>
         <expression-string>gtL[0].max()</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>ims[0].max()</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>ims[0]</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>gtL</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>gtL.max()</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -1883,16 +1877,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/Stereo/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="243">
-          <caret line="203" column="42" selection-start-line="203" selection-start-column="42" selection-end-line="203" selection-end-column="43" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/experiments.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="455">
@@ -1904,6 +1888,16 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="266">
           <caret line="14" column="61" lean-forward="true" selection-start-line="14" selection-start-column="61" selection-end-line="14" selection-end-column="61" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/Stereo/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="380">
+          <caret line="20" column="7" lean-forward="true" selection-start-line="20" selection-start-column="7" selection-end-line="20" selection-end-column="7" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

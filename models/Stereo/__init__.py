@@ -13,7 +13,12 @@ from ..Model import Model
 
 class Stereo(Model):
     # dataset: only used for suffix of saveFolderName
-    # maxdisp: disparity range of self.model
+    # maxdisp: disparity range of self.model.
+    # (
+    # Note: the definition of maxdisp was changed from commit:d46b96.
+    # This corrects loss computation. So there will be different behavious in Stereo_train_moduletest.
+    # Change 'gts < self.maxdisp' to 'gts < self.outputMaxDisp' will reproduce the original wrong loss curve.
+    # )
     # dispScale: scale the disparity value before input the original disparity map
     def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
                  saveFolderSuffix=''):
