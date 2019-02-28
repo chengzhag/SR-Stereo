@@ -13,14 +13,17 @@ from ..Model import Model
 
 class Stereo(Model):
     # dataset: only used for suffix of saveFolderName
+    # maxdisp: disparity range of self.model
+    # dispScale: scale the disparity value before input the original disparity map
     def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
                  saveFolderSuffix=''):
         super(Stereo, self).__init__(cuda, half, stage, dataset, saveFolderSuffix)
         self.maxdisp = maxdisp
         self.dispScale = dispScale
+        self.outputMaxDisp = maxdisp * dispScale # final output value range of disparity map
 
     def initModel(self):
-        self.model = self.getModel(round(self.maxdisp // self.dispScale))
+        self.model = self.getModel(self.maxdisp)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
         if self.cuda:
             self.model = nn.DataParallel(self.model)
@@ -70,20 +73,20 @@ class Stereo(Model):
 
         state_dict = torch.load(checkpointDir)
 
-        def loadValue(name):
-            if name in state_dict.keys():
-                value = state_dict[name]
-                if value != getattr(self, name):
-                    print(
-                        f'Specified {name} \'{getattr(self, name)}\' from args '
-                        f'is not equal to {name} \'{value}\' loaded from checkpoint!'
-                        f' Using loaded {name} instead!')
-                setattr(self, name, value)
-            else:
-                print(f'No {name} found in checkpoint! Using {name} \'{getattr(self, name)}\' specified in args!')
+        # def loadValue(name):
+        #     if name in state_dict.keys():
+        #         value = state_dict[name]
+        #         if value != getattr(self, name):
+        #             print(
+        #                 f'Specified {name} \'{getattr(self, name)}\' from args '
+        #                 f'is not equal to {name} \'{value}\' loaded from checkpoint!'
+        #                 f' Using loaded {name} instead!')
+        #         setattr(self, name, value)
+        #     else:
+        #         print(f'No {name} found in checkpoint! Using {name} \'{getattr(self, name)}\' specified in args!')
 
-        loadValue('maxdisp')
-        loadValue('dispScale')
+        # loadValue('maxdisp')
+        # loadValue('dispScale')
         self.initModel()
         self.model.load_state_dict(state_dict['state_dict'])
 
@@ -97,7 +100,8 @@ class Stereo(Model):
             'state_dict': self.model.state_dict(),
             'train_loss': trainLoss,
             'maxdisp': self.maxdisp,
-            'dispScale': self.dispScale
+            'dispScale': self.dispScale,
+            'outputMaxDisp': self.outputMaxDisp
         }, self.checkpointDir)
         return self.checkpointDir
 
@@ -177,6 +181,7 @@ class PSMNetDown(PSMNet):
     def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
                  saveFolderSuffix=''):
         super(PSMNetDown, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
+        self.outputMaxDisp = self.outputMaxDisp // 2
 
         # Downsampling net
         class AvgDownSample(torch.nn.Module):

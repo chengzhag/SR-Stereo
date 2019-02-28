@@ -21,7 +21,7 @@ class Train(Base):
             # save Tensorboard logs to where checkpoint is.
             self.tensorboardLogger.set(self.model.logFolder)
             for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), batch.lowestResDisps() + outputs):
-                self.tensorboardLogger.logFirstNIms('trainImages/' + name, disp, self.model.maxdisp,
+                self.tensorboardLogger.logFirstNIms('trainImages/' + name, disp, self.model.outputMaxDisp,
                                                     global_step=self.global_step, n=self.ndisLog)
         else:
             losses, _ = self.model.train(batch, output=False, kitti=self.trainImgLoader.kitti)
