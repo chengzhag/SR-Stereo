@@ -93,7 +93,9 @@ class SR(Model):
         return scores, list(outputs) if returnOutputs else None
 
     def load(self, checkpointDir):
-        super(SR, self).load(checkpointDir)
+        checkpointDir = super(SR, self).beforeLoad(checkpointDir)
+        if checkpointDir is None:
+            return
 
         self.initModel()
         load_state_dict = torch.load(checkpointDir)

@@ -55,18 +55,23 @@ class Model:
     def predict(self, batch):
         raise Exception('Error: please overtide \'Model.predict()\' without calling it!')
 
-    def load(self, checkpointDir):
+    def beforeLoad(self, checkpointDir):
         if checkpointDir is not None:
             print('Loading checkpoint from %s' % checkpointDir)
         else:
-            raise Exception('checkpoint dir is None!')
-
+            print('No checkpoint specified. Will initialize weights randomly.')
+            return None
+        checkpointDir = checkpointDir[0] \
+            if type(checkpointDir) in (list, tuple) and len(checkpointDir) == 1 \
+            else checkpointDir
         # update checkpointDir
         self.checkpointDir = checkpointDir
         self.checkpointFolder, _ = os.path.split(self.checkpointDir)
         # When testing, log files should be saved to checkpointFolder.
         # Here checkpointFolder is setted as default logging folder.
         self.logFolder = os.path.join(self.checkpointFolder, 'logs')
+
+        return checkpointDir
 
     def nParams(self):
         return sum([p.data.nelement() for p in self.model.parameters()])

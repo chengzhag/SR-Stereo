@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash`
 
 carla_kitti_dataset=/media/omnisky/zcSSD/SR-Stereo/datasets/carla_kitti/carla_kitti_sr_lowquality_moduletest/
 sceneflow_dataset=/media/omnisky/zcSSD/SR-Stereo/datasets/sceneflow/

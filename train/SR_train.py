@@ -73,8 +73,7 @@ def main():
                                  half=args.half, stage=stage,
                                  dataset=args.dataset,
                                  saveFolderSuffix=saveFolderSuffix.strSuffix())
-    if args.loadmodel is not None:
-        sr.load(args.loadmodel)
+    sr.load(args.loadmodel)
 
     # Train
     test = SR_eval.Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,

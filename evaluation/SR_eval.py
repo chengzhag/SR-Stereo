@@ -65,8 +65,7 @@ def main():
     sr = getattr(SR, args.model)(cInput=cInput, cuda=args.cuda,
                                  half=args.half, stage=stage,
                                  dataset=args.dataset)
-    if args.loadmodel is not None:
-        sr.load(args.loadmodel)
+    sr.load(args.loadmodel)
 
     # Test
     test = Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,

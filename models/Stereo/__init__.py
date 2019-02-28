@@ -74,7 +74,9 @@ class Stereo(Model):
         return scores, outputs
 
     def load(self, checkpointDir):
-        super(Stereo, self).load(checkpointDir)
+        checkpointDir = super(Stereo, self).beforeLoad(checkpointDir)
+        if checkpointDir is None:
+            return
 
         state_dict = torch.load(checkpointDir)
 

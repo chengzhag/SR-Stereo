@@ -81,8 +81,7 @@ def main():
                                          stage=stage,
                                          dataset=args.dataset,
                                          saveFolderSuffix=saveFolderSuffix.strSuffix())
-    if args.loadmodel is not None:
-        stereo.load(args.loadmodel)
+    stereo.load(args.loadmodel)
 
     # Train
     test = Stereo_eval.Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,

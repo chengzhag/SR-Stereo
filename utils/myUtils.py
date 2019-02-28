@@ -130,8 +130,8 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                                                           help='scale disparity when training (gtDisp/dispscale) and predicting (outputDisp*dispscale'),
                  'model': lambda: parser.add_argument('--model', default='PSMNet',
                                                       help='select model'),
-                 'loadmodel': lambda: parser.add_argument('--loadmodel', default=None,
-                                                          help='load model'),
+                 'loadmodel': lambda: parser.add_argument('--loadmodel',  type=str, default=None, nargs='+',
+                                                          help='checkpoint(s) of model(s) to load'),
                  'no_cuda': lambda: parser.add_argument('--no_cuda', action='store_true', default=False,
                                                         help='enables CUDA training'),
                  # logging

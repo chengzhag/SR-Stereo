@@ -52,8 +52,7 @@ def main():
     stage = os.path.join(args.outputFolder, stage) if args.outputFolder is not None else stage
     stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale,
                                          half=args.half, cuda=args.cuda, stage=stage)
-    if args.loadmodel is not None:
-        stereo.load(args.loadmodel)
+    stereo.load(args.loadmodel)
 
     # Test
     test = Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
