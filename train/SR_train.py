@@ -66,7 +66,7 @@ def main():
     stage, _ = os.path.splitext(os.path.basename(__file__))
     stage = os.path.join(args.outputFolder, stage) if args.outputFolder is not None else stage
     saveFolderSuffix = myUtils.NameValues(('loadScale', 'trainCrop', 'batchSize'),
-                                          (trainImgLoader.loadScale * 10,
+                                          (trainImgLoader.loadScale[0] * 10,
                                            trainImgLoader.trainCrop,
                                            args.batchsize_train))
     sr = getattr(SR, args.model)(cInput=cInput, cuda=args.cuda,

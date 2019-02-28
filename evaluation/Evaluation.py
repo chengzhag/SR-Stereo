@@ -1,8 +1,7 @@
 import time
-import torch
 import os
-from models import Stereo
 from utils import myUtils
+import sys
 
 class Evaluation:
     def __init__(self, testImgLoader, evalFcn='outlier', ndisLog=1):
@@ -65,6 +64,12 @@ class Evaluation:
 
             log.seek(0)
             log.write('---------------------- %s ----------------------\n\n' % self.localtime)
+
+            log.write('python ')
+            for arg in sys.argv:
+                log.write(arg + ' ')
+            log.write('\n\n')
+
             baseInfos = (('data', self.testImgLoader.datapath ),
                          ('loadScale', self.testImgLoader.loadScale),
                          ('trainCrop', self.testImgLoader.trainCrop),
