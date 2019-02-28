@@ -147,7 +147,6 @@ class PSMNet(Stereo):
         self.optimizer.zero_grad()
 
         outputs = self.model(imgL, imgR)
-
         loss = self.loss(outputs, gt, kitti=kitti)
         loss.backward()
         self.optimizer.step()
@@ -256,7 +255,7 @@ class PSMNetDown(PSMNet):
 
     def train(self, batch, returnOutputs=False, kitti=False, weights=(1, 0)):
         myUtils.assertBatchLen(batch, 8)
-        batch = super(PSMNet, self).trainPrepare(batch)
+        batch = self.trainPrepare(batch)
 
         losses = myUtils.NameValues()
         outputs = collections.OrderedDict()
