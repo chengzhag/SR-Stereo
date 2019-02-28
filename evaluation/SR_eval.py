@@ -13,8 +13,8 @@ class Evaluation(Base):
 
     def _evalIt(self, batch, log):
 
+        scores, outputs = self.model.test(batch.deattach(), type=self.evalFcn, returnOutputs=log)
         if log:
-            scores, outputs = self.model.test(batch.deattach(), type=self.evalFcn, returnOutputs=True)
             imgs = batch.lowResRGBs() + batch.highResRGBs() + outputs
 
             # save Tensorboard logs to where checkpoint is.
@@ -23,8 +23,6 @@ class Evaluation(Base):
                 for name, im in zip(('input', 'gt', 'output'), imsSide):
                     self.tensorboardLogger.logFirstNIms('testImages/' + name + side, im, 1,
                                                         global_step=1, n=self.ndisLog)
-        else:
-            scores, _ = self.model.test(batch, type=self.evalFcn, returnOutputs=False)
 
         scoresPairs = myUtils.NameValues(('L', 'R'), scores, prefix=self.evalFcn)
         return scoresPairs
