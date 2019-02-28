@@ -71,7 +71,7 @@ class SR(Model):
         for input, do in zip(batch.highResRGBs(), mask):
             outputs.append(self.predictOneSide(input) if do else None)
 
-        return tuple(outputs)
+        return outputs
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1

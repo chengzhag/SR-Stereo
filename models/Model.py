@@ -8,6 +8,7 @@ from evaluation import evalFcn
 from utils import myUtils
 from apex import amp
 
+
 class Model:
     def __init__(self, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
         self.cuda = cuda
@@ -55,23 +56,41 @@ class Model:
     def predict(self, batch):
         raise Exception('Error: please overtide \'Model.predict()\' without calling it!')
 
-    def beforeLoad(self, checkpointDir):
-        if checkpointDir is not None:
-            print('Loading checkpoint from %s' % checkpointDir)
+    def beforeLoad(self, checkpointDirs):
+        if checkpointDirs is not None:
+            print('Loading checkpoint from %s' % checkpointDirs)
         else:
             print('No checkpoint specified. Will initialize weights randomly.')
             return None
-        checkpointDir = checkpointDir[0] \
-            if type(checkpointDir) in (list, tuple) and len(checkpointDir) == 1 \
-            else checkpointDir
-        # update checkpointDir
-        self.checkpointDir = checkpointDir
-        self.checkpointFolder, _ = os.path.split(self.checkpointDir)
+
+        if type(checkpointDirs) in (list, tuple):
+            if len(checkpointDirs) == 1:
+                checkpointDirs = checkpointDirs[0]
+                # update checkpointDir
+                self.checkpointDir = checkpointDirs
+                self.checkpointFolder, _ = os.path.split(self.checkpointDir)
+
+            elif len(checkpointDirs) >= 1:
+                # for model composed with multiple models, check if checkpointDirs are together
+                modelRoot = None
+                for dir in checkpointDirs:
+                    checkpointFolder, _ = os.path.split(dir)
+                    checkpointRoot = os.path.join(*checkpointFolder.split('/')[:-2])
+                    if modelRoot is None:
+                        modelRoot = checkpointRoot
+                    elif modelRoot != checkpointRoot:
+                        raise Exception('Error: For good project structure, '
+                                        'checkpoints of model combinations should be placed together like: '
+                                        'pycharmruns (running stage)/SRStereo_eval_test (model)/SR_train (components)/'
+                                        '190228011913_SR_loadScale_10_trainCrop_96_1360_batchSize_4_carla_kitti (runs)/'
+                                        '*.tar (checkpoints)')
+                self.checkpointFolder = self.saveFolder
+
         # When testing, log files should be saved to checkpointFolder.
         # Here checkpointFolder is setted as default logging folder.
-        self.logFolder = os.path.join(self.checkpointFolder, 'logs')
+        self.logFolder = os.path.join(self.saveFolder, 'logs')
 
-        return checkpointDir
+        return checkpointDirs
 
     def nParams(self):
         return sum([p.data.nelement() for p in self.model.parameters()])

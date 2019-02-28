@@ -227,20 +227,28 @@ class TensorboardLogger:
 
 class Batch:
     def __init__(self, batch, cuda=None, half=None):
-        if type(batch) not in (list, tuple, Batch):
-            raise Exception('Error: batch must be class list, tuple or Batch!')
-        if len(batch) % 4 != 0:
-            raise Exception(f'Error: input batch with length {len(batch)} doesnot match required 4n!')
-
         if type(batch) in (list, tuple):
+            self._assertLen(len(batch))
             self.batch = batch[:]  # deattach with initial list
         elif type(batch) is Batch:
+            self._assertLen(len(batch))
             self.batch = batch.batch[:]
+        elif type(batch) is int:
+            self._assertLen(batch)
+            if batch % 4 != 0:
+                raise Exception(f'Error: input batch with length {len(batch)} doesnot match required 4n!')
+            self.batch = [None] * batch
+        else:
+            raise Exception('Error: batch must be class list, tuple or Batch!')
 
         if cuda is not None:
             self.batch = [(im.half() if half else im) if im.numel() else None for im in self.batch]
         if half is not None:
             self.batch = [(im.cuda() if cuda else im) if im is not None else None for im in self.batch]
+
+    def _assertLen(self, len):
+        if len % 4 != 0:
+            raise Exception(f'Error: input batch with length {len} doesnot match required 4n!')
 
     def __len__(self):
         return len(self.batch)
