@@ -139,7 +139,7 @@ class PSMNet(Stereo):
 
         return loss.data.item(), outputs[2] if returnOutputs else None
 
-    def train(self, batch, returnOutputs=False, kitti=False):
+    def train(self, batch, returnOutputs=False, kitti=False, weights=()):
         myUtils.assertBatchLen(batch, 4)
         imgL, imgR, dispL, dispR = super(PSMNet, self).trainPrepare(batch)
 
@@ -231,7 +231,7 @@ class PSMNetDown(PSMNet):
         losses = [loss,] + losses
         return [loss.data.item() for loss in losses], rOutput
 
-    def train(self, batch, returnOutputs=False, kitti=False):
+    def train(self, batch, returnOutputs=False, kitti=False, weights=(1, 0)):
         myUtils.assertBatchLen(batch, 8)
         batch = super(PSMNet, self).trainPrepare(batch)
 
@@ -242,7 +242,7 @@ class PSMNetDown(PSMNet):
                                                zip(batch.highResDisps(), batch.lowResDisps()),
                                                (lambda im: im, myUtils.flipLR)):
             loss, dispOut = self.trainOneSide(
-                process(inputL), process(inputR), process(gts), returnOutputs, kitti
+                process(inputL), process(inputR), process(gts), returnOutputs, kitti, weights=weights
             ) if gts is not None else (None, None)
             losses.append(loss)
             outputs.append(

@@ -119,7 +119,10 @@ def checkDir(dir):
 def getBasicParser(includeKeys=['all'], description='Stereo'):
     parser = argparse.ArgumentParser(description=description)
 
-    addParams = {'outputFolder': lambda: parser.add_argument('--outputFolder', type=str, default=None,
+    addParams = {'seed': lambda: parser.add_argument('--seed', type=int, default=1, metavar='S',
+                                                     help='random seed (default: 1)'),
+                 # model
+                 'outputFolder': lambda: parser.add_argument('--outputFolder', type=str, default=None,
                                                              help='output checkpoints and logs to foleder logs/outputFolder'),
                  'maxdisp': lambda: parser.add_argument('--maxdisp', type=int, default=192,
                                                         help='maximum disparity of unscaled model (or dataset in some module test)'),
@@ -127,29 +130,25 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                                                           help='scale disparity when training (gtDisp/dispscale) and predicting (outputDisp*dispscale'),
                  'model': lambda: parser.add_argument('--model', default='PSMNet',
                                                       help='select model'),
-                 'datapath': lambda: parser.add_argument('--datapath', default='../datasets/sceneflow/',
-                                                         help='datapath'),
                  'loadmodel': lambda: parser.add_argument('--loadmodel', default=None,
                                                           help='load model'),
                  'no_cuda': lambda: parser.add_argument('--no_cuda', action='store_true', default=False,
                                                         help='enables CUDA training'),
-                 'seed': lambda: parser.add_argument('--seed', type=int, default=1, metavar='S',
-                                                     help='random seed (default: 1)'),
-                 'eval_fcn': lambda: parser.add_argument('--eval_fcn', type=str, default='outlier',
-                                                         help='evaluation function used in testing'),
+                 # logging
                  'ndis_log': lambda: parser.add_argument('--ndis_log', type=int, default=1,
                                                          help='number of disparity maps to log'),
+                 # datasets
                  'dataset': lambda: parser.add_argument('--dataset', type=str, default='sceneflow',
                                                         help='(sceneflow/kitti2012/kitti2015/carla_kitti)'),
+                 'datapath': lambda: parser.add_argument('--datapath', default='../datasets/sceneflow/',
+                                                         help='datapath'),
                  'load_scale': lambda: parser.add_argument('--load_scale', type=float, default=[1], nargs='+',
                                                            help='scaling applied to data during loading'),
-                 'trainCrop': lambda: parser.add_argument('--trainCrop', type=float, default=(256, 512), nargs=2,
-                                                          help='size of random crop (H x W) applied to data during training'),
-                 'batchsize_test': lambda: parser.add_argument('--batchsize_test', type=int, default=3,
-                                                               help='testing batch size'),
                  # training
                  'batchsize_train': lambda: parser.add_argument('--batchsize_train', type=int, default=3,
                                                                 help='training batch size'),
+                 'trainCrop': lambda: parser.add_argument('--trainCrop', type=float, default=(256, 512), nargs=2,
+                                                          help='size of random crop (H x W) applied to data during training'),
                  'log_every': lambda: parser.add_argument('--log_every', type=int, default=10,
                                                           help='log every log_every iterations. set to 0 to stop logging'),
                  'test_every': lambda: parser.add_argument('--test_every', type=int, default=1,
@@ -157,6 +156,13 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                  'epochs': lambda: parser.add_argument('--epochs', type=int, default=10,
                                                        help='number of epochs to train'),
                  'lr': lambda: parser.add_argument('--lr', type=float, default=[0.001], help='', nargs='+'),
+                 'lossWeights': lambda: parser.add_argument('--lossWeights', type=float, default=[1], nargs='+',
+                                                           help='weights of losses if model have multiple losses'),
+                 # evaluation
+                 'eval_fcn': lambda: parser.add_argument('--eval_fcn', type=str, default='outlier',
+                                                         help='evaluation function used in testing'),
+                 'batchsize_test': lambda: parser.add_argument('--batchsize_test', type=int, default=3,
+                                                               help='testing batch size'),
                  # submission
                  'subtype': lambda: parser.add_argument('--subtype', type=str, default='eval',
                                                         help='dataset type used for submission (eval/test)'),

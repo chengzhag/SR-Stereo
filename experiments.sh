@@ -44,7 +44,7 @@ kitti2012_dataset=/media/omnisky/zcSSD/SR-Stereo/datasets/kitti/data_stereo_flow
 
 # test: Stereo1_Stereo2_compare_test (TODO)
 # test subject: Compare Stereo2 (SR input) with Stereo1 (KITTI-size input PSMNet)
-# step 1: training
+## step 1: training
 #CUDA_VISIBLE_DEVICES=0,1,2,3 PYTHONPATH=./ python train/Stereo_train.py --model PSMNet --model PSMNet --outputFolder experiments/Stereo1_Stereo2_compare_test --dispscale 2 --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every -1 --batchsize_train 4 --lr 0.001 2 0.0002 4 0.0001 --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --load_scale 1
 #CUDA_VISIBLE_DEVICES=0,1,2,3 PYTHONPATH=./ python train/Stereo_train.py --model PSMNet --model PSMNet --outputFolder experiments/Stereo1_Stereo2_compare_test --dispscale 1 --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every -1 --batchsize_train 4 --lr 0.001 2 0.0002 4 0.0001 --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --load_scale 0.5
 # step 2: evaluation

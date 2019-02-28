@@ -10,13 +10,17 @@ from train.Train import Train as Base
 
 
 class Train(Base):
-    def __init__(self, trainImgLoader, nEpochs, lr=(0.001,), logEvery=1, testEvery=1, ndisLog=1, Test=None):
+    def __init__(self, trainImgLoader, nEpochs, lr=(0.001,), logEvery=1, testEvery=1, ndisLog=1, Test=None, lossWeights=(1,)):
         super(Train, self).__init__(trainImgLoader, nEpochs, lr, logEvery, testEvery, ndisLog, Test)
+        self.lossWeights = lossWeights
 
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
         if log:
-            losses, outputs = self.model.train(batch.deattach(), returnOutputs=True, kitti=self.trainImgLoader.kitti)
+            losses, outputs = self.model.train(batch.deattach(),
+                                               returnOutputs=True,
+                                               kitti=self.trainImgLoader.kitti,
+                                               weights=self.lossWeights)
 
             # save Tensorboard logs to where checkpoint is.
             self.tensorboardLogger.set(self.model.logFolder)
@@ -47,7 +51,7 @@ def main():
     parser = myUtils.getBasicParser(
         ['outputFolder', 'maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
-         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half'],
+         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half', 'lossWeights'],
         description='train or finetune Stereo net')
 
     args = parser.parse_args()
@@ -85,7 +89,7 @@ def main():
                                   ndisLog=args.ndis_log)
     train = Train(trainImgLoader=trainImgLoader, nEpochs=args.epochs, lr=args.lr,
                   logEvery=args.log_every, ndisLog=args.ndis_log,
-                  testEvery=args.test_every, Test=test)
+                  testEvery=args.test_every, Test=test, lossWeights=args.lossWeights)
     train(model=stereo)
 
 
