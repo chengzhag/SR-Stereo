@@ -35,7 +35,7 @@ class Train(Base):
             lossFlat = []
             for i, lossLR in enumerate(zip(*losses)):
                 if i == 0:
-                    names += ['LTotal', 'RTotal']
+                    names += ['L', 'R']
                 else:
                     names += ['L%d' % i, 'R%d' % i]
                 lossFlat += lossLR
