@@ -78,8 +78,11 @@ class AutoPad:
 
 
 # Flip among W dimension. For NCHW data type.
-def flipLR(im):
-    return im.flip(-1)
+def flipLR(ims):
+    if type(ims) in (list, tuple):
+        return [flipLR(im) for im in ims]
+    else:
+        return ims.flip(-1)
 
 
 def assertDisp(dispL=None, dispR=None):

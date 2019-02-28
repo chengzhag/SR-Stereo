@@ -123,18 +123,18 @@ class PSMNet(Stereo):
                                                                                  reduction='mean')
         return loss
 
-    def trainOneSide(self, imgL, imgR, disp_true, output=False, kitti=False):
+    def trainOneSide(self, imgL, imgR, gt, returnOutputs=False, kitti=False):
         self.optimizer.zero_grad()
 
         outputs = self.model(imgL, imgR)
 
-        loss = self.loss(outputs, disp_true, kitti=kitti)
+        loss = self.loss(outputs, gt, kitti=kitti)
         loss.backward()
         self.optimizer.step()
 
-        return loss.data.item(), outputs[2] if output else None
+        return loss.data.item(), outputs[2] if returnOutputs else None
 
-    def train(self, batch, output=False, kitti=False):
+    def train(self, batch, returnOutputs=False, kitti=False):
         myUtils.assertBatchLen(batch, 4)
         imgL, imgR, dispL, dispR = super(PSMNet, self).trainPrepare(batch)
 
@@ -143,7 +143,7 @@ class PSMNet(Stereo):
         for inputL, inputR, gt, process in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
                                                (lambda im: im, myUtils.flipLR)):
             loss, dispOut = self.trainOneSide(
-                process(inputL), process(inputR), process(gt), output, kitti
+                process(inputL), process(inputR), process(gt), returnOutputs, kitti
             ) if gt is not None else (None, None)
             losses.append(loss)
             outputs.append(
@@ -200,6 +200,52 @@ class PSMNetDown(PSMNet):
         if self.cuda:
             self.down = nn.DataParallel(self.down)
             self.down.cuda()
+
+    def loss(self, outputs, gts, weights=(1, 0), kitti=False):
+        loss = 0
+        if weights[0] != 0:
+            loss += weights[0] * super(PSMNetDown, self).loss(outputs, gts[0], kitti=kitti)
+        if weights[1] != 0:
+            outputs = [self.down(output) for output in outputs]
+            loss += weights[1] * super(PSMNetDown, self).loss(outputs, gts[1], kitti=kitti)
+        return loss
+
+    def trainOneSide(self, imgL, imgR, gts, returnOutputs=False, kitti=False):
+        self.optimizer.zero_grad()
+
+        outputs = self.model(imgL, imgR)
+
+        loss = self.loss(outputs, gts, kitti=kitti)
+        loss.backward()
+        self.optimizer.step()
+
+        if returnOutputs:
+            with torch.no_grad():
+                rOutput = self.down(outputs[2])
+        else:
+            rOutput = None
+        return loss.data.item(), rOutput
+
+    def train(self, batch, returnOutputs=False, kitti=False):
+        myUtils.assertBatchLen(batch, 8)
+        batch = super(PSMNet, self).trainPrepare(batch)
+
+        losses = []
+        outputs = []
+        imgL, imgR = batch.highResRGBs()
+        for inputL, inputR, gts, process in zip((imgL, imgR), (imgR, imgL),
+                                               zip(batch.highResDisps(), batch.lowResDisps()),
+                                               (lambda im: im, myUtils.flipLR)):
+            loss, dispOut = self.trainOneSide(
+                process(inputL), process(inputR), process(gts), returnOutputs, kitti
+            ) if gts is not None else (None, None)
+            losses.append(loss)
+            outputs.append(
+                (process(dispOut) * self.dispScale).cpu()
+                if dispOut is not None else None
+            )
+
+        return losses, outputs
 
     def predict(self, batch, mask=(1, 1)):
         myUtils.assertBatchLen(batch, 4)

@@ -14,7 +14,7 @@ class Train(Base):
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
         if log:
-            losses, outputs = self.model.train(batch.deattach(), output=True)
+            losses, outputs = self.model.train(batch.deattach(), returnOutputs=True)
             imgs = batch.lowResRGBs() + batch.highResRGBs() + outputs
 
             # save Tensorboard logs to where checkpoint is.
@@ -24,7 +24,7 @@ class Train(Base):
                     self.tensorboardLogger.logFirstNIms('trainImages/' + name + side, im, 1,
                                                         global_step=self.global_step, n=self.ndisLog)
         else:
-            losses, _ = self.model.train(batch, output=False)
+            losses, _ = self.model.train(batch, returnOutputs=False)
 
         lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
         return lossesPairs

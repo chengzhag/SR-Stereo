@@ -37,13 +37,13 @@ class SR(Model):
 
     # imgL: RGB value range 0~1
     # imgH: RGB value range 0~1
-    def train(self, batch, output=False):
+    def train(self, batch, returnOutputs=False):
         losses = []
         outputs = []
         for input, gt in zip(batch.lowResRGBs(), batch.highResRGBs()):
             loss, predict = self.trainOneSide(input, gt) if gt is not None else (None, None)
             losses.append(loss)
-            outputs.append(myUtils.quantize(predict, 1) if output and predict is not None else None)
+            outputs.append(myUtils.quantize(predict, 1) if returnOutputs and predict is not None else None)
 
         return losses, outputs
 
@@ -90,7 +90,7 @@ class SR(Model):
             else:
                 scores.append(None)
 
-        return scores, list(outputs)
+        return scores, list(outputs) if returnOutputs else None
 
     def load(self, checkpointDir):
         super(SR, self).load(checkpointDir)
@@ -155,10 +155,10 @@ class SRdisp(SR):
                         'Error: self.model.args.n_inputs = %d which is not supporty!' % self.model.args.n_inputs)
             return inputs
 
-    def train(self, batch, output=False):
+    def train(self, batch, returnOutputs=False):
         myUtils.assertBatchLen(batch, 8)
         batch.lowResRGBs(self.warpAndCat(batch.lastScaleBatch()))
-        return super(SRdisp, self).train(batch, output)
+        return super(SRdisp, self).train(batch, returnOutputs)
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
