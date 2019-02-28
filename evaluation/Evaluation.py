@@ -60,7 +60,7 @@ class Evaluation:
         return avgTestScores
 
     # log file will be saved to where chkpoint file is
-    def log(self, epoch=None, it=None, global_step=None, additionalValue=()):
+    def log(self, epoch=None, it=None, global_step=None, additionalValue=None):
         logDir = os.path.join(self.model.checkpointFolder, 'test_results.txt')
         with open(logDir, "a") as log:
             pass
@@ -89,7 +89,8 @@ class Evaluation:
                          ('global_step', global_step),
                          ('testTime', self.testTime),
                          )
-            for pairs in (baseInfos, self.testResults.items(), additionalValue.items()):
+            for pairs in (baseInfos, self.testResults.items(),
+                          additionalValue.items() if additionalValue is not None else ()):
                 for (name, value) in pairs:
                     writeNotNone(name, value)
                 log.write('\n')
