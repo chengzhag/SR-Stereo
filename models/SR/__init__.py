@@ -37,8 +37,18 @@ class SR(Model):
 
     # imgL: RGB value range 0~1
     # imgH: RGB value range 0~1
-    def train(self, imgL, imgH):
-        super(SR, self)._train()
+    def train(self, batch, returnOutputs=False):
+        losses = []
+        outputs = []
+        for input, gt in zip(batch.lowResRGBs(), batch.highResRGBs()):
+            loss, predict = self.trainOneSide(input, gt) if gt is not None else (None, None)
+            losses.append(loss)
+            outputs.append(myUtils.quantize(predict, 1) if returnOutputs and predict is not None else None)
+
+        return losses, outputs
+
+    def trainOneSide(self, imgL, imgH):
+        super(SR, self).trainPrepare()
 
         if self.cuda:
             imgL, imgH = imgL.cuda(), imgH.cuda()
@@ -53,24 +63,39 @@ class SR(Model):
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
-    def predict(self, imgL):
-        super(SR, self)._predict()
+    def predict(self, batch, mask=(1,1)):
+        myUtils.assertBatchLen(batch, 4)
+        outputs = []
+        for input, do in zip(batch.highResRGBs(), mask):
+            outputs.append(self.predictOneSide(input) if do else None)
+
+        return tuple(outputs)
+
+    # imgL: RGB value range 0~1
+    # output: RGB value range 0~1
+    def predictOneSide(self, imgL):
+        super(SR, self).predictPrepare()
         with torch.no_grad():
             output = P.data_parallel(self.model, imgL * self.args.rgb_range)
             output = myUtils.quantize(output, self.args.rgb_range) / self.args.rgb_range
             return output
 
-    def test(self, imgL, imgH, type='l1'):
-        if self.cuda:
-            imgL, imgH = imgL.cuda(), imgH.cuda()
+    def test(self, batch, type='l1', returnOutputs=False):
+        myUtils.assertBatchLen(batch, 8)
+        scores = []
+        outputs = self.predict(batch.lastScaleBatch(), mask=[gt is not None for gt in batch.highResRGBs()])
+        for gt, output in zip(batch.highResRGBs(), outputs):
+            if output is not None:
+                scores.append(evalFcn.getEvalFcn(type)(gt * self.args.rgb_range, output * self.args.rgb_range))
+            else:
+                scores.append(None)
 
-        output = self.predict(imgL)
-        score = evalFcn.getEvalFcn(type)(imgH * self.args.rgb_range, output * self.args.rgb_range)
-
-        return score, output
+        return scores, list(outputs) if returnOutputs else None
 
     def load(self, checkpointDir):
-        super(SR, self).load(checkpointDir)
+        checkpointDir = super(SR, self).beforeLoad(checkpointDir)
+        if checkpointDir is None:
+            return
 
         self.initModel()
         load_state_dict = torch.load(checkpointDir)
@@ -99,7 +124,7 @@ class SR(Model):
         print('Loading complete! Number of model parameters: %d' % self.nParams())
 
     def save(self, epoch, iteration, trainLoss):
-        super(SR, self)._save(epoch, iteration)
+        super(SR, self).beforeSave(epoch, iteration)
 
         torch.save({
             'epoch': epoch,
@@ -110,17 +135,16 @@ class SR(Model):
 
 class SRdisp(SR):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, withMask=False, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
-        super(SRdisp, self).__init__(7 if withMask else 6, cuda, half, stage, dataset, saveFolderSuffix)
-        self.withMask = withMask
+    def __init__(self, cInput=6, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        super(SRdisp, self).__init__(cInput, cuda, half, stage, dataset, saveFolderSuffix)
 
     def initModel(self):
         super(SRdisp, self).initModel()
 
-
-    def _preProcess(self, inputL, inputR, dispL, dispR):
+    def warpAndCat(self, batch):
+        inputL, inputR, dispL, dispR = batch
         with torch.no_grad():
-            warpToL, warpToR, maskL, maskR = warp(inputL, inputR, dispL, dispR)
+            warpToL, warpToR, maskL, maskR = warp(*batch)
 
             inputs = []
             for input in zip((inputL, inputR), (warpToL, warpToR), (maskL, maskR)):
@@ -132,47 +156,16 @@ class SRdisp(SR):
                     raise Exception(
                         'Error: self.model.args.n_inputs = %d which is not supporty!' % self.model.args.n_inputs)
             return inputs
-    # imgL: RGB value range 0~1
-    # imgH: RGB value range 0~1
-    def train(self, inputL, inputR, dispL, dispR, gtL=None, gtR=None, output=False):
-        inputs = self._preProcess(inputL, inputR, dispL, dispR)
 
-        losses = []
-        outputs = []
-        for input, gt in zip(inputs, (gtL, gtR)):
-            loss, predict = super(SRdisp, self).train(input, gt) if gt is not None else (None, None)
-            losses.append(loss)
-            outputs.append(myUtils.quantize(predict, 1) if output and predict is not None else None)
-
-        return losses, outputs
+    def train(self, batch, returnOutputs=False):
+        myUtils.assertBatchLen(batch, 8)
+        batch.lowResRGBs(self.warpAndCat(batch.lastScaleBatch()))
+        return super(SRdisp, self).train(batch, returnOutputs)
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
-    def predict(self, inputL, inputR, dispL, dispR, mask=(1,1)):
-        inputs = self._preProcess(inputL, inputR, dispL, dispR)
-        outputs = []
-        for input, do in zip(inputs, mask):
-            outputs.append(super(SRdisp, self).predict(input) if do else None)
-
-        return tuple(outputs)
-
-    def test(self, inputL, inputR, dispL, dispR, gtL=None, gtR=None, type='l1', output=False):
-        if self.cuda:
-            inputL, inputR = inputL.cuda(), inputR.cuda()
-            dispL, dispR = dispL.cuda(), dispR.cuda()
-            gtL = gtL.cuda() if gtL is not None else None
-            gtR = gtR.cuda() if gtR is not None else None
-
-        scores = []
-        outputs = []
-        predicts = self.predict(inputL, inputR, dispL, dispR, mask=[gt is not None for gt in (gtL, gtR)])
-        for gt, predict in zip((gtL, gtR), predicts):
-            if predict is not None:
-                scores.append(evalFcn.getEvalFcn(type)(gt * self.args.rgb_range, predict * self.args.rgb_range))
-                outputs.append(predict if output else None)
-            else:
-                outputs.append(None)
-                scores.append(None)
-
-        return scores, outputs
+    def predict(self, batch, mask=(1,1)):
+        myUtils.assertBatchLen(batch, 4)
+        batch.highResRGBs(self.warpAndCat(batch.firstScaleBatch()))
+        return super(SRdisp, self).predict(batch, mask)
 

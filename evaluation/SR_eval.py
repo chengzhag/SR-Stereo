@@ -8,37 +8,23 @@ from evaluation.Evaluation import Evaluation as Base
 
 # Evaluation for any stereo model including SR-Stereo
 class Evaluation(Base):
-    def __init__(self, testImgLoader, mode='both', evalFcn='l1', ndisLog=1):
+    def __init__(self, testImgLoader, evalFcn='l1', ndisLog=1):
         super(Evaluation, self).__init__(testImgLoader, evalFcn, ndisLog)
-        self.mode = myUtils.assertMode(testImgLoader.kitti, mode)
 
     def _evalIt(self, batch, log):
-        batch = batch[0:2] + batch[4:6]
-        if self.mode == 'left':
-            batch[1] = None
-            batch[3] = None
-        if self.mode == 'right':
-            batch[0] = None
-            batch[2] = None
 
-        scores = []
-        for input, gt, suffix in zip(batch[2:4], batch[0:2], ('L', 'R')):
-            if input is None or gt is None:
-                scores.append(None)
-                continue
-            if log:
-                score, output = self.model.test(input, gt, type=self.evalFcn)
-                imgs = [input, gt, output]
+        if log:
+            scores, outputs = self.model.test(batch.deattach(), type=self.evalFcn, returnOutputs=True)
+            imgs = batch.lowResRGBs() + batch.highResRGBs() + outputs
 
-                # save Tensorboard logs to where checkpoint is.
-                self.tensorboardLogger.set(self.model.logFolder)
-                for name, im in zip(('input', 'gt', 'output'), imgs):
-                    self.tensorboardLogger.logFirstNIms('testImages/' + name + suffix, im, 1,
-                                                       global_step=1, n=self.ndisLog)
-            else:
-                score, _ = self.model.test(input, gt, type=self.evalFcn)
-
-            scores.append(score)
+            # save Tensorboard logs to where checkpoint is.
+            self.tensorboardLogger.set(self.model.logFolder)
+            for imsSide, side in zip((imgs[0::2], imgs[1::2]), ('L', 'R')):
+                for name, im in zip(('input', 'gt', 'output'), imsSide):
+                    self.tensorboardLogger.logFirstNIms('testImages/' + name + side, im, 1,
+                                                        global_step=1, n=self.ndisLog)
+        else:
+            scores, _ = self.model.test(batch, type=self.evalFcn, returnOutputs=False)
 
         scoresPairs = myUtils.NameValues(('L', 'R'), scores, prefix=self.evalFcn)
         return scoresPairs
@@ -46,8 +32,8 @@ class Evaluation(Base):
 
 def main():
     parser = myUtils.getBasicParser(
-        ['outputFolder', 'maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
-         'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half'],
+        ['outputFolder', 'datapath', 'model', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
+         'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half', 'withMask'],
         description='evaluate Stereo net or SR-Stereo net')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -58,23 +44,31 @@ def main():
 
     # Dataset
     import dataloader
+    if args.model in ('SR',):
+        mask = (1, 1, 0, 0)
+        cInput = 3
+    elif args.model in ('SRdisp',):
+        mask = (1, 1, 1, 1)
+        cInput = cInput = 7 if args.withMask else 6
+    else:
+        raise Exception('Error: No model named \'%s\'!' % args.model)
     _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
                                                 batchSizes=(0, args.batchsize_test),
-                                                loadScale=(args.load_scale[0] + args.load_scale[0] / 2),
+                                                loadScale=(args.load_scale[0], args.load_scale[0] / 2),
                                                 mode='testing',
                                                 preprocess=False,
-                                                mask=(1, 1, 0, 0))
+                                                mask=mask)
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
     stage = os.path.join(args.outputFolder, stage) if args.outputFolder is not None else stage
-    sr = getattr(SR, 'SR')(cuda=args.cuda, half=args.half, stage=stage,
-                           dataset=args.dataset)
-    if args.loadmodel is not None:
-        sr.load(args.loadmodel)
+    sr = getattr(SR, args.model)(cInput=cInput, cuda=args.cuda,
+                                 half=args.half, stage=stage,
+                                 dataset=args.dataset)
+    sr.load(args.loadmodel)
 
     # Test
-    test = Evaluation(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn,
+    test = Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
                       ndisLog=args.ndis_log)
     test(model=sr)
     test.log()

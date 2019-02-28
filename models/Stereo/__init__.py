@@ -13,51 +13,54 @@ from ..Model import Model
 
 class Stereo(Model):
     # dataset: only used for suffix of saveFolderName
+    # maxdisp: disparity range of self.model.
+    # (
+    # Note: the definition of maxdisp was changed from commit:d46b96.
+    # This corrects loss computation. So there will be different behavious in Stereo_train_moduletest.
+    # Change 'gts < self.maxdisp' to 'gts < self.outputMaxDisp' will reproduce the original wrong loss curve.
+    # )
+    # dispScale: scale the disparity value before input the original disparity map
     def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
                  saveFolderSuffix=''):
         super(Stereo, self).__init__(cuda, half, stage, dataset, saveFolderSuffix)
         self.maxdisp = maxdisp
         self.dispScale = dispScale
+        self.outputMaxDisp = maxdisp * dispScale # final output value range of disparity map
 
     def initModel(self):
-        self.model = self.getModel(round(self.maxdisp // self.dispScale))
+        self.model = self.getModel(self.maxdisp)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
         if self.cuda:
             self.model = nn.DataParallel(self.model)
             self.model.cuda()
 
-    def train(self, imgL, imgR, dispL=None, dispR=None):
-        super(Stereo, self)._train()
-        myUtils.assertDisp(dispL, dispR)
-        if self.cuda:
-            imgL, imgR = imgL.cuda(), imgR.cuda()
-            dispL = dispL.cuda() if dispL is not None else None
-            dispR = dispR.cuda() if dispR is not None else None
-        return imgL, imgR, dispL, dispR
+    def trainPrepare(self, batch=()):
+        batch = super(Stereo, self).trainPrepare(batch)
+        if len(batch) != 0:
+            batch.allDisps([disp / self.dispScale if disp is not None else None for disp in batch.allDisps()])
+        return batch
 
-    def predict(self, imgL, imgR, mask=(1, 1)):
-        super(Stereo, self)._predict()
-        autoPad = myUtils.AutoPad(imgL, self.multiple)
-        return autoPad
+    def predictPrepare(self, batch=()):
+        batch = super(Stereo, self).predictPrepare(batch)
+        autoPad = myUtils.AutoPad(batch[0], self.multiple)
+        return batch, autoPad
 
-    def test(self, imgL, imgR, dispL=None, dispR=None, type='l1', output=False, kitti=False):
-        myUtils.assertDisp(dispL, dispR)
+    def predict(self, batch, mask=(1, 1)):
+        super(Stereo, self).predict(batch)
 
-        if self.cuda:
-            imgL, imgR = imgL.cuda(), imgR.cuda()
-            dispL = dispL.cuda() if dispL is not None else None
-            dispR = dispR.cuda() if dispR is not None else None
+    def test(self, batch, type='l1', returnOutputs=False, kitti=False):
+        disps = batch.lowestResDisps()
+        myUtils.assertDisp(*disps)
 
         # for kitti dataset, only consider loss of none zero disparity pixels in gt
-
         scores = []
         outputs = []
-        dispOuts = self.predict(imgL, imgR, [disp is not None for disp in (dispL, dispR)])
-        for gt, dispOut in zip([dispL, dispR], dispOuts):
+        dispOuts = self.predict(batch.lastScaleBatch(), [disp is not None for disp in disps])
+        for gt, dispOut in zip(disps, dispOuts):
             if dispOut is not None:
                 if dispOut.dim() == 3:
                     dispOut = dispOut.unsqueeze(1)
-                outputs.append(dispOut if output else None)
+                outputs.append(dispOut if returnOutputs else None)
 
                 if kitti:
                     mask = gt > 0
@@ -71,38 +74,41 @@ class Stereo(Model):
         return scores, outputs
 
     def load(self, checkpointDir):
-        super(Stereo, self).load(checkpointDir)
+        checkpointDir = super(Stereo, self).beforeLoad(checkpointDir)
+        if checkpointDir is None:
+            return
 
         state_dict = torch.load(checkpointDir)
 
-        def loadValue(name):
-            if name in state_dict.keys():
-                value = state_dict[name]
-                if value != getattr(self, name):
-                    print(
-                        f'Specified {name} \'{getattr(self, name)}\' from args '
-                        f'is not equal to {name} \'{value}\' loaded from checkpoint!'
-                        f' Using loaded {name} instead!')
-                setattr(self, name, value)
-            else:
-                print(f'No {name} found in checkpoint! Using {name} \'{getattr(self, name)}\' specified in args!')
+        # def loadValue(name):
+        #     if name in state_dict.keys():
+        #         value = state_dict[name]
+        #         if value != getattr(self, name):
+        #             print(
+        #                 f'Specified {name} \'{getattr(self, name)}\' from args '
+        #                 f'is not equal to {name} \'{value}\' loaded from checkpoint!'
+        #                 f' Using loaded {name} instead!')
+        #         setattr(self, name, value)
+        #     else:
+        #         print(f'No {name} found in checkpoint! Using {name} \'{getattr(self, name)}\' specified in args!')
 
-        loadValue('maxdisp')
-        loadValue('dispScale')
+        # loadValue('maxdisp')
+        # loadValue('dispScale')
         self.initModel()
         self.model.load_state_dict(state_dict['state_dict'])
 
         print('Loading complete! Number of model parameters: %d' % self.nParams())
 
     def save(self, epoch, iteration, trainLoss):
-        super(Stereo, self)._save(epoch, iteration)
+        super(Stereo, self).beforeSave(epoch, iteration)
         torch.save({
             'epoch': epoch,
             'iteration': iteration,
             'state_dict': self.model.state_dict(),
             'train_loss': trainLoss,
             'maxdisp': self.maxdisp,
-            'dispScale': self.dispScale
+            'dispScale': self.dispScale,
+            'outputMaxDisp': self.outputMaxDisp
         }, self.checkpointDir)
         return self.checkpointDir
 
@@ -114,37 +120,37 @@ class PSMNet(Stereo):
         super(PSMNet, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet
 
-    def _train_original(self, imgL, imgR, disp_true, output=False, kitti=False):
+    def loss(self, outputs, gts, kitti=False):
+        outputs = [output.unsqueeze(1) for output in outputs]
+        # for kitti dataset, only consider loss of none zero disparity pixels in gt
+        mask = (gts > 0) if kitti else (gts < self.maxdisp)
+        mask.detach_()
+        loss = 0.5 * F.smooth_l1_loss(outputs[0][mask], gts[mask], reduction='mean') + 0.7 * F.smooth_l1_loss(
+            outputs[1][mask], gts[mask], reduction='mean') + F.smooth_l1_loss(outputs[2][mask], gts[mask],
+                                                                                 reduction='mean')
+        return loss
+
+    def trainOneSide(self, imgL, imgR, gt, returnOutputs=False, kitti=False):
         self.optimizer.zero_grad()
 
-        # for kitti dataset, only consider loss of none zero disparity pixels in gt
-        mask = (disp_true > 0) if kitti else (disp_true < self.maxdisp)
-        mask.detach_()
+        outputs = self.model(imgL, imgR)
 
-        output1, output2, output3 = self.model(imgL, imgR)
-        output1 = output1.unsqueeze(1)
-        output2 = output2.unsqueeze(1)
-        output3 = output3.unsqueeze(1)
-        loss = 0.5 * F.smooth_l1_loss(output1[mask], disp_true[mask], reduction='mean') + 0.7 * F.smooth_l1_loss(
-            output2[mask], disp_true[mask], reduction='mean') + F.smooth_l1_loss(output3[mask], disp_true[mask],
-                                                                                 reduction='mean')
-
+        loss = self.loss(outputs, gt, kitti=kitti)
         loss.backward()
         self.optimizer.step()
 
-        return loss.data.item(), output3 if output else None
+        return loss.data.item(), outputs[2] if returnOutputs else None
 
-    def train(self, imgL, imgR, dispL=None, dispR=None, output=False, kitti=False):
-        imgL, imgR, dispL, dispR = super(PSMNet, self).train(imgL, imgR, dispL, dispR)
-        dispL, dispR = dispL / self.dispScale if dispL is not None else None, \
-                       dispR / self.dispScale if dispR is not None else None
+    def train(self, batch, returnOutputs=False, kitti=False, weights=()):
+        myUtils.assertBatchLen(batch, 4)
+        imgL, imgR, dispL, dispR = super(PSMNet, self).trainPrepare(batch)
 
         losses = []
         outputs = []
         for inputL, inputR, gt, process in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
                                                (lambda im: im, myUtils.flipLR)):
-            loss, dispOut = self._train_original(
-                process(inputL), process(inputR), process(gt), output, kitti
+            loss, dispOut = self.trainOneSide(
+                process(inputL), process(inputR), process(gt), returnOutputs, kitti
             ) if gt is not None else (None, None)
             losses.append(loss)
             outputs.append(
@@ -154,11 +160,13 @@ class PSMNet(Stereo):
 
         return losses, outputs
 
-    def predict(self, imgL, imgR, mask=(1, 1)):
-        autoPad = super(PSMNet, self).predict(imgL, imgR, mask)
+    def predict(self, batch, mask=(1, 1)):
+        myUtils.assertBatchLen(batch, 4)
+        batch, autoPad = super(PSMNet, self).predictPrepare(batch)
+        imgs = batch.lowestResRGBs()
 
         with torch.no_grad():
-            imgL, imgR = autoPad.pad(imgL, self.cuda), autoPad.pad(imgR, self.cuda)
+            imgL, imgR = autoPad.pad(imgs)
             outputs = []
             for inputL, inputR, process, do in zip((imgL, imgR), (imgR, imgL),
                                                    (lambda im: im, myUtils.flipLR), mask):
@@ -181,6 +189,7 @@ class PSMNetDown(PSMNet):
     def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
                  saveFolderSuffix=''):
         super(PSMNetDown, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
+        self.outputMaxDisp = self.outputMaxDisp // 2
 
         # Downsampling net
         class AvgDownSample(torch.nn.Module):
@@ -199,16 +208,65 @@ class PSMNetDown(PSMNet):
             self.down = nn.DataParallel(self.down)
             self.down.cuda()
 
-    def train(self, imgL, imgR, dispL=None, dispR=None, output=False, kitti=False):
-        raise Exception('Error: fcn train() not completed yet!')
+    def loss(self, outputs, gts, kitti=False):
+        losses = []
+        losses.append(super(PSMNetDown, self).loss(outputs, gts[0], kitti=kitti))
+        outputs = [self.down(output) for output in outputs]
+        losses.append(super(PSMNetDown, self).loss(outputs, gts[1], kitti=kitti))
+        return losses
 
-    def predict(self, imgL, imgR, mask=(1, 1)):
-        outputs = super(PSMNetDown, self).predict(imgL, imgR, mask)
+    def trainOneSide(self, imgL, imgR, gts, returnOutputs=False, kitti=False, weights=(1, 0)):
+        self.optimizer.zero_grad()
+
+        outputs = self.model(imgL, imgR)
+
+        losses = self.loss(outputs, gts, kitti=kitti)
+        loss = sum([weight * loss for weight, loss in zip(weights, losses)])
+        loss.backward()
+        self.optimizer.step()
+
+        if returnOutputs:
+            with torch.no_grad():
+                rOutput = self.down(outputs[2])
+        else:
+            rOutput = None
+        losses = [loss,] + losses
+        return [loss.data.item() for loss in losses], rOutput
+
+    def train(self, batch, returnOutputs=False, kitti=False, weights=(1, 0)):
+        myUtils.assertBatchLen(batch, 8)
+        batch = super(PSMNet, self).trainPrepare(batch)
+
+        losses = []
+        outputs = []
+        imgL, imgR = batch.highResRGBs()
+        for inputL, inputR, gts, process in zip((imgL, imgR), (imgR, imgL),
+                                               zip(batch.highResDisps(), batch.lowResDisps()),
+                                               (lambda im: im, myUtils.flipLR)):
+            loss, dispOut = self.trainOneSide(
+                process(inputL), process(inputR), process(gts), returnOutputs, kitti, weights=weights
+            ) if gts is not None else (None, None)
+            losses.append(loss)
+            outputs.append(
+                (process(dispOut) * self.dispScale).cpu()
+                if dispOut is not None else None
+            )
+
+        return losses, outputs
+
+    def predict(self, batch, mask=(1, 1)):
+        myUtils.assertBatchLen(batch, 4)
+        outputs = super(PSMNetDown, self).predict(batch, mask)
         downsampled = []
         for output in outputs:
             # Down sample to half size
             downsampled.append(self.down(output) if output is not None else None)
         return downsampled
+
+    def test(self, batch, type='l1', returnOutputs=False, kitti=False):
+        myUtils.assertBatchLen(batch, 8)
+        batch = myUtils.Batch(batch.highResRGBs() + batch.lowestResDisps())
+        return super(PSMNetDown, self).test(batch, type, returnOutputs, kitti)
 
 
 class PSMNet_TieCheng(Stereo):
@@ -218,21 +276,12 @@ class PSMNet_TieCheng(Stereo):
         super(PSMNet_TieCheng, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet_TieCheng
 
-    def train(self, imgL, imgR, dispL=None, dispR=None, output=False, kitti=False):
-        imgL, imgR, dispL, dispR = super(PSMNet_TieCheng, self).train(imgL, imgR, dispL, dispR)
-        raise Exception('Fcn \'train\' not done yet...')
-
-    def predict(self, imgL, imgR, mode='both'):
-        autoPad = super(PSMNet_TieCheng, self).predict(imgL, imgR, mode)
+    def predict(self, batch, mask=(1, 1)):
+        batch, autoPad = super(PSMNet_TieCheng, self).predictPrepare(batch)
+        inputs = batch.lowestResRGBs()
 
         with torch.no_grad():
-            imgL, imgR = autoPad.pad(imgL, self.cuda), autoPad.pad(imgR, self.cuda)
-            pl, pr = self.model(imgL, imgR)
-            if mode == 'left':
-                return autoPad.unpad(pl) * self.dispScale
-            elif mode == 'right':
-                return autoPad.unpad(pr) * self.dispScale
-            elif mode == 'both':
-                return autoPad.unpad(pl) * self.dispScale, autoPad.unpad(pr) * self.dispScale
-            else:
-                raise Exception('No mode \'%s\'!' % mode)
+            imgL, imgR = autoPad.pad(inputs)
+            outputs = self.model(imgL, imgR)
+            outputs = autoPad.unpad(outputs)
+            return tuple(outputs)

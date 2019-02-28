@@ -10,23 +10,39 @@ from train.Train import Train as Base
 
 
 class Train(Base):
-    def __init__(self, trainImgLoader, nEpochs, lr=(0.001,), logEvery=1, testEvery=1, ndisLog=1, Test=None):
+    def __init__(self, trainImgLoader, nEpochs, lr=(0.001,), logEvery=1, testEvery=1, ndisLog=1, Test=None, lossWeights=(1,)):
         super(Train, self).__init__(trainImgLoader, nEpochs, lr, logEvery, testEvery, ndisLog, Test)
+        self.lossWeights = lossWeights
 
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
         if log:
-            losses, outputs = self.model.train(*batch, output=True, kitti=self.trainImgLoader.kitti)
+            losses, outputs = self.model.train(batch.deattach(),
+                                               returnOutputs=True,
+                                               kitti=self.trainImgLoader.kitti,
+                                               weights=self.lossWeights)
 
             # save Tensorboard logs to where checkpoint is.
             self.tensorboardLogger.set(self.model.logFolder)
-            for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), batch[2:4] + outputs):
-                self.tensorboardLogger.logFirstNIms('trainImages/' + name, disp, self.model.maxdisp,
+            for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), batch.lowestResDisps() + outputs):
+                self.tensorboardLogger.logFirstNIms('trainImages/' + name, disp, self.model.outputMaxDisp,
                                                     global_step=self.global_step, n=self.ndisLog)
         else:
-            losses, _ = self.model.train(*batch, output=False, kitti=self.trainImgLoader.kitti)
+            losses, _ = self.model.train(batch, returnOutputs=False, kitti=self.trainImgLoader.kitti)
 
-        lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
+        if type(losses[0]) in (list, tuple):
+            names = []
+            lossFlat = []
+            for i, lossLR in enumerate(zip(*losses)):
+                if i == 0:
+                    names += ['L', 'R']
+                else:
+                    names += ['L%d' % i, 'R%d' % i]
+                lossFlat += lossLR
+
+            lossesPairs = myUtils.NameValues(names, lossFlat, prefix='loss')
+        else:
+            lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
 
         return lossesPairs
 
@@ -35,7 +51,7 @@ def main():
     parser = myUtils.getBasicParser(
         ['outputFolder', 'maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
-         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half'],
+         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half', 'lossWeights'],
         description='train or finetune Stereo net')
 
     args = parser.parse_args()
@@ -57,7 +73,7 @@ def main():
     stage, _ = os.path.splitext(os.path.basename(__file__))
     stage = os.path.join(args.outputFolder, stage) if args.outputFolder is not None else stage
     saveFolderSuffix = myUtils.NameValues(('loadScale', 'trainCrop', 'batchSize'),
-                                          (trainImgLoader.loadScale * 10,
+                                          (trainImgLoader.loadScale[0] * 10,
                                            trainImgLoader.trainCrop,
                                            args.batchsize_train))
     stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale,
@@ -65,15 +81,14 @@ def main():
                                          stage=stage,
                                          dataset=args.dataset,
                                          saveFolderSuffix=saveFolderSuffix.strSuffix())
-    if args.loadmodel is not None:
-        stereo.load(args.loadmodel)
+    stereo.load(args.loadmodel)
 
     # Train
-    test = Stereo_eval.Evaluation(testImgLoader=testImgLoader, mode='both', evalFcn=args.eval_fcn,
+    test = Stereo_eval.Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
                                   ndisLog=args.ndis_log)
     train = Train(trainImgLoader=trainImgLoader, nEpochs=args.epochs, lr=args.lr,
                   logEvery=args.log_every, ndisLog=args.ndis_log,
-                  testEvery=args.test_every, Test=test)
+                  testEvery=args.test_every, Test=test, lossWeights=args.lossWeights)
     train(model=stereo)
 
 

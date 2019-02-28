@@ -1,8 +1,7 @@
 import time
-import torch
 import os
-from models import Stereo
 from utils import myUtils
+import sys
 
 class Evaluation:
     def __init__(self, testImgLoader, evalFcn='outlier', ndisLog=1):
@@ -25,8 +24,7 @@ class Evaluation:
         scoreUnit = '%' if 'outlier' in self.evalFcn else ''
 
         for batch_idx, batch in enumerate(self.testImgLoader, 1):
-            batch = [(data.half() if self.model.half else data) if data.numel() else None for data in batch]
-            batch = [(data.cuda() if self.model.cuda else data) if data is not None else None for data in batch]
+            batch = myUtils.Batch(batch, cuda=self.model.cuda, half=self.model.half)
 
             scoresPairs = self._evalIt(batch, log=(batch_idx == 1))
 
@@ -66,6 +64,12 @@ class Evaluation:
 
             log.seek(0)
             log.write('---------------------- %s ----------------------\n\n' % self.localtime)
+
+            log.write('python ')
+            for arg in sys.argv:
+                log.write(arg + ' ')
+            log.write('\n\n')
+
             baseInfos = (('data', self.testImgLoader.datapath ),
                          ('loadScale', self.testImgLoader.loadScale),
                          ('trainCrop', self.testImgLoader.trainCrop),

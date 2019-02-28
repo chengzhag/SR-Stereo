@@ -34,22 +34,36 @@ class Model:
     def initModel(self):
         pass
 
-    def _train(self):
+    def trainPrepare(self, batch=()):
         if self.model is None:
             self.initModel()
         # When training, log files should be saved to saveFolder.
         self.logFolder = os.path.join(self.saveFolder, 'logs')
         self.model.train()
+        return batch
 
-    def _predict(self):
+    def loss(self, outputs, gts):
+        raise Exception('Error: please overtide \'Model.loss()\' without calling it!')
+
+    def train(self, batch):
+        raise Exception('Error: please overtide \'Model.train()\' without calling it!')
+
+    def predictPrepare(self, batch=()):
         self.model.eval()
+        return batch
 
-    def load(self, checkpointDir):
+    def predict(self, batch):
+        raise Exception('Error: please overtide \'Model.predict()\' without calling it!')
+
+    def beforeLoad(self, checkpointDir):
         if checkpointDir is not None:
             print('Loading checkpoint from %s' % checkpointDir)
         else:
-            raise Exception('checkpoint dir is None!')
-
+            print('No checkpoint specified. Will initialize weights randomly.')
+            return None
+        checkpointDir = checkpointDir[0] \
+            if type(checkpointDir) in (list, tuple) and len(checkpointDir) == 1 \
+            else checkpointDir
         # update checkpointDir
         self.checkpointDir = checkpointDir
         self.checkpointFolder, _ = os.path.split(self.checkpointDir)
@@ -57,10 +71,12 @@ class Model:
         # Here checkpointFolder is setted as default logging folder.
         self.logFolder = os.path.join(self.checkpointFolder, 'logs')
 
+        return checkpointDir
+
     def nParams(self):
         return sum([p.data.nelement() for p in self.model.parameters()])
 
-    def _save(self, epoch, iteration):
+    def beforeSave(self, epoch, iteration):
         # update checkpointDir
         self.checkpointDir = os.path.join(self.saveFolder, 'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
         self.checkpointFolder = self.saveFolder

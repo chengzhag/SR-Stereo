@@ -46,7 +46,7 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
     for imgLoader in (trainImgLoader, testImgLoader):
         if imgLoader is not None:
             imgLoader.kitti = kitti
-            imgLoader.loadScale = loadScale[0]
+            imgLoader.loadScale = loadScale
             imgLoader.trainCrop = trainCrop
             imgLoader.datapath = datapath
             imgLoader.batchSizes = batchSizes

@@ -25,8 +25,7 @@ def main():
 
     # Load model
     sr = SR(cuda=args.cuda, half=args.half, stage='SR_moduleTest', dataset='testImages', saveFolderSuffix='')
-    if args.loadmodel is not None:
-        sr.load(args.loadmodel)
+    sr.load(args.loadmodel)
 
     # Predict
     saveFolder = os.path.join(sr.checkpointFolder, 'SR_module_test')
