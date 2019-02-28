@@ -113,25 +113,26 @@ class PSMNet(Stereo):
         super(PSMNet, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet
 
+    def loss(self, outputs, gts, weights=(1,), kitti=False):
+        outputs = [output.unsqueeze(1) for output in outputs]
+        # for kitti dataset, only consider loss of none zero disparity pixels in gt
+        mask = (gts > 0) if kitti else (gts < self.maxdisp)
+        mask.detach_()
+        loss = 0.5 * F.smooth_l1_loss(outputs[0][mask], gts[mask], reduction='mean') + 0.7 * F.smooth_l1_loss(
+            outputs[1][mask], gts[mask], reduction='mean') + F.smooth_l1_loss(outputs[2][mask], gts[mask],
+                                                                                 reduction='mean')
+        return loss
+
     def trainOneSide(self, imgL, imgR, disp_true, output=False, kitti=False):
         self.optimizer.zero_grad()
 
-        # for kitti dataset, only consider loss of none zero disparity pixels in gt
-        mask = (disp_true > 0) if kitti else (disp_true < self.maxdisp)
-        mask.detach_()
+        outputs = self.model(imgL, imgR)
 
-        output1, output2, output3 = self.model(imgL, imgR)
-        output1 = output1.unsqueeze(1)
-        output2 = output2.unsqueeze(1)
-        output3 = output3.unsqueeze(1)
-        loss = 0.5 * F.smooth_l1_loss(output1[mask], disp_true[mask], reduction='mean') + 0.7 * F.smooth_l1_loss(
-            output2[mask], disp_true[mask], reduction='mean') + F.smooth_l1_loss(output3[mask], disp_true[mask],
-                                                                                 reduction='mean')
-
+        loss = self.loss(outputs, disp_true, kitti=kitti)
         loss.backward()
         self.optimizer.step()
 
-        return loss.data.item(), output3 if output else None
+        return loss.data.item(), outputs[2] if output else None
 
     def train(self, batch, output=False, kitti=False):
         myUtils.assertBatchLen(batch, 4)
