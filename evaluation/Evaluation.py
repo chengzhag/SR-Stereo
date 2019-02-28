@@ -39,8 +39,9 @@ class Evaluation:
             if doLog:
                 self.tensorboardLogger.set(self.model.logFolder)
                 for name, im in ims.items():
-                    self.tensorboardLogger.logFirstNIms('testImages/' + name, im, 1,
-                                                        global_step=1, n=self.ndisLog)
+                    if im is not None:
+                        self.tensorboardLogger.logFirstNIms('testImages/' + name, im, 1,
+                                                            global_step=1, n=self.ndisLog)
 
             timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
 

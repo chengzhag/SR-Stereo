@@ -73,8 +73,9 @@ class Train:
                     lossesAvg = None
 
                     for name, im in ims.items():
-                        self.tensorboardLogger.logFirstNIms('trainImages/' + name, im, 1,
-                                                            global_step=self.global_step, n=self.ndisLog)
+                        if im is not None:
+                            self.tensorboardLogger.logFirstNIms('trainImages/' + name, im, 1,
+                                                                global_step=self.global_step, n=self.ndisLog)
 
                 totalTrainLoss += sum(lossesPairs.values()) / len(lossesPairs.values())
 

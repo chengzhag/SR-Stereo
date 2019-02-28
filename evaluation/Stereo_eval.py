@@ -20,10 +20,9 @@ class Evaluation(Base):
                                           kitti=self.testImgLoader.kitti)
 
         if log:
-            imgs = batch.lowestResDisps()
-
-            for im, side in zip(imgs, ('L', 'R')):
-                outputs['gt' + side] = im / self.model.outputMaxDisp
+            for disp, input, side in zip(batch.lowestResDisps(), batch.lowestResRGBs(), ('L', 'R')):
+                outputs['gt' + side] = disp / self.model.outputMaxDisp
+                outputs['input' + side] = input # lowestResRGBs should be input in most cases
 
         return scores, outputs
 

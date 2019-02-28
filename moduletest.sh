@@ -16,7 +16,7 @@ PYTHONPATH=./ python train/Stereo_train.py --outputFolder moduletests --dispscal
 
 # test Stereo_eval with PSMNet
 echo 'test Stereo_eval with PSMNet'
-PYTHONPATH=./ python evaluation\Stereo_eval.py --outputFolder moduletests --outputFolder moduletests --dispscale 0.5 --datapath /media/omnisky/zcSSD/SR-Stereo/datasets/carla_kitti/carla_kitti_sr_lowquality_moduletest/ --dataset carla_kitti --load_scale 0.25 --eval_fcn outlier --batchsize_test 2 --model PSMNet --loadmodel logs/moduletests/Stereo_train/190228164923_PSMNet_loadScale_2_trainCrop_128_256_batchSize_4_carla_kitti/checkpoint_epoch_0003_it_00002.tar --logToNew
+PYTHONPATH=./ python evaluation/Stereo_eval.py --outputFolder moduletests --outputFolder moduletests --dispscale 0.5 --datapath /media/omnisky/zcSSD/SR-Stereo/datasets/carla_kitti/carla_kitti_sr_lowquality_moduletest/ --dataset carla_kitti --load_scale 0.25 --eval_fcn outlier --batchsize_test 2 --model PSMNet --loadmodel logs/moduletests/Stereo_train/190228164923_PSMNet_loadScale_2_trainCrop_128_256_batchSize_4_carla_kitti/checkpoint_epoch_0003_it_00002.tar --logToNew
 
 # test SR_train/eval with EDSR
 echo 'SR_train/eval with EDSR'
