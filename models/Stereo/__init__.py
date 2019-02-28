@@ -9,6 +9,7 @@ from utils import myUtils
 from .PSMNet import stackhourglass as getPSMNet
 from .PSMNet_TieCheng import stackhourglass as getPSMNet_TieCheng
 from ..Model import Model
+import collections
 
 
 class Stereo(Model):
@@ -53,23 +54,21 @@ class Stereo(Model):
         myUtils.assertDisp(*disps)
 
         # for kitti dataset, only consider loss of none zero disparity pixels in gt
-        scores = []
-        outputs = []
+        scores = myUtils.NameValues()
+        outputs = collections.OrderedDict()
         dispOuts = self.predict(batch.lastScaleBatch(), [disp is not None for disp in disps])
-        for gt, dispOut in zip(disps, dispOuts):
+        for gt, dispOut, side in zip(disps, dispOuts, ('L', 'R')):
             if dispOut is not None:
                 if dispOut.dim() == 3:
                     dispOut = dispOut.unsqueeze(1)
-                outputs.append(dispOut if returnOutputs else None)
 
                 if kitti:
                     mask = gt > 0
                     dispOut = dispOut[mask]
                     gt = gt[mask]
-                scores.append(evalFcn.getEvalFcn(type)(gt, dispOut))
-            else:
-                outputs.append(None)
-                scores.append(None)
+                scores[type + side] = evalFcn.getEvalFcn(type)(gt, dispOut)
+
+                outputs['output' + side] = dispOut / self.outputMaxDisp if returnOutputs else None
 
         return scores, outputs
 
@@ -145,18 +144,16 @@ class PSMNet(Stereo):
         myUtils.assertBatchLen(batch, 4)
         imgL, imgR, dispL, dispR = super(PSMNet, self).trainPrepare(batch)
 
-        losses = []
-        outputs = []
-        for inputL, inputR, gt, process in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
-                                               (lambda im: im, myUtils.flipLR)):
+        losses = myUtils.NameValues()
+        outputs = collections.OrderedDict()
+        for inputL, inputR, gt, process, side in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
+                                               (lambda im: im, myUtils.flipLR), ('L', 'R')):
             loss, dispOut = self.trainOneSide(
                 process(inputL), process(inputR), process(gt), returnOutputs, kitti
             ) if gt is not None else (None, None)
-            losses.append(loss)
-            outputs.append(
-                (process(dispOut) * self.dispScale).cpu()
+            losses['loss' + side] = loss
+            outputs['output' + side] = (process(dispOut) * self.dispScale / self.outputMaxDisp).cpu()\
                 if dispOut is not None else None
-            )
 
         return losses, outputs
 
@@ -237,20 +234,20 @@ class PSMNetDown(PSMNet):
         myUtils.assertBatchLen(batch, 8)
         batch = super(PSMNet, self).trainPrepare(batch)
 
-        losses = []
-        outputs = []
+        losses = myUtils.NameValues()
+        outputs = collections.OrderedDict()
         imgL, imgR = batch.highResRGBs()
-        for inputL, inputR, gts, process in zip((imgL, imgR), (imgR, imgL),
+        for inputL, inputR, gts, process, side in zip((imgL, imgR), (imgR, imgL),
                                                zip(batch.highResDisps(), batch.lowResDisps()),
-                                               (lambda im: im, myUtils.flipLR)):
-            loss, dispOut = self.trainOneSide(
+                                               (lambda im: im, myUtils.flipLR), ('L', 'R')):
+            lossN, dispOut = self.trainOneSide(
                 process(inputL), process(inputR), process(gts), returnOutputs, kitti, weights=weights
             ) if gts is not None else (None, None)
-            losses.append(loss)
-            outputs.append(
-                (process(dispOut) * self.dispScale).cpu()
+            for i, loss in enumerate(lossN):
+                losses['loss' + side + ('' if i == 0 else str(i))] = loss
+
+            outputs['output' + side] =(process(dispOut) * self.dispScale / self.outputMaxDisp).cpu() \
                 if dispOut is not None else None
-            )
 
         return losses, outputs
 

@@ -17,17 +17,13 @@ class Train(Base):
         losses, outputs = self.model.train(batch.deattach(), returnOutputs=log)
 
         if log:
-            imgs = batch.lowResRGBs() + batch.highResRGBs() + outputs
+            imgs = batch.lowResRGBs() + batch.highResRGBs()
 
-            # save Tensorboard logs to where checkpoint is.
-            self.tensorboardLogger.set(self.model.logFolder)
             for imsSide, side in zip((imgs[0::2], imgs[1::2]), ('L', 'R')):
-                for name, im in zip(('input', 'gt', 'output'), imsSide):
-                    self.tensorboardLogger.logFirstNIms('trainImages/' + name + side, im, 1,
-                                                        global_step=self.global_step, n=self.ndisLog)
+                for name, im in zip(('input', 'gt'), imsSide):
+                    outputs[name + side] = im
 
-        lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
-        return lossesPairs
+        return losses, outputs
 
 
 def main():

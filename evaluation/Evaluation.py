@@ -15,7 +15,7 @@ class Evaluation:
         self.tensorboardLogger = myUtils.TensorboardLogger() # should be initialized in _evalIt
 
     def _evalIt(self, batch, log):
-        pass
+        return None, None
 
     def __call__(self, model):
         self.model = model
@@ -26,13 +26,21 @@ class Evaluation:
         for batch_idx, batch in enumerate(self.testImgLoader, 1):
             batch = myUtils.Batch(batch, cuda=self.model.cuda, half=self.model.half)
 
-            scoresPairs = self._evalIt(batch, log=(batch_idx == 1))
+            doLog = batch_idx == 1
+            scoresPairs, ims = self._evalIt(batch, log=doLog)
 
             try:
                 for name in totalTestScores.keys():
                     totalTestScores[name] += scoresPairs[name]
             except NameError:
                 totalTestScores = scoresPairs.copy()
+
+            # save Tensorboard logs to where checkpoint is.
+            if doLog:
+                self.tensorboardLogger.set(self.model.logFolder)
+                for name, im in ims.items():
+                    self.tensorboardLogger.logFirstNIms('testImages/' + name, im, 1,
+                                                        global_step=1, n=self.ndisLog)
 
             timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
 

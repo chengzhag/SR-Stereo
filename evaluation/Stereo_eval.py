@@ -20,16 +20,12 @@ class Evaluation(Base):
                                           kitti=self.testImgLoader.kitti)
 
         if log:
-            imgs = batch.lowestResDisps() + outputs
+            imgs = batch.lowestResDisps()
 
-            # save Tensorboard logs to where checkpoint is.
-            self.tensorboardLogger.set(self.model.logFolder)
-            for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), imgs):
-                self.tensorboardLogger.logFirstNIms('testImages/' + name, disp, self.model.outputMaxDisp,
-                                                    global_step=1, n=self.ndisLog)
+            for im, side in zip(imgs, ('L', 'R')):
+                outputs['gt' + side] = im / self.model.outputMaxDisp
 
-        scoresPairs = myUtils.NameValues(('L', 'R'), scores, prefix=self.evalFcn)
-        return scoresPairs
+        return scores, outputs
 
 
 def main():

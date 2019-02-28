@@ -10,6 +10,7 @@ from .EDSR import edsr
 from ..Model import Model
 import torch.nn.parallel as P
 from models.SR.warp import warp
+import collections
 
 
 class SR(Model):
@@ -38,12 +39,13 @@ class SR(Model):
     # imgL: RGB value range 0~1
     # imgH: RGB value range 0~1
     def train(self, batch, returnOutputs=False):
-        losses = []
-        outputs = []
-        for input, gt in zip(batch.lowResRGBs(), batch.highResRGBs()):
+        losses = myUtils.NameValues()
+        outputs = collections.OrderedDict()
+        for input, gt, side in zip(batch.lowResRGBs(), batch.highResRGBs(), ('L', 'R')):
             loss, predict = self.trainOneSide(input, gt) if gt is not None else (None, None)
-            losses.append(loss)
-            outputs.append(myUtils.quantize(predict, 1) if returnOutputs and predict is not None else None)
+            losses['loss' + side] = loss
+            outputs['output' + side] = \
+                myUtils.quantize(predict, 1) if returnOutputs and predict is not None else None
 
         return losses, outputs
 
@@ -82,15 +84,17 @@ class SR(Model):
 
     def test(self, batch, type='l1', returnOutputs=False):
         myUtils.assertBatchLen(batch, 8)
-        scores = []
-        outputs = self.predict(batch.lastScaleBatch(), mask=[gt is not None for gt in batch.highResRGBs()])
-        for gt, output in zip(batch.highResRGBs(), outputs):
-            if output is not None:
-                scores.append(evalFcn.getEvalFcn(type)(gt * self.args.rgb_range, output * self.args.rgb_range))
-            else:
-                scores.append(None)
 
-        return scores, list(outputs) if returnOutputs else None
+        scores = myUtils.NameValues()
+        outputs = collections.OrderedDict()
+        outputsIm = self.predict(batch.lastScaleBatch(), mask=[gt is not None for gt in batch.highResRGBs()])
+        for gt, output, side in zip(batch.highResRGBs(), outputsIm, ('L', 'R')):
+            scores[type + side] = evalFcn.getEvalFcn(type)(
+                gt * self.args.rgb_range, output * self.args.rgb_range
+            )if output is not None else None
+            outputs['output' + side] = output
+
+        return scores, outputs
 
     def load(self, checkpointDir):
         checkpointDir = super(SR, self).beforeLoad(checkpointDir)

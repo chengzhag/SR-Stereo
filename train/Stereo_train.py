@@ -22,29 +22,12 @@ class Train(Base):
                                            kitti=self.trainImgLoader.kitti,
                                            weights=self.lossWeights)
         if log:
-            imgs = batch.lowestResDisps() + outputs
+            imgs = batch.lowestResDisps()
 
-            # save Tensorboard logs to where checkpoint is.
-            self.tensorboardLogger.set(self.model.logFolder)
-            for name, disp in zip(('gtL', 'gtR', 'ouputL', 'ouputR'), imgs):
-                self.tensorboardLogger.logFirstNIms('trainImages/' + name, disp, self.model.outputMaxDisp,
-                                                    global_step=self.global_step, n=self.ndisLog)
+            for im, side in zip(imgs, ('L', 'R')):
+                outputs['gt' + side] = im / self.model.outputMaxDisp
 
-        if type(losses[0]) in (list, tuple):
-            names = []
-            lossFlat = []
-            for i, lossLR in enumerate(zip(*losses)):
-                if i == 0:
-                    names += ['L', 'R']
-                else:
-                    names += ['L%d' % i, 'R%d' % i]
-                lossFlat += lossLR
-
-            lossesPairs = myUtils.NameValues(names, lossFlat, prefix='loss')
-        else:
-            lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
-
-        return lossesPairs
+        return losses, outputs
 
 
 def main():

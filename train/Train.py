@@ -22,7 +22,7 @@ class Train:
         self.test.tensorboardLogger = self.tensorboardLogger # should be initialized in _trainIt 
         
     def _trainIt(self, batch, log):
-        pass
+        return None, None
 
     def __call__(self, model):
         self.model = model
@@ -52,7 +52,8 @@ class Train:
                 # torch.cuda.empty_cache()
 
                 doLog = self.global_step % self.logEvery == 0 and self.logEvery > 0
-                lossesPairs = self._trainIt(batch=batch, log=doLog)
+                lossesPairs, ims = self._trainIt(batch=batch, log=doLog)
+
                 if lossesAvg is None:
                     lossesAvg = lossesPairs.copy()
                 else:
@@ -62,6 +63,7 @@ class Train:
                 # save Tensorboard logs to where checkpoint is.
                 if doLog:
                     self.tensorboardLogger.set(self.model.logFolder)
+
                     for name in lossesAvg.keys():
                         lossesAvg[name] /= self.logEvery
                     lossesAvg['lr'] = self.lrNow
@@ -69,6 +71,10 @@ class Train:
                         self.tensorboardLogger.writer.add_scalar('trainLosses/' + name, value,
                                                                  self.global_step)
                     lossesAvg = None
+
+                    for name, im in ims.items():
+                        self.tensorboardLogger.logFirstNIms('trainImages/' + name, im, 1,
+                                                            global_step=self.global_step, n=self.ndisLog)
 
                 totalTrainLoss += sum(lossesPairs.values()) / len(lossesPairs.values())
 
