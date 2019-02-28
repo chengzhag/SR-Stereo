@@ -29,7 +29,7 @@ class Evaluation(Base):
 def main():
     parser = myUtils.getBasicParser(
         ['outputFolder', 'datapath', 'model', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
-         'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half', 'withMask'],
+         'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half', 'withMask', 'logToNew'],
         description='evaluate Stereo net or SR-Stereo net')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -61,6 +61,8 @@ def main():
                                  half=args.half, stage=stage,
                                  dataset=args.dataset)
     sr.load(args.loadmodel)
+    if args.logToNew:
+        sr.logFolder = sr.saveFolder
 
     # Test
     test = Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,

@@ -70,6 +70,10 @@ class Model:
                 self.checkpointDir = checkpointDirs
                 self.checkpointFolder, _ = os.path.split(self.checkpointDir)
 
+                # When testing, log files should be saved to checkpointFolder.
+                # Here checkpointFolder is setted as default logging folder.
+                self.logFolder = os.path.join(self.checkpointFolder, 'logs')
+
             elif len(checkpointDirs) >= 1:
                 # for model composed with multiple models, check if checkpointDirs are together
                 modelRoot = None
@@ -85,10 +89,8 @@ class Model:
                                         '190228011913_SR_loadScale_10_trainCrop_96_1360_batchSize_4_carla_kitti (runs)/'
                                         '*.tar (checkpoints)')
                 self.checkpointFolder = self.saveFolder
-
-        # When testing, log files should be saved to checkpointFolder.
-        # Here checkpointFolder is setted as default logging folder.
-        self.logFolder = os.path.join(self.saveFolder, 'logs')
+                # If model is composed with multiple models, save logs to a new folder
+                self.logFolder = os.path.join(self.saveFolder, 'logs')
 
         return checkpointDirs
 
