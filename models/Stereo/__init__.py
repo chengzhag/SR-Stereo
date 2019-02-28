@@ -204,6 +204,11 @@ class PSMNetDown(PSMNet):
             downsampled.append(self.down(output) if output is not None else None)
         return downsampled
 
+    def test(self, batch, type='l1', returnOutputs=False, kitti=False):
+        myUtils.assertBatchLen(batch, 8)
+        batch = myUtils.Batch(batch.highResRGBs() + batch.lowestResDisps())
+        return super(PSMNetDown, self).test(batch, type, returnOutputs, kitti)
+
 
 class PSMNet_TieCheng(Stereo):
     # dataset: only used for suffix of saveFolderName

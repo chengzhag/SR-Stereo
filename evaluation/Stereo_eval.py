@@ -12,10 +12,7 @@ class Evaluation(Base):
         super(Evaluation, self).__init__(testImgLoader, evalFcn, ndisLog)
 
     def _evalIt(self, batch, log):
-        if len(batch) == 8:
-            # use large scale for input and small scale for gt
-            batch = batch.highResRGBs() + batch.lowResDisps()
-
+        super(Evaluation, self)._evalIt(batch, log)
         if log:
             scores, outputs = self.model.test(batch.deattach(), type=self.evalFcn, returnOutputs=True, kitti=self.testImgLoader.kitti)
             imgs = batch.lowestResDisps() + outputs
