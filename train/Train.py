@@ -54,15 +54,18 @@ class Train:
                 doLog = self.global_step % self.logEvery == 0 and self.logEvery > 0
                 lossesPairs = self._trainIt(batch=batch, log=doLog)
                 if lossesAvg is None:
-                    lossesAvg = lossesPairs.values()
+                    lossesAvg = lossesPairs.copy()
                 else:
-                    lossesAvg = [lossAvg + loss for lossAvg, loss in zip(lossesAvg, lossesPairs.values())]
+                    for name in lossesAvg.keys():
+                        lossesAvg[name] += lossesPairs[name]
 
                 # save Tensorboard logs to where checkpoint is.
                 if doLog:
                     self.tensorboardLogger.set(self.model.logFolder)
-                    lossesAvg = [lossAvg / self.logEvery for lossAvg in lossesAvg]
-                    for name, value in zip(lossesPairs.names() + ['lr'], lossesAvg + [self.lrNow]):
+                    for name in lossesAvg.keys():
+                        lossesAvg[name] /= self.logEvery
+                    lossesAvg['lr'] = self.lrNow
+                    for name, value in lossesAvg.items():
                         self.tensorboardLogger.writer.add_scalar('trainLosses/' + name, value,
                                                                  self.global_step)
                     lossesAvg = None
@@ -87,7 +90,6 @@ class Train:
                 or (self.testEvery == 0 and epoch == self.nEpochs)) \
                     and self.test is not None:
                 testScores = self.test(model=self.model).values()
-                testScores = [score for score in testScores if score is not None]
                 testScore = sum(testScores) / len(testScores)
                 try:
                     if testScore <= minTestScore:
@@ -100,7 +102,7 @@ class Train:
                     ('minTestScore', 'minTestScoreEpoch'), (minTestScore, minTestScoreEpoch))
                 print('Training status: %s' % testReaults.strPrint(''))
                 self.test.log(epoch=epoch, it=batch_idx, global_step=self.global_step,
-                              additionalValue=testReaults.pairs())
+                              additionalValue=testReaults)
 
         endMessage = 'Full training time = %.2fh\n' % ((time.time() - ticFull) / 3600)
         print(endMessage)
