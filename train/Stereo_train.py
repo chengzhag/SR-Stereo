@@ -26,7 +26,19 @@ class Train(Base):
         else:
             losses, _ = self.model.train(batch, returnOutputs=False, kitti=self.trainImgLoader.kitti)
 
-        lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
+        if type(losses[0]) in (list, tuple):
+            names = []
+            lossFlat = []
+            for i, lossLR in enumerate(zip(*losses)):
+                if i == 0:
+                    names += ['LTotal', 'RTotal']
+                else:
+                    names += ['L%d' % i, 'R%d' % i]
+                lossFlat += lossLR
+
+            lossesPairs = myUtils.NameValues(names, lossFlat, prefix='loss')
+        else:
+            lossesPairs = myUtils.NameValues(('L', 'R'), losses, prefix='loss')
 
         return lossesPairs
 

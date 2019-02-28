@@ -118,7 +118,7 @@ class PSMNet(Stereo):
         super(PSMNet, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.getModel = getPSMNet
 
-    def loss(self, outputs, gts, weights=(1,), kitti=False):
+    def loss(self, outputs, gts, kitti=False):
         outputs = [output.unsqueeze(1) for output in outputs]
         # for kitti dataset, only consider loss of none zero disparity pixels in gt
         mask = (gts > 0) if kitti else (gts < self.maxdisp)
@@ -206,21 +206,20 @@ class PSMNetDown(PSMNet):
             self.down = nn.DataParallel(self.down)
             self.down.cuda()
 
-    def loss(self, outputs, gts, weights=(1, 0), kitti=False):
-        loss = 0
-        if weights[0] != 0:
-            loss += weights[0] * super(PSMNetDown, self).loss(outputs, gts[0], kitti=kitti)
-        if weights[1] != 0:
-            outputs = [self.down(output) for output in outputs]
-            loss += weights[1] * super(PSMNetDown, self).loss(outputs, gts[1], kitti=kitti)
-        return loss
+    def loss(self, outputs, gts, kitti=False):
+        losses = []
+        losses.append(super(PSMNetDown, self).loss(outputs, gts[0], kitti=kitti))
+        outputs = [self.down(output) for output in outputs]
+        losses.append(super(PSMNetDown, self).loss(outputs, gts[1], kitti=kitti))
+        return losses
 
-    def trainOneSide(self, imgL, imgR, gts, returnOutputs=False, kitti=False):
+    def trainOneSide(self, imgL, imgR, gts, returnOutputs=False, kitti=False, weights=(1, 0)):
         self.optimizer.zero_grad()
 
         outputs = self.model(imgL, imgR)
 
-        loss = self.loss(outputs, gts, kitti=kitti)
+        losses = self.loss(outputs, gts, kitti=kitti)
+        loss = sum([weight * loss for weight, loss in zip(weights, losses)])
         loss.backward()
         self.optimizer.step()
 
@@ -229,7 +228,8 @@ class PSMNetDown(PSMNet):
                 rOutput = self.down(outputs[2])
         else:
             rOutput = None
-        return loss.data.item(), rOutput
+        losses = [loss,] + losses
+        return [loss.data.item() for loss in losses], rOutput
 
     def train(self, batch, returnOutputs=False, kitti=False):
         myUtils.assertBatchLen(batch, 8)

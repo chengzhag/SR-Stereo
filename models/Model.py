@@ -42,7 +42,7 @@ class Model:
         self.model.train()
         return batch
 
-    def loss(self, outputs, gts, weights=(1,)):
+    def loss(self, outputs, gts):
         raise Exception('Error: please overtide \'Model.loss()\' without calling it!')
 
     def train(self, batch):
