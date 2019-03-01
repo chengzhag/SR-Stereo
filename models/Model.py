@@ -66,13 +66,6 @@ class Model:
         if type(checkpointDirs) in (list, tuple):
             if len(checkpointDirs) == 1:
                 checkpointDirs = checkpointDirs[0]
-                # update checkpointDir
-                self.checkpointDir = checkpointDirs
-                self.checkpointFolder, _ = os.path.split(self.checkpointDir)
-
-                # When testing, log files should be saved to checkpointFolder.
-                # Here checkpointFolder is setted as default logging folder.
-                self.logFolder = os.path.join(self.checkpointFolder, 'logs')
 
             elif len(checkpointDirs) >= 1:
                 # for model composed with multiple models, check if checkpointDirs are together
@@ -91,6 +84,15 @@ class Model:
                 self.checkpointFolder = self.saveFolder
                 # If model is composed with multiple models, save logs to a new folder
                 self.logFolder = os.path.join(self.saveFolder, 'logs')
+
+        if type(checkpointDirs) is str:
+            # update checkpointDir
+            self.checkpointDir = checkpointDirs
+            self.checkpointFolder, _ = os.path.split(self.checkpointDir)
+
+            # When testing, log files should be saved to checkpointFolder.
+            # Here checkpointFolder is setted as default logging folder.
+            self.logFolder = os.path.join(self.checkpointFolder, 'logs')
 
         return checkpointDirs
 
