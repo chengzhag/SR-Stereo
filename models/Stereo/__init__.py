@@ -70,7 +70,8 @@ class Stereo(Model):
                     gt = gt[mask]
                 scores[type + side] = evalFcn.getEvalFcn(type)(gt, dispOut)
 
-                outputs['output' + side] = dispOut / self.outputMaxDisp if returnOutputs else None
+                if returnOutputs:
+                    outputs['output' + side] = dispOut / self.outputMaxDisp
 
         return scores, outputs
 
@@ -136,8 +137,7 @@ class PSMNet(Stereo):
     def loss(self, outputs, gts, kitti=False):
         outputs = [output.unsqueeze(1) for output in outputs]
         # for kitti dataset, only consider loss of none zero disparity pixels in gt
-        mask = (gts > 0) if kitti else (gts < self.maxdisp)
-        mask.detach_()
+        mask = (gts.detach() > 0) if kitti else (gts.detach() < self.maxdisp)
         loss = 0.5 * F.smooth_l1_loss(outputs[0][mask], gts[mask], reduction='mean') + 0.7 * F.smooth_l1_loss(
             outputs[1][mask], gts[mask], reduction='mean') + F.smooth_l1_loss(outputs[2][mask], gts[mask],
                                                                               reduction='mean')
@@ -151,7 +151,7 @@ class PSMNet(Stereo):
         loss.backward()
         self.optimizer.step()
 
-        return loss.data.item(), outputs[2] if returnOutputs else None
+        return loss.data.item(), outputs[2].detach() * self.dispScale / self.outputMaxDisp if returnOutputs else None
 
     def trainPrepare(self, batch):
         batch = super(PSMNet, self).trainPrepare(batch)
@@ -170,8 +170,7 @@ class PSMNet(Stereo):
                 process(inputL), process(inputR), process(gt), returnOutputs, kitti
             ) if gt is not None else (None, None)
             losses['loss' + side] = loss
-            outputs['output' + side] = (process(dispOut) * self.dispScale / self.outputMaxDisp).cpu() \
-                if dispOut is not None else None
+            outputs['output' + side] = process(dispOut) if dispOut is not None else None
 
         return losses, outputs
 
@@ -245,13 +244,13 @@ class PSMNetDown(PSMNet):
         loss.backward()
         self.optimizer.step()
 
+        dispOuts = []
         if returnOutputs:
+            dispOuts.append(outputs[2].detach() * self.dispScale / self.outputMaxDisp / 2)
             with torch.no_grad():
-                rOutput = self.down(outputs[2])
-        else:
-            rOutput = None
+                dispOuts.append(self.down(outputs[2].detach()) * self.dispScale / self.outputMaxDisp)
         losses = [loss, ] + losses
-        return [loss.data.item() for loss in losses], rOutput
+        return [loss.data.item() for loss in losses], dispOuts
 
     def train(self, batch, returnOutputs=False, kitti=False, weights=(1, 0)):
         myUtils.assertBatchLen(batch, 8)
@@ -263,14 +262,14 @@ class PSMNetDown(PSMNet):
         for inputL, inputR, gts, process, side in zip((imgL, imgR), (imgR, imgL),
                                                       zip(batch.highResDisps(), batch.lowResDisps()),
                                                       (lambda im: im, myUtils.flipLR), ('L', 'R')):
-            lossN, dispOut = self.trainOneSide(
+            lossN, dispOuts = self.trainOneSide(
                 process(inputL), process(inputR), process(gts), returnOutputs, kitti, weights=weights
             ) if gts is not None else (None, None)
-            for i, loss in enumerate(lossN):
-                losses['loss' + side + ('' if i == 0 else str(i))] = loss
+            for suffix, loss in zip(('', 'High', 'Low'), lossN):
+                losses['loss' + suffix + side] = loss
 
-            outputs['output' + side] = (process(dispOut) * self.dispScale / self.outputMaxDisp).cpu() \
-                if dispOut is not None else None
+            if returnOutputs:
+                outputs['outputHigh' + side], outputs['outputLow' + side] = process(dispOuts)
 
         return losses, outputs
 
@@ -319,7 +318,7 @@ class SRStereo(Model):
         stereoBatch.lowestResDisps(batch.lowestResDisps())
         scores, outputs = self.stereo.test(stereoBatch, type=type, returnOutputs=returnOutputs, kitti=kitti)
         for sr, side in zip(srs, ('L', 'R')):
-            outputs['sr' + side] = sr
+            outputs['outputSR' + side] = sr
         return scores, outputs
 
     def load(self, checkpointDir):

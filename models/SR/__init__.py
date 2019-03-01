@@ -46,21 +46,19 @@ class SR(Model):
         for input, gt, side in zip(batch.lowResRGBs(), batch.highResRGBs(), ('L', 'R')):
             loss, predict = self.trainOneSide(input, gt) if gt is not None else (None, None)
             losses['loss' + side] = loss
-            outputs['output' + side] = \
-                myUtils.quantize(predict, 1) if returnOutputs and predict is not None else None
+            if returnOutputs:
+                outputs['output' + side] = myUtils.quantize(predict, 1)
 
         return losses, outputs
 
     def trainOneSide(self, imgL, imgH):
-        if self.cuda:
-            imgL, imgH = imgL.cuda(), imgH.cuda()
         self.optimizer.zero_grad()
         output = P.data_parallel(self.model, imgL * self.args.rgb_range)
         loss = F.smooth_l1_loss(imgH * self.args.rgb_range, output, reduction='mean')
         with self.amp_handle.scale_loss(loss, self.optimizer) as scaled_loss:
             scaled_loss.backward()
         self.optimizer.step()
-        output = output / self.args.rgb_range
+        output = output.detach() / self.args.rgb_range
         return loss.data.item(), output
 
     # imgL: RGB value range 0~1
@@ -149,27 +147,33 @@ class SRdisp(SR):
         inputL, inputR, dispL, dispR = batch
         with torch.no_grad():
             warpToL, warpToR, maskL, maskR = warp(*batch)
-
-            inputs = []
+            warpTos = (warpToL, warpToR)
+            cated = []
             for input in zip((inputL, inputR), (warpToL, warpToR), (maskL, maskR)):
                 if self.args.n_inputs == 7:
-                    inputs.append(torch.cat(input, 1))
+                    cated.append(torch.cat(input, 1))
                 elif self.args.n_inputs == 6:
-                    inputs.append(torch.cat(input[:2], 1))
+                    cated.append(torch.cat(input[:2], 1))
                 else:
                     raise Exception(
                         'Error: self.model.args.n_inputs = %d which is not supporty!' % self.model.args.n_inputs)
-            return inputs
+            return cated, warpTos
 
     def train(self, batch, returnOutputs=False):
         myUtils.assertBatchLen(batch, 8)
-        batch.lowResRGBs(self.warpAndCat(batch.lastScaleBatch()))
-        return super(SRdisp, self).train(batch, returnOutputs)
+        cated, warpTos = self.warpAndCat(batch.lastScaleBatch())
+        batch.lowResRGBs(cated)
+        losses, outputs = super(SRdisp, self).train(batch, returnOutputs)
+        if returnOutputs:
+            for warpTo, side in zip(warpTos, ('L', 'R')):
+                outputs['warpTo' + side] = warpTo
+        return losses, outputs
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
     def predict(self, batch, mask=(1,1)):
         myUtils.assertBatchLen(batch, 4)
-        batch.highResRGBs(self.warpAndCat(batch.firstScaleBatch()))
+        cated, warpTos = self.warpAndCat(batch.firstScaleBatch())
+        batch.highResRGBs(cated)
         return super(SRdisp, self).predict(batch, mask)
 
