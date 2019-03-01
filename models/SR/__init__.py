@@ -39,6 +39,7 @@ class SR(Model):
     # imgL: RGB value range 0~1
     # imgH: RGB value range 0~1
     def train(self, batch, returnOutputs=False):
+        myUtils.assertBatchLen(batch, 8)
         batch = self.trainPrepare(batch)
 
         losses = myUtils.NameValues()
@@ -47,7 +48,7 @@ class SR(Model):
             loss, predict = self.trainOneSide(input, gt) if gt is not None else (None, None)
             losses['loss' + side] = loss
             if returnOutputs:
-                outputs['output' + side] = myUtils.quantize(predict.detach() / self.args.rgb_range, 1)
+                outputs['output' + side] = myUtils.quantize(predict / self.args.rgb_range, 1)
 
         return losses, outputs
 
@@ -58,15 +59,15 @@ class SR(Model):
         with self.amp_handle.scale_loss(loss, self.optimizer) as scaled_loss:
             scaled_loss.backward()
         self.optimizer.step()
-        return loss.data.item(), output
+        return loss.data.item(), output.detach()
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
     def predict(self, batch, mask=(1,1)):
-        batch = self.predictPrepare(batch)
         myUtils.assertBatchLen(batch, 4)
+        batch = self.predictPrepare(batch)
         outputs = []
-        for input, do in zip(batch.highResRGBs(), mask):
+        for input, do in zip(batch.lowestResRGBs(), mask):
             outputs.append(self.predictOneSide(input) if do else None)
 
         return outputs
