@@ -47,7 +47,7 @@ class SR(Model):
             loss, predict = self.trainOneSide(input, gt) if gt is not None else (None, None)
             losses['loss' + side] = loss
             if returnOutputs:
-                outputs['output' + side] = myUtils.quantize(predict, 1)
+                outputs['output' + side] = myUtils.quantize(predict.detach() / self.args.rgb_range, 1)
 
         return losses, outputs
 
@@ -58,7 +58,6 @@ class SR(Model):
         with self.amp_handle.scale_loss(loss, self.optimizer) as scaled_loss:
             scaled_loss.backward()
         self.optimizer.step()
-        output = output.detach() / self.args.rgb_range
         return loss.data.item(), output
 
     # imgL: RGB value range 0~1
