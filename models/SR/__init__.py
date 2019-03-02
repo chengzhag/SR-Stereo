@@ -36,6 +36,18 @@ class SR(Model):
         if self.cuda:
             self.model.cuda()
 
+    # outputs, gts: RGB value range 0~1
+    def loss(self, outputs, gts):
+        # To get same loss with orignal EDSR, input range should scale to 0~self.args.rgb_range
+        loss = F.smooth_l1_loss(outputs * self.args.rgb_range, gts * self.args.rgb_range, reduction='mean')
+        return loss
+
+    # input: RGB value range 0~1
+    # output: RGB value range 0~1 without quantize
+    def forward(self, imgL):
+        output = P.data_parallel(self.model, imgL * self.args.rgb_range) / self.args.rgb_range
+        return output
+
     # imgL: RGB value range 0~1
     # imgH: RGB value range 0~1
     def train(self, batch, returnOutputs=False):
@@ -45,21 +57,23 @@ class SR(Model):
         losses = myUtils.NameValues()
         outputs = collections.OrderedDict()
         for input, gt, side in zip(batch.lowResRGBs(), batch.highResRGBs(), ('L', 'R')):
-            loss, predict = self.trainOneSide(input, gt) if gt is not None else (None, None)
-            losses['loss' + side] = loss
-            if returnOutputs:
-                outputs['output' + side] = myUtils.quantize(predict / self.args.rgb_range, 1)
+            if gt is not None:
+                loss, predict = self.trainOneSide(input, gt, returnOutputs)
+                losses['loss' + side] = loss
+                if returnOutputs:
+                    outputs['output' + side] = predict
 
         return losses, outputs
 
-    def trainOneSide(self, imgL, imgH):
+    def trainOneSide(self, imgL, imgH, returnOutputs=False):
         self.optimizer.zero_grad()
-        output = P.data_parallel(self.model, imgL * self.args.rgb_range)
-        loss = F.smooth_l1_loss(imgH * self.args.rgb_range, output, reduction='mean')
+        output = self.forward(imgL)
+        loss = self.loss(imgH, output)
         with self.amp_handle.scale_loss(loss, self.optimizer) as scaled_loss:
             scaled_loss.backward()
         self.optimizer.step()
-        return loss.data.item(), output.detach()
+        output = myUtils.quantize(output.detach(), 1) if returnOutputs else None
+        return loss.data.item(), output
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
@@ -77,8 +91,8 @@ class SR(Model):
     # output: RGB value range 0~1
     def predictOneSide(self, imgL):
         with torch.no_grad():
-            output = P.data_parallel(self.model, imgL * self.args.rgb_range)
-            output = myUtils.quantize(output, self.args.rgb_range) / self.args.rgb_range
+            output = self.forward(imgL)
+            output = myUtils.quantize(output, 1)
             return output
 
     def test(self, batch, type='l1', returnOutputs=False):
@@ -86,12 +100,14 @@ class SR(Model):
 
         scores = myUtils.NameValues()
         outputs = collections.OrderedDict()
-        outputsIm = self.predict(batch.lastScaleBatch(), mask=[gt is not None for gt in batch.highResRGBs()])
+        mask = [gt is not None for gt in batch.highResRGBs()]
+        outputsIm = self.predict(batch.lastScaleBatch(), mask=mask)
         for gt, output, side in zip(batch.highResRGBs(), outputsIm, ('L', 'R')):
             scores[type + side] = evalFcn.getEvalFcn(type)(
                 gt * self.args.rgb_range, output * self.args.rgb_range
             )if output is not None else None
-            outputs['output' + side] = output
+            if returnOutputs:
+                outputs['output' + side] = output
 
         return scores, outputs
 
@@ -167,6 +183,8 @@ class SRdisp(SR):
 
     def train(self, batch, returnOutputs=False):
         myUtils.assertBatchLen(batch, 8)
+        self.trainPrepare()
+
         cated, warpTos = self.warpAndCat(batch.lastScaleBatch())
         batch.lowResRGBs(cated)
         losses, outputs = super(SRdisp, self).train(batch, returnOutputs)
@@ -179,7 +197,10 @@ class SRdisp(SR):
     # output: RGB value range 0~1
     def predict(self, batch, mask=(1,1)):
         myUtils.assertBatchLen(batch, 4)
+        self.predictPrepare()
+
         cated, warpTos = self.warpAndCat(batch.firstScaleBatch())
         batch.highResRGBs(cated)
-        return super(SRdisp, self).predict(batch, mask)
+        outputs = super(SRdisp, self).predict(batch, mask)
+        return outputs
 
