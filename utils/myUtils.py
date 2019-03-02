@@ -128,6 +128,8 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                                                          help='datapath'),
                  'load_scale': lambda: parser.add_argument('--load_scale', type=float, default=[1], nargs='+',
                                                            help='scaling applied to data during loading'),
+                 'randomLR': lambda: parser.add_argument('--randomLR', type=str, default=None,
+                                                        help='enables randomly loading left or right images (disp/rgb)'),
                  # training
                  'batchsize_train': lambda: parser.add_argument('--batchsize_train', type=int, default=3,
                                                                 help='training batch size'),

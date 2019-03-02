@@ -1,9 +1,10 @@
 import torch
 
+
 # cropScale: Defaultly set to loadScale to remain ratio between loaded image and cropped image.
 # loadScale: A list of scale to load. Will return 4 * len(loadScale) images. Should be decreasing values.
 def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSizes=(12, 11),
-                  loadScale=(1,), mode='normal',mask=(1, 1, 1, 1)):
+                  loadScale=(1,), mode='normal', mask=(1, 1, 1, 1), randomLR=None):
     if not hasattr(loadScale, '__iter__'):
         loadScale = (loadScale,)
     if dataset == 'sceneflow':
@@ -29,14 +30,14 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
     trainImgLoader = torch.utils.data.DataLoader(
         fileLoader.myImageFloder(*pathsTrain, trainCrop=trainCrop,
                                  kitti=kitti, loadScale=loadScale,
-                                 mode=mode, mask=mask),
+                                 mode=mode, mask=mask, randomLR=randomLR),
         batch_size=batchSizes[0], shuffle=True, num_workers=4, drop_last=False) if batchSizes[0] > 0 else None
 
     testImgLoader = torch.utils.data.DataLoader(
         fileLoader.myImageFloder(*pathsTest, trainCrop=trainCrop,
                                  kitti=kitti, loadScale=loadScale,
                                  mode='testing' if mode == 'training' else mode,
-                                 mask=mask),
+                                 mask=mask, randomLR=randomLR),
         batch_size=batchSizes[1], shuffle=False, num_workers=4, drop_last=False) if batchSizes[1] > 0 else None
 
     # Add dataset info to imgLoader objects

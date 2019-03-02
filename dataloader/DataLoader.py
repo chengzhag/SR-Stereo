@@ -22,7 +22,7 @@ class myImageFloder(data.Dataset):
     # trainCrop = (W, H)
     def __init__(self, inputLdirs=None, inputRdirs=None, gtLdirs=None, gtRdirs=None,
                  trainCrop=(256, 512), kitti=False, loadScale=(1,), mode='training',
-                 mask=(1, 1, 1, 1)):
+                 mask=(1, 1, 1, 1), randomLR=None):
         self.mask = mask
         self.mode = mode
         self.dirs = (inputLdirs, inputRdirs, gtLdirs, gtRdirs)
@@ -33,6 +33,7 @@ class myImageFloder(data.Dataset):
         self.dispScale = 256 if kitti else 1
         self.loadScale = loadScale
         self.trainCrop = trainCrop
+        self.randomLR = randomLR
 
 
     def __getitem__(self, index):
@@ -62,9 +63,25 @@ class myImageFloder(data.Dataset):
 
         randomCrop = RandomCrop(trainCrop=self.trainCrop)
 
+        if self.randomLR is not None:
+            isLorR = random.randint(0, 1) == 1
+            randomMask = list(self.mask[:])
+            if self.randomLR == 'disp':
+                iStart = 2
+            elif self.randomLR == 'rgb':
+                iStart = 0
+            else:
+                raise Exception(f'No randomLR setting: {self.randomLR}')
+
+            for i in range(iStart, iStart + 2):
+                randomMask[i::4] = [isLorR and original for original in randomMask[i::4]]
+                isLorR = not isLorR
+        else:
+            randomMask = self.mask
+
         def loadIm(dirsIndex, loader, scaleRatios, isRGBorDepth):
             ims = []
-            if not self.mask[dirsIndex] or self.dirs[dirsIndex] is None:
+            if not randomMask[dirsIndex] or self.dirs[dirsIndex] is None:
                 return [np.array([]),] * len(self.loadScale)
             im0 = loader(self.dirs[dirsIndex][index])
             if type(im0) == np.ndarray:
