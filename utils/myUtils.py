@@ -145,6 +145,10 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                  'lr': lambda: parser.add_argument('--lr', type=float, default=[0.001], help='', nargs='+'),
                  'lossWeights': lambda: parser.add_argument('--lossWeights', type=float, default=[1], nargs='+',
                                                            help='weights of losses if model have multiple losses'),
+                 'resume': lambda: parser.add_argument('--resume', action='store_true', default=False,
+                                                           help='resume specified training '
+                                                                '(or save evaluation results to old folder)'
+                                                                ' else save/log into a new folders'),
                  # evaluation
                  'eval_fcn': lambda: parser.add_argument('--eval_fcn', type=str, default='outlier',
                                                          help='evaluation function used in testing'),

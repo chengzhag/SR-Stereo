@@ -19,11 +19,11 @@ class Model:
         self.startTime = time.localtime(time.time())
         self.multiple = 16
 
-        self.saveFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) \
+        self.newFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) \
                               + self.__class__.__name__ \
                               + saveFolderSuffix
-        if dataset is not None: self.saveFolderName += ('_%s' % dataset)
-        self.saveFolder = os.path.join('logs', stage, self.saveFolderName)
+        if dataset is not None: self.newFolderName += ('_%s' % dataset)
+        self.newFolder = os.path.join('logs', stage, self.newFolderName)
         self.logFolder = None
         self.checkpointDir = None
         self.checkpointFolder = None
@@ -35,13 +35,14 @@ class Model:
     def initModel(self):
         pass
 
-    def trainPrepare(self, batch):
-        if self.model is None:
-            self.initModel()
-        # When training, log files should be saved to saveFolder.
-        self.logFolder = os.path.join(self.saveFolder, 'logs')
-        self.model.train()
-        return batch
+    def trainPrepare(self):
+        if type(self.model) in (list, tuple):
+            for m in self.model:
+                m.trainPrepare()
+        else:
+            if self.model is None:
+                self.initModel()
+            self.model.train()
 
     def loss(self, outputs, gts):
         raise Exception('Error: please overtide \'Model.loss()\' without calling it!')
@@ -49,14 +50,50 @@ class Model:
     def train(self, batch):
         raise Exception('Error: please overtide \'Model.train()\' without calling it!')
 
-    def predictPrepare(self, batch):
-        self.model.eval()
-        return batch
+    def predictPrepare(self):
+        if type(self.model) in (list, tuple):
+            for m in self.model:
+                m.predictPrepare()
+        else:
+            self.model.eval()
 
     def predict(self, batch):
         raise Exception('Error: please overtide \'Model.predict()\' without calling it!')
 
-    def beforeLoad(self, checkpointDirs):
+    # For multi checkpointModel, optimizer state dict is saved to a independent folder.
+    # If input checkpointDirs fewer than maxCheckPoints,
+    #   optimizer checkpoint is not specified,
+    #   new optimizer checkpoint will be saved to self.newFolder
+    # If input checkpointDirs with amount of maxCheckPoints, optimizer checkpoint is the last one
+    def loadPrepare(self, checkpointDirs, maxCheckPoints=1):
+        def scanCheckpoint(checkpointDirs):
+            # if checkpoint is folder
+            if os.path.isdir(checkpointDirs):
+                filenames = [d for d in os.listdir(checkpointDirs) if os.path.isfile(os.path.join(checkpointDirs, d))]
+                filenames.sort()
+                latestCheckpointName = None
+                latestEpoch = None
+
+                def _getEpoch(name):
+                    try:
+                        return int(name.split('_')[-3])
+                    except ValueError:
+                        return None
+
+                for filename in filenames:
+                    if any(filename.endswith(extension) for extension in ('.tar', '.pt')):
+                        if latestCheckpointName is None:
+                            latestCheckpointName = filename
+                            latestEpoch = _getEpoch(filename)
+                        else:
+                            epoch = _getEpoch(filename)
+                            if epoch > latestEpoch or epoch is None:
+                                latestCheckpointName = filename
+                                latestEpoch = epoch
+                checkpointDirs = os.path.join(checkpointDirs, latestCheckpointName)
+
+            return checkpointDirs
+
         if checkpointDirs is not None:
             print('Loading checkpoint from %s' % checkpointDirs)
         else:
@@ -68,8 +105,11 @@ class Model:
                 checkpointDirs = checkpointDirs[0]
 
             elif len(checkpointDirs) >= 1:
+                if len(checkpointDirs) > maxCheckPoints:
+                    raise Exception(f'Error: Specified {len(checkpointDirs)} checkpoints. Only {maxCheckPoints} are needed!')
                 # for model composed with multiple models, check if checkpointDirs are together
                 modelRoot = None
+                checkpointDirs = [scanCheckpoint(dir) for dir in checkpointDirs]
                 for dir in checkpointDirs:
                     checkpointFolder, _ = os.path.split(dir)
                     checkpointRoot = os.path.join(*checkpointFolder.split('/')[:-2])
@@ -81,11 +121,17 @@ class Model:
                                         'pycharmruns (running stage)/SRStereo_eval_test (model)/SR_train (components)/'
                                         '190228011913_SR_loadScale_10_trainCrop_96_1360_batchSize_4_carla_kitti (runs)/'
                                         '*.tar (checkpoints)')
-                self.checkpointFolder = self.saveFolder
-                # If model is composed with multiple models, save logs to a new folder
-                self.logFolder = os.path.join(self.saveFolder, 'logs')
+                if len(checkpointDirs) == maxCheckPoints:
+                    self.checkpointDir = checkpointDirs[-1]
+                    self.checkpointFolder, _ = os.path.split(self.checkpointDir)
+                else:
+                    self.checkpointFolder = self.newFolder
+                    # If model is composed with multiple models, save logs to a new folder
+                self.logFolder = os.path.join(self.checkpointFolder, 'logs')
 
         if type(checkpointDirs) is str:
+            checkpointDirs = scanCheckpoint(checkpointDirs)
+
             # update checkpointDir
             self.checkpointDir = checkpointDirs
             self.checkpointFolder, _ = os.path.split(self.checkpointDir)
@@ -94,14 +140,17 @@ class Model:
             # Here checkpointFolder is setted as default logging folder.
             self.logFolder = os.path.join(self.checkpointFolder, 'logs')
 
+        if self.model is None:
+            self.initModel()
         return checkpointDirs
 
     def nParams(self):
         return sum([p.data.nelement() for p in self.model.parameters()])
 
-    def beforeSave(self, epoch, iteration):
+    def savePrepare(self, epoch, iteration, toOld=False):
         # update checkpointDir
-        self.checkpointDir = os.path.join(self.saveFolder, 'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
-        self.checkpointFolder = self.saveFolder
+        self.checkpointFolder = self.checkpointFolder if toOld else self.newFolder
+        self.checkpointDir = os.path.join(self.checkpointFolder,
+                                          'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
         self.logFolder = os.path.join(self.checkpointFolder, 'logs')
-        myUtils.checkDir(self.saveFolder)
+        myUtils.checkDir(self.checkpointFolder)
