@@ -2,13 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5af41d42-9f6a-4e3f-b5e4-a4d9632ca140" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/SR-Stereo.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/SR-Stereo.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dataloader/DataLoader.py" beforeDir="false" afterPath="$PROJECT_DIR$/dataloader/DataLoader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dataloader/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/dataloader/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dataloader/listCarlaKittiFiles.py" beforeDir="false" afterPath="$PROJECT_DIR$/dataloader/listCarlaKittiFiles.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/moduletest.sh" beforeDir="false" afterPath="$PROJECT_DIR$/moduletest.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/evaluation/Evaluation.py" beforeDir="false" afterPath="$PROJECT_DIR$/evaluation/Evaluation.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/myUtils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/myUtils.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -1470,15 +1464,11 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.SR_module_test" />
-      <item itemvalue="Python.listCarlaKittiFiles" />
-      <item itemvalue="Python.listCarlaKittiFiles_halfscale" />
-      <item itemvalue="Python.warp_carla_kitti" />
-      <item itemvalue="Python.warp_carla_kitti_halfscale" />
-      <item itemvalue="Python.warp_sceneflow" />
+      <item itemvalue="Python.PSMNetDown_train_moduletest" />
       <item itemvalue="Python.SR_eval_EDSR_carla_kitti" />
       <item itemvalue="Python.SR_eval_EDSR_carla_kitti_half" />
       <item itemvalue="Python.SR_eval_EDSR_kitti2015" />
+      <item itemvalue="Python.SR_module_test" />
       <item itemvalue="Python.SR_sub_EDSR_kitti2015_eval" />
       <item itemvalue="Python.SR_sub_EDSR_kitti2015_eval_half" />
       <item itemvalue="Python.SR_train_EDSR_carla_kitti" />
@@ -1491,7 +1481,6 @@
       <item itemvalue="Python.SRdisp_train_EDSR_carla_kitti" />
       <item itemvalue="Python.SRdisp_train_EDSR_carla_kitti_half" />
       <item itemvalue="Python.SRdisp_train_moduletest" />
-      <item itemvalue="Python.Stereo_eval_SRStereo_carla_kitti_halfscale_half" />
       <item itemvalue="Python.Stereo_eval_PSMNetDown_carla_kitti_half" />
       <item itemvalue="Python.Stereo_eval_PSMNet_TieCheng_kitti2015" />
       <item itemvalue="Python.Stereo_eval_PSMNet_carla_kitti" />
@@ -1501,17 +1490,22 @@
       <item itemvalue="Python.Stereo_eval_PSMNet_kitti2012" />
       <item itemvalue="Python.Stereo_eval_PSMNet_kitti2015" />
       <item itemvalue="Python.Stereo_eval_PSMNet_sceneflow" />
+      <item itemvalue="Python.Stereo_eval_SRStereo_carla_kitti_halfscale_half" />
       <item itemvalue="Python.Stereo_eval_moduletest" />
       <item itemvalue="Python.Stereo_sub_PSMNet_TieCheng_kitti2015_eval" />
       <item itemvalue="Python.Stereo_sub_PSMNet_kitti2015_eval" />
       <item itemvalue="Python.Stereo_sub_PSMNet_kitti2015_eval_half" />
-      <item itemvalue="Python.PSMNetDown_train_moduletest" />
-      <item itemvalue="Python.Stereo_train_SRStereo_carla_kitti" />
       <item itemvalue="Python.Stereo_train_PSMNet_carla_kitti" />
       <item itemvalue="Python.Stereo_train_PSMNet_kitti2012" />
       <item itemvalue="Python.Stereo_train_PSMNet_kitti2015" />
       <item itemvalue="Python.Stereo_train_PSMNet_sceneflow" />
+      <item itemvalue="Python.Stereo_train_SRStereo_carla_kitti" />
       <item itemvalue="Python.Stereo_train_moduletest" />
+      <item itemvalue="Python.listCarlaKittiFiles" />
+      <item itemvalue="Python.listCarlaKittiFiles_halfscale" />
+      <item itemvalue="Python.warp_carla_kitti" />
+      <item itemvalue="Python.warp_carla_kitti_halfscale" />
+      <item itemvalue="Python.warp_sceneflow" />
     </list>
   </component>
   <component name="SvnConfiguration">
@@ -1591,12 +1585,12 @@
       <workItem from="1551271314429" duration="20077000" />
       <workItem from="1551326159268" duration="22800000" />
       <workItem from="1551357670889" duration="19016000" />
-      <workItem from="1551535020477" duration="647000" />
+      <workItem from="1551535020477" duration="931000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="491784000" />
+    <option name="totallyTimeSpent" value="492068000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1609,6 +1603,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4991119" visible="true" weight="0.12633263" />
       <window_info id="Structure" order="1" sideWeight="0.5008881" side_tool="true" weight="0.1325215" />
@@ -1671,15 +1666,6 @@
     </ignored-roots>
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/dataloader/DataLoader.py</url>
-          <line>138</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
         <watch expression="__py_debug_temp_var_365800048" />

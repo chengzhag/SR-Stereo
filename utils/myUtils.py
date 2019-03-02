@@ -24,15 +24,25 @@ class NameValues(collections.OrderedDict):
         return str
 
     def strSuffix(self, prefix='', suffix=''):
-        str = ''
+        sSuffix = ''
         for name, value in super(NameValues, self).items():
-            str += '_%s' % (prefix + name + suffix)
-            if type(value) in (list, tuple):
-                for v in value:
-                    str += '_%.0f' % (v)
-            else:
-                str += '_%.0f' % (value)
-        return str
+            sSuffix += '_%s' % (prefix + name + suffix)
+
+            def addValue(sAppend, values):
+                if type(values) == int:
+                    return sAppend + '_' + str(values)
+                elif type(values) == float:
+                    return sAppend + '_%.1f' % values
+                elif type(values) in (list, tuple):
+                    for v in values:
+                        sAppend = addValue(sAppend, v)
+                    return sAppend
+                else:
+                    raise Exception('Error: Type of values should be in int, float, list, tuple!')
+
+            sSuffix = addValue(sSuffix, value)
+
+        return sSuffix
 
 
 
@@ -43,29 +53,20 @@ class AutoPad:
         self.WPad = ((self.W - 1) // multiple + 1) * multiple
 
     def pad(self, imgs):
-        if type(imgs) in (list, tuple):
-            imgsPad = [self.pad(im) for im in imgs]
-        else:
-            imgsPad = torch.zeros([self.N, self.C, self.HPad, self.WPad], dtype=imgs.dtype,
-                                  device=imgs.device.type)
-            imgsPad[:, :, (self.HPad - self.H):, (self.WPad - self.W):] = imgs
-        return imgsPad
+        def _pad(img):
+            imgPad = torch.zeros([self.N, self.C, self.HPad, self.WPad], dtype=img.dtype,
+                                  device=img.device.type)
+            imgPad[:, :, (self.HPad - self.H):, (self.WPad - self.W):] = img
+            return imgPad
+        return forNestingList(imgs, _pad)
 
     def unpad(self, imgs):
-        if type(imgs) in (list, tuple):
-            imgs = [self.unpad(im) for im in imgs]
-        else:
-            imgs = imgs[:, (self.HPad - self.H):, (self.WPad - self.W):]
-        return imgs
+        return forNestingList(imgs, lambda img: img[:, (self.HPad - self.H):, (self.WPad - self.W):])
 
 
 # Flip among W dimension. For NCHW data type.
 def flipLR(ims):
-    if type(ims) in (list, tuple):
-        return [flipLR(im) for im in ims]
-    else:
-        return ims.flip(-1)
-
+    return forNestingList(ims, lambda im: im.flip(-1) if im is not None else None)
 
 def assertDisp(dispL=None, dispR=None):
     if (dispL is None or dispL.numel() == 0) and (dispR is None or dispR.numel() == 0):
@@ -133,7 +134,7 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                  # training
                  'batchsize_train': lambda: parser.add_argument('--batchsize_train', type=int, default=3,
                                                                 help='training batch size'),
-                 'trainCrop': lambda: parser.add_argument('--trainCrop', type=float, default=(256, 512), nargs=2,
+                 'trainCrop': lambda: parser.add_argument('--trainCrop', type=int, default=(256, 512), nargs=2,
                                                           help='size of random crop (H x W) applied to data during training'),
                  'log_every': lambda: parser.add_argument('--log_every', type=int, default=10,
                                                           help='log every log_every iterations. set to 0 to stop logging'),
@@ -313,3 +314,11 @@ class Batch:
             self.batch[2::4] = set[:len(set) // 2]
             self.batch[3::4] = set[len(set) // 2:]
         return self.batch[2::4] + self.batch[3::4]
+
+def forNestingList(l, fcn):
+    if type(l) in (list, tuple):
+        l = [forNestingList(e, fcn) for e in l]
+        return l
+    else:
+        return fcn(l)
+

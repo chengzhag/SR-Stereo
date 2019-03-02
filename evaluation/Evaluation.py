@@ -64,15 +64,9 @@ class Evaluation:
     def log(self, epoch=None, it=None, global_step=None, additionalValue=None):
         logDir = os.path.join(self.model.checkpointFolder, 'test_results.txt')
         with open(logDir, "a") as log:
-            pass
-        with open(logDir, "r+") as log:
             def writeNotNone(name, value):
                 if value is not None: log.write(name + ': ' + str(value) + '\n')
 
-            log.seek(0)
-            logOld = log.read()
-
-            log.seek(0)
             log.write('---------------------- %s ----------------------\n\n' % self.localtime)
 
             log.write('python ')
@@ -95,8 +89,6 @@ class Evaluation:
                 for (name, value) in pairs:
                     writeNotNone(name, value)
                 log.write('\n')
-
-            log.write(logOld)
 
         # save Tensorboard logs to where checkpoint is.
         for name, value in self.testResults.items():
