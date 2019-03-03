@@ -62,7 +62,7 @@ def main():
                                  dataset=args.dataset)
     sr.load(args.loadmodel)
     if not args.resume:
-        sr.logFolder = sr.newFolder
+        sr.saveToNew()
 
     # Test
     test = Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,

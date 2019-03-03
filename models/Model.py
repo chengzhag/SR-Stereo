@@ -19,11 +19,12 @@ class Model:
         self.startTime = time.localtime(time.time())
         self.multiple = 16
 
-        self.newFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) \
+        self._newFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) \
                               + self.__class__.__name__ \
                               + saveFolderSuffix
-        if dataset is not None: self.newFolderName += ('_%s' % dataset)
-        self.newFolder = os.path.join('logs', stage, self.newFolderName)
+        if dataset is not None:
+            self._newFolderName += ('_%s' % dataset)
+        self._newFolder = os.path.join('logs', stage, self._newFolderName)
         self.logFolder = None
         self.checkpointDir = None
         self.checkpointFolder = None
@@ -31,6 +32,10 @@ class Model:
         self.getModel = None
         self.model = None
         self.optimizer = None
+
+    def saveToNew(self):
+        self.checkpointFolder = self._newFolder
+        self.logFolder = os.path.join(self._newFolder, 'logs')
 
     def initModel(self):
         pass
@@ -66,34 +71,6 @@ class Model:
     #   new optimizer checkpoint will be saved to self.newFolder
     # If input checkpointDirs with amount of maxCheckPoints, optimizer checkpoint is the last one
     def loadPrepare(self, checkpointDirs, maxCheckPoints=1):
-        def scanCheckpoint(checkpointDirs):
-            # if checkpoint is folder
-            if os.path.isdir(checkpointDirs):
-                filenames = [d for d in os.listdir(checkpointDirs) if os.path.isfile(os.path.join(checkpointDirs, d))]
-                filenames.sort()
-                latestCheckpointName = None
-                latestEpoch = None
-
-                def _getEpoch(name):
-                    try:
-                        return int(name.split('_')[-3])
-                    except ValueError:
-                        return None
-
-                for filename in filenames:
-                    if any(filename.endswith(extension) for extension in ('.tar', '.pt')):
-                        if latestCheckpointName is None:
-                            latestCheckpointName = filename
-                            latestEpoch = _getEpoch(filename)
-                        else:
-                            epoch = _getEpoch(filename)
-                            if epoch > latestEpoch or epoch is None:
-                                latestCheckpointName = filename
-                                latestEpoch = epoch
-                checkpointDirs = os.path.join(checkpointDirs, latestCheckpointName)
-
-            return checkpointDirs
-
         if checkpointDirs is not None:
             print('Loading checkpoint from %s' % checkpointDirs)
         else:
@@ -109,7 +86,7 @@ class Model:
                     raise Exception(f'Error: Specified {len(checkpointDirs)} checkpoints. Only {maxCheckPoints} are needed!')
                 # for model composed with multiple models, check if checkpointDirs are together
                 modelRoot = None
-                checkpointDirs = [scanCheckpoint(dir) for dir in checkpointDirs]
+                checkpointDirs = [myUtils.scanCheckpoint(dir) for dir in checkpointDirs]
                 for dir in checkpointDirs:
                     checkpointFolder, _ = os.path.split(dir)
                     checkpointRoot = os.path.join(*checkpointFolder.split('/')[:-2])
@@ -123,21 +100,15 @@ class Model:
                                         '*.tar (checkpoints)')
                 if len(checkpointDirs) == maxCheckPoints:
                     self.checkpointDir = checkpointDirs[-1]
-                    self.checkpointFolder, _ = os.path.split(self.checkpointDir)
-                else:
-                    self.checkpointFolder = self.newFolder
-                    # If model is composed with multiple models, save logs to a new folder
-                self.logFolder = os.path.join(self.checkpointFolder, 'logs')
 
         if type(checkpointDirs) is str:
-            checkpointDirs = scanCheckpoint(checkpointDirs)
+            checkpointDirs = myUtils.scanCheckpoint(checkpointDirs)
 
             # update checkpointDir
             self.checkpointDir = checkpointDirs
-            self.checkpointFolder, _ = os.path.split(self.checkpointDir)
 
-            # When testing, log files should be saved to checkpointFolder.
-            # Here checkpointFolder is setted as default logging folder.
+        if self.checkpointFolder is None:
+            self.checkpointFolder, _ = os.path.split(self.checkpointDir)
             self.logFolder = os.path.join(self.checkpointFolder, 'logs')
 
         if self.model is None:
@@ -147,10 +118,8 @@ class Model:
     def nParams(self):
         return sum([p.data.nelement() for p in self.model.parameters()])
 
-    def savePrepare(self, epoch, iteration, toOld=False):
+    def savePrepare(self, epoch, iteration):
         # update checkpointDir
-        self.checkpointFolder = self.checkpointFolder if toOld else self.newFolder
         self.checkpointDir = os.path.join(self.checkpointFolder,
                                           'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
-        self.logFolder = os.path.join(self.checkpointFolder, 'logs')
         myUtils.checkDir(self.checkpointFolder)

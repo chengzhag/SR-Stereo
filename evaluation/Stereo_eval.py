@@ -52,7 +52,7 @@ def main():
                                          half=args.half, cuda=args.cuda, stage=stage)
     stereo.load(args.loadmodel)
     if not args.resume:
-        stereo.logFolder = stereo.newFolder
+        stereo.saveToNew()
 
     # Test
     test = Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,

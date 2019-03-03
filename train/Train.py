@@ -32,9 +32,9 @@ class Train:
         if model.model is None:
             model.initModel()
 
-        toOld = True if self.startEpoch != 1 else False
-        self.model.savePrepare(0, 0, toOld) # refresh logFolder
-        self.log(toOld=toOld)
+        if self.startEpoch == 1:
+            self.model.saveToNew()
+        self.log()
         # Train
         ticFull = time.time()
 
@@ -96,8 +96,7 @@ class Train:
             print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / batch_idx))
             # save
             model.save(epoch=epoch, iteration=batch_idx,
-                       trainLoss=totalTrainLoss / len(self.trainImgLoader),
-                       toOld=toOld)
+                       trainLoss=totalTrainLoss / len(self.trainImgLoader))
             # test
             if ((self.testEvery > 0 and epoch % self.testEvery == 0)
                 or (self.testEvery == 0 and epoch == self.nEpochs)) \
@@ -119,10 +118,10 @@ class Train:
 
         endMessage = 'Full training time = %.2fh\n' % ((time.time() - ticFull) / 3600)
         print(endMessage)
-        self.log(endMessage=endMessage, toOld=toOld)
+        self.log(endMessage=endMessage)
 
-    def log(self, additionalValue=(), endMessage=None, toOld=False):
-        logFolder = self.model.checkpointFolder if toOld else self.model.newFolder
+    def log(self, additionalValue=(), endMessage=None):
+        logFolder = self.model.checkpointFolder
         myUtils.checkDir(logFolder)
         logDir = os.path.join(logFolder, 'train_info.txt')
         with open(logDir, "a") as log:

@@ -90,8 +90,8 @@ class Stereo(Model):
         print(f'Checkpoint epoch {epoch}, iteration {iteration}')
         return epoch, iteration
 
-    def save(self, epoch, iteration, trainLoss, toOld=False):
-        super(Stereo, self).savePrepare(epoch, iteration, toOld)
+    def save(self, epoch, iteration, trainLoss):
+        super(Stereo, self).savePrepare(epoch, iteration)
         saveDict ={
             'epoch': epoch,
             'iteration': iteration,

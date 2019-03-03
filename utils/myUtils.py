@@ -324,3 +324,32 @@ def forNestingList(l, fcn):
     else:
         return fcn(l)
 
+def scanCheckpoint(checkpointDirs):
+    # if checkpoint is folder
+    if os.path.isdir(checkpointDirs):
+        filenames = [d for d in os.listdir(checkpointDirs) if os.path.isfile(os.path.join(checkpointDirs, d))]
+        filenames.sort()
+        latestCheckpointName = None
+        latestEpoch = None
+
+        def _getEpoch(name):
+            try:
+                keywords = name.split('_')
+                epoch = keywords[keywords.index('epoch') + 1]
+                return int(epoch)
+            except ValueError:
+                return None
+
+        for filename in filenames:
+            if any(filename.endswith(extension) for extension in ('.tar', '.pt')):
+                if latestCheckpointName is None:
+                    latestCheckpointName = filename
+                    latestEpoch = _getEpoch(filename)
+                else:
+                    epoch = _getEpoch(filename)
+                    if epoch > latestEpoch or epoch is None:
+                        latestCheckpointName = filename
+                        latestEpoch = epoch
+        checkpointDirs = os.path.join(checkpointDirs, latestCheckpointName)
+
+    return checkpointDirs
