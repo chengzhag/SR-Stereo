@@ -219,6 +219,16 @@ class PSMNet(Stereo):
 
             return outputs
 
+class rawPSMNetDown(rawPSMNetScale):
+    def __init__(self, maxdisp, dispScale, multiple):
+        super(rawPSMNetDown, self).__init__(maxdisp, dispScale, multiple)
+        self.pool = nn.AvgPool2d((2, 2))
+
+    def forward(self, left, right):
+        dispHighs = super(rawPSMNetDown, self).forward(left, right)
+        dispLows = myUtils.forNestingList(dispHighs, lambda disp: self.pool(disp) / 2)
+        return dispHighs, dispLows
+
 
 class PSMNetDown(PSMNet):
 
@@ -227,36 +237,20 @@ class PSMNetDown(PSMNet):
                  saveFolderSuffix=''):
         super(PSMNetDown, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
         self.outputMaxDisp = self.outputMaxDisp // 2
-
-        # Downsampling net
-        class AvgDownSample(torch.nn.Module):
-            def __init__(self):
-                super(AvgDownSample, self).__init__()
-                self.pool = nn.AvgPool2d((2, 2))
-
-            def forward(self, x):
-                return self.pool(x) / 2
-
-        self.down = AvgDownSample()
+        self.getModel = rawPSMNetDown
 
     def initModel(self):
         super(PSMNetDown, self).initModel()
-        if self.cuda:
-            self.down = nn.DataParallel(self.down)
-            self.down.cuda()
 
     def loss(self, outputs, gts, kitti=False):
         losses = []
-        losses.append(super(PSMNetDown, self).loss(outputs, gts[0], kitti=kitti))
-        outputs = [self.down(output) for output in outputs]
-        losses.append(super(PSMNetDown, self).loss(outputs, gts[1], kitti=kitti))
+        for output, gt in zip(outputs, gts):
+            losses.append(super(PSMNetDown, self).loss(output, gt, kitti=kitti) if gt is not None else None)
         return losses
 
     def trainOneSide(self, imgL, imgR, gts, returnOutputs=False, kitti=False, weights=(1, 0)):
         self.optimizer.zero_grad()
-
-        outputs = self.model(imgL, imgR)
-
+        outputs = self.forward(imgL, imgR)
         losses = self.loss(outputs, gts, kitti=kitti)
         loss = sum([weight * loss for weight, loss in zip(weights, losses)])
         loss.backward()
@@ -264,15 +258,15 @@ class PSMNetDown(PSMNet):
 
         dispOuts = []
         if returnOutputs:
-            dispOuts.append(outputs[2].detach() * self.dispScale / self.outputMaxDisp / 2)
             with torch.no_grad():
-                dispOuts.append(self.down(outputs[2].detach()) * self.dispScale / self.outputMaxDisp)
+                dispOuts.append(outputs[0][2].detach() / (self.outputMaxDisp * 2))
+                dispOuts.append(outputs[1][2].detach() / self.outputMaxDisp)
         losses = [loss, ] + losses
         return [loss.data.item() for loss in losses], dispOuts
 
     def train(self, batch, returnOutputs=False, kitti=False, weights=(1, 0)):
         myUtils.assertBatchLen(batch, 8)
-        batch = self.trainPrepare(batch)
+        self.trainPrepare()
 
         losses = myUtils.NameValues()
         outputs = collections.OrderedDict()
@@ -280,24 +274,27 @@ class PSMNetDown(PSMNet):
         for inputL, inputR, gts, process, side in zip((imgL, imgR), (imgR, imgL),
                                                       zip(batch.highResDisps(), batch.lowResDisps()),
                                                       (lambda im: im, myUtils.flipLR), ('L', 'R')):
-            lossN, dispOuts = self.trainOneSide(
-                process(inputL), process(inputR), process(gts), returnOutputs, kitti, weights=weights
-            ) if gts is not None else (None, None)
-            for suffix, loss in zip(('', 'High', 'Low'), lossN):
-                losses['loss' + suffix + side] = loss
+            if not all([gt is None for gt in gts]):
+                lossesList, outputsList = self.trainOneSide(
+                    process(inputL), process(inputR), process(gts), returnOutputs, kitti, weights=weights
+                )
+                for suffix, loss in zip(('', 'High', 'Low'), lossesList):
+                    losses['loss' + suffix + side] = loss
 
-            if returnOutputs:
-                outputs['outputHigh' + side], outputs['outputLow' + side] = process(dispOuts)
+                if returnOutputs:
+                    outputs['outputHigh' + side], outputs['outputLow' + side] = process(outputsList)
 
         return losses, outputs
 
     def predict(self, batch, mask=(1, 1)):
         myUtils.assertBatchLen(batch, 4)
+        self.predictPrepare()
+
         outputs = super(PSMNetDown, self).predict(batch, mask)
         downsampled = []
         for output in outputs:
             # Down sample to half size
-            downsampled.append(self.down(output) if output is not None else None)
+            downsampled.append(output[1])
         return downsampled
 
     def test(self, batch, type='l1', returnOutputs=False, kitti=False):
