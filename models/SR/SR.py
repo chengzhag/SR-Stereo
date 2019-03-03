@@ -95,9 +95,9 @@ class SR(Model):
         for input, gt, side in zip(batch.lowResRGBs(), batch.highResRGBs(), ('L', 'R')):
             if gt is not None:
                 loss, predict = self.trainOneSide(input, gt, returnOutputs)
-                losses['loss' + side] = loss
+                losses['lossSr' + side] = loss
                 if returnOutputs:
-                    outputs['output' + side] = predict
+                    outputs['outputSr' + side] = predict
 
         return losses, outputs
 

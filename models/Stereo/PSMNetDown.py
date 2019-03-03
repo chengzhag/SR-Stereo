@@ -84,11 +84,11 @@ class PSMNetDown(PSMNet):
                     weights=weights
                 )
                 for suffix, loss in zip(('', 'High', 'Low'), lossesList):
-                    losses['loss' + suffix + side] = loss
+                    losses['lossDisp' + suffix + side] = loss
 
                 if returnOutputs:
                     for suffix, output in zip(('High', 'Low'), outputsList):
-                        outputs['output' + suffix + side] = process(output)
+                        outputs['outputDisp' + suffix + side] = process(output)
 
         return losses, outputs
 

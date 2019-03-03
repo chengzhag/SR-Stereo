@@ -97,9 +97,9 @@ class PSMNet(Stereo):
                     returnOutputs=returnOutputs,
                     kitti=kitti
                 )
-                losses['loss' + side] = loss
+                losses['lossDisp' + side] = loss
                 if returnOutputs:
-                    outputs['output' + side] = process(dispOut)
+                    outputs['outputDisp' + side] = process(dispOut)
 
         return losses, outputs
 
