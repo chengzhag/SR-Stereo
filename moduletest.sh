@@ -16,7 +16,7 @@ PYTHONPATH=./ python train/Stereo_train.py --outputFolder moduletests --dispscal
 
 # test Stereo_eval with PSMNet
 echo 'test Stereo_eval with PSMNet'
-PYTHONPATH=./ python evaluation/Stereo_eval.py --outputFolder moduletests --dispscale 0.5 --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 0.25 --eval_fcn outlier --batchsize_test 2 --model PSMNet --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --logToNew
+PYTHONPATH=./ python evaluation/Stereo_eval.py --outputFolder moduletests --dispscale 0.5 --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 0.25 --eval_fcn outlier --batchsize_test 2 --model PSMNet --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar
 
 # test SR_train/eval with EDSR
 echo 'SR_train/eval with EDSR'

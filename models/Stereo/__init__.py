@@ -6,12 +6,12 @@ import torch.nn.functional as F
 import torch.nn as nn
 from evaluation import evalFcn
 from utils import myUtils
-from .PSMNet import stackhourglass as getPSMNet
-from .PSMNet_TieCheng import stackhourglass as getPSMNet_TieCheng
+from .PSMNet import stackhourglass as rawPSMNet
+from .PSMNet_TieCheng import stackhourglass as rawPSMNet_TieCheng
 from ..Model import Model
 from .. import SR
 import collections
-from utils import preprocess
+import torch.nn.parallel as P
 
 
 class Stereo(Model):
@@ -38,13 +38,13 @@ class Stereo(Model):
             self.model.cuda()
 
     def trainPrepare(self, batch):
-        batch = super(Stereo, self).trainPrepare(batch)
+        super(Stereo, self).trainPrepare()
         if len(batch) != 0:
             batch.allDisps([disp / self.dispScale if disp is not None else None for disp in batch.allDisps()])
         return batch
 
     def predictPrepare(self, batch):
-        batch = super(Stereo, self).predictPrepare(batch)
+        super(Stereo, self).predictPrepare()
         autoPad = myUtils.AutoPad(batch[0], self.multiple)
         return batch, autoPad
 
@@ -55,19 +55,21 @@ class Stereo(Model):
         disps = batch.lowestResDisps()
         myUtils.assertDisp(*disps)
 
-        # for kitti dataset, only consider loss of none zero disparity pixels in gt
         scores = myUtils.NameValues()
         outputs = collections.OrderedDict()
-        dispOuts = self.predict(batch.lastScaleBatch(), [disp is not None for disp in disps])
+        mask = [disp is not None for disp in disps]
+        dispOuts = self.predict(batch.lastScaleBatch(), mask)
         for gt, dispOut, side in zip(disps, dispOuts, ('L', 'R')):
             if dispOut is not None:
                 if dispOut.dim() == 3:
                     dispOut = dispOut.unsqueeze(1)
 
+                # for kitti dataset, only consider loss of none zero disparity pixels in gt
                 if kitti:
                     mask = gt > 0
                     dispOut = dispOut[mask]
                     gt = gt[mask]
+
                 scores[type + side] = evalFcn.getEvalFcn(type)(gt, dispOut)
 
                 if returnOutputs:
@@ -76,15 +78,15 @@ class Stereo(Model):
         return scores, outputs
 
     def load(self, checkpointDir):
-        checkpointDir = super(Stereo, self).beforeLoad(checkpointDir)
+        checkpointDir = super(Stereo, self).loadPrepare(checkpointDir)
         if checkpointDir is None:
-            return
+            return None, None
 
-        state_dict = torch.load(checkpointDir)
+        loadStateDict = torch.load(checkpointDir)
 
         # def loadValue(name):
         #     if name in state_dict.keys():
-        #         value = state_dict[name]
+        #         value = loadStateDict[name]
         #         if value != getattr(self, name):
         #             print(
         #                 f'Specified {name} \'{getattr(self, name)}\' from args '
@@ -96,14 +98,19 @@ class Stereo(Model):
 
         # loadValue('maxdisp')
         # loadValue('dispScale')
-        self.initModel()
-        self.model.load_state_dict(state_dict['state_dict'])
-
+        self.model.load_state_dict(loadStateDict['state_dict'])
+        if 'optimizer' in loadStateDict.keys():
+            self.optimizer.load_state_dict(loadStateDict['optimizer'])
         print('Loading complete! Number of model parameters: %d' % self.nParams())
 
-    def save(self, epoch, iteration, trainLoss):
-        super(Stereo, self).beforeSave(epoch, iteration)
-        torch.save({
+        epoch = loadStateDict.get('epoch')
+        iteration = loadStateDict.get('iteration')
+        print(f'Checkpoint epoch {epoch}, iteration {iteration}')
+        return epoch, iteration
+
+    def save(self, epoch, iteration, trainLoss, toOld=False):
+        super(Stereo, self).savePrepare(epoch, iteration, toOld)
+        saveDict ={
             'epoch': epoch,
             'iteration': iteration,
             'state_dict': self.model.state_dict(),
@@ -111,7 +118,10 @@ class Stereo(Model):
             'maxdisp': self.maxdisp,
             'dispScale': self.dispScale,
             'outputMaxDisp': self.outputMaxDisp
-        }, self.checkpointDir)
+        }
+        if self.optimizer is not None:
+            saveDict['optimizer'] = self.optimizer.state_dict()
+        torch.save(saveDict, self.checkpointDir)
         return self.checkpointDir
 
 
@@ -120,16 +130,17 @@ class PSMNet(Stereo):
     def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
                  saveFolderSuffix=''):
         super(PSMNet, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
-        self.getModel = getPSMNet
+        self.getModel = rawPSMNet
         self.__imagenet_stats = {'mean': [0.485, 0.456, 0.406],
                                  'std': [0.229, 0.224, 0.225]}
 
     def _preprocess(self, batch):
         def normalize(nTensor):
-            for tensor in nTensor:
+            nTensorClone = nTensor.clone()
+            for tensor in nTensorClone:
                 for t, m, s in zip(tensor, self.__imagenet_stats['mean'], self.__imagenet_stats['std']):
-                    t = (t - m) / s
-            return nTensor
+                    t.sub_(m).div_(s)
+            return nTensorClone
 
         batch.allRGBs([normalize(im) for im in batch.allRGBs()])
         return batch

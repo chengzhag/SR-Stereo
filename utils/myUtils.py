@@ -120,8 +120,6 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                  # logging
                  'ndis_log': lambda: parser.add_argument('--ndis_log', type=int, default=1,
                                                          help='number of disparity maps to log'),
-                 'logToNew': lambda: parser.add_argument('--logToNew', action='store_true', default=False,
-                                                     help='log to new folder in logs/[stage]/[time]_[model]'),
                  # datasets
                  'dataset': lambda: parser.add_argument('--dataset', type=str, default='sceneflow',
                                                         help='(sceneflow/kitti2012/kitti2015/carla_kitti)'),
