@@ -74,6 +74,16 @@ class SR(Model):
         loss = F.smooth_l1_loss(outputs * self.model.args.rgb_range, gts * self.model.args.rgb_range, reduction='mean')
         return loss
 
+    def trainOneSide(self, imgL, imgH, returnOutputs=False):
+        self.optimizer.zero_grad()
+        output = self.model.forward(imgL)
+        loss = self.loss(imgH, output)
+        with self.amp_handle.scale_loss(loss, self.optimizer) as scaled_loss:
+            scaled_loss.backward()
+        self.optimizer.step()
+        output = myUtils.quantize(output.detach(), 1) if returnOutputs else None
+        return loss.data.item(), output
+
     # imgL: RGB value range 0~1
     # imgH: RGB value range 0~1
     def train(self, batch, returnOutputs=False):
@@ -90,16 +100,6 @@ class SR(Model):
                     outputs['output' + side] = predict
 
         return losses, outputs
-
-    def trainOneSide(self, imgL, imgH, returnOutputs=False):
-        self.optimizer.zero_grad()
-        output = self.model.forward(imgL)
-        loss = self.loss(imgH, output)
-        with self.amp_handle.scale_loss(loss, self.optimizer) as scaled_loss:
-            scaled_loss.backward()
-        self.optimizer.step()
-        output = myUtils.quantize(output.detach(), 1) if returnOutputs else None
-        return loss.data.item(), output
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1

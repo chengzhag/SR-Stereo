@@ -122,7 +122,9 @@ class Model:
 
         loadStateDict = torch.load(checkpointDir)
 
-        self.model.load_state_dict(loadStateDict['state_dict'])
+        loadModelDict = loadStateDict.get('state_dict', loadStateDict)
+        self.model.load_state_dict(loadModelDict)
+
         if 'optimizer' in loadStateDict.keys():
             self.optimizer.load_state_dict(loadStateDict['optimizer'])
         print('Loading complete! Number of model parameters: %d' % self.nParams())

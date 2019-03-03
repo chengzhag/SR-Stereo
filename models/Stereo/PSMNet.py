@@ -86,12 +86,16 @@ class PSMNet(Stereo):
         losses = myUtils.NameValues()
         outputs = collections.OrderedDict()
         for inputL, inputR, gt, process, side in zip(
-                (imgL, imgR), (imgR, imgL), batch.highResDisps(),
-                (lambda im: im, myUtils.flipLR), ('L', 'R')
+                (imgL, imgR), (imgR, imgL),
+                batch.highResDisps(),
+                (lambda im: im, myUtils.flipLR),
+                ('L', 'R')
         ):
             if gt is not None:
                 loss, dispOut = self.trainOneSide(
-                    *process([inputL, inputR, gt]), returnOutputs=returnOutputs, kitti=kitti
+                    *process([inputL, inputR, gt]),
+                    returnOutputs=returnOutputs,
+                    kitti=kitti
                 )
                 losses['loss' + side] = loss
                 if returnOutputs:

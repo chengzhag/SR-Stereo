@@ -23,9 +23,9 @@ class RawPSMNetDown(RawPSMNetScale):
     # input: RGB value range 0~1
     # outputs: disparity range 0~self.maxdisp * self.dispScale / 2
     def forward(self, left, right):
-        dispHighs = super(RawPSMNetDown, self).forward(left, right)
-        dispLows = myUtils.forNestingList(dispHighs, lambda disp: self.pool(disp) / 2)
-        return dispHighs, dispLows
+        outDispHighs = super(RawPSMNetDown, self).forward(left, right)
+        outDispLows = myUtils.forNestingList(outDispHighs, lambda disp: self.pool(disp) / 2)
+        return outDispHighs, outDispLows
 
 
 class PSMNetDown(PSMNet):
@@ -43,23 +43,24 @@ class PSMNetDown(PSMNet):
     def loss(self, outputs, gts, kitti=False):
         losses = []
         for output, gt in zip(outputs, gts):
-            losses.append(super(PSMNetDown, self).loss(output, gt, kitti=kitti) if gt is not None else None)
+            losses.append(super(PSMNetDown, self).loss(output, gt, kitti=kitti) if gt is not None else 0)
         return losses
 
     def trainOneSide(self, imgL, imgR, gts, returnOutputs=False, kitti=False, weights=(1, 0)):
         self.optimizer.zero_grad()
-        outputs = self.model.forward(imgL, imgR)
-        losses = self.loss(outputs, gts, kitti=kitti)
+        outDispHighs, outDispLows = self.model.forward(imgL, imgR)
+        losses = self.loss((outDispHighs, outDispLows), gts, kitti=kitti)
         loss = sum([weight * loss for weight, loss in zip(weights, losses)])
-        loss.backward()
+        with self.amp_handle.scale_loss(loss, self.optimizer) as scaled_loss:
+            scaled_loss.backward()
         self.optimizer.step()
 
         dispOuts = []
         if returnOutputs:
             with torch.no_grad():
-                dispOuts.append(outputs[0][2].detach() / (self.outputMaxDisp * 2))
-                dispOuts.append(outputs[1][2].detach() / self.outputMaxDisp)
-        losses = [loss, ] + losses
+                dispOuts.append(outDispHighs[2].detach() / (self.outputMaxDisp * 2))
+                dispOuts.append(outDispLows[2].detach() / self.outputMaxDisp)
+        losses = [loss] + losses
         return [loss.data.item() for loss in losses], dispOuts
 
     def train(self, batch, returnOutputs=False, kitti=False, weights=(1, 0)):
@@ -69,18 +70,25 @@ class PSMNetDown(PSMNet):
         losses = myUtils.NameValues()
         outputs = collections.OrderedDict()
         imgL, imgR = batch.highResRGBs()
-        for inputL, inputR, gts, process, side in zip((imgL, imgR), (imgR, imgL),
-                                                      zip(batch.highResDisps(), batch.lowResDisps()),
-                                                      (lambda im: im, myUtils.flipLR), ('L', 'R')):
+        for inputL, inputR, gts, process, side in zip(
+                (imgL, imgR), (imgR, imgL),
+                zip(batch.highResDisps(), batch.lowResDisps()),
+                (lambda im: im, myUtils.flipLR),
+                ('L', 'R')
+        ):
             if not all([gt is None for gt in gts]):
                 lossesList, outputsList = self.trainOneSide(
-                    process(inputL), process(inputR), process(gts), returnOutputs, kitti, weights=weights
+                    *process((inputL, inputR, gts)),
+                    returnOutputs=returnOutputs,
+                    kitti=kitti,
+                    weights=weights
                 )
                 for suffix, loss in zip(('', 'High', 'Low'), lossesList):
                     losses['loss' + suffix + side] = loss
 
                 if returnOutputs:
-                    outputs['outputHigh' + side], outputs['outputLow' + side] = process(outputsList)
+                    for suffix, output in zip(('High', 'Low'), outputsList):
+                        outputs['output' + suffix + side] = process(output)
 
         return losses, outputs
 
