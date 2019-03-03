@@ -19,7 +19,7 @@ echo 'test Stereo_eval with PSMNet'
 PYTHONPATH=./ python evaluation/Stereo_eval.py --outputFolder moduletests --dispscale 0.5 --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 0.25 --eval_fcn outlier --batchsize_test 2 --model PSMNet --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar
 
 # test SR_train/eval with EDSR
-echo 'SR_train/eval with EDSR'
+echo 'test SR_train/eval with EDSR'
 PYTHONPATH=./ python train/SR_train.py --outputFolder moduletests --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 0.5 --trainCrop 128 256 --epochs 5 --log_every 1 --test_every 1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 2  --lr 0.0001 --model SR --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt
 
 # test SRdisp_train/eval with EDSR

@@ -1,4 +1,3 @@
-import time
 import torch
 import os
 from models import SR

@@ -83,7 +83,7 @@ class Model:
 
             elif len(checkpointDirs) >= 1:
                 if len(checkpointDirs) > maxCheckPoints:
-                    raise Exception(f'Error: Specified {len(checkpointDirs)} checkpoints. Only {maxCheckPoints} are needed!')
+                    raise Exception(f'Error: Specified {len(checkpointDirs)} checkpoints. Only {maxCheckPoints} is(are) needed!')
                 # for model composed with multiple models, check if checkpointDirs are together
                 modelRoot = None
                 checkpointDirs = [myUtils.scanCheckpoint(dir) for dir in checkpointDirs]

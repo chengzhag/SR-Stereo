@@ -29,8 +29,8 @@ class Train(Base):
 
         return losses, outputs
 
-    def log(self, additionalValue=(), endMessage=None, toOld=False):
-        super(Train, self).log(additionalValue=(('lossWeights', self.lossWeights),), toOld=toOld)
+    def log(self, additionalValue=(), endMessage=None):
+        super(Train, self).log(additionalValue=(('lossWeights', self.lossWeights),))
 
 
 def main():
