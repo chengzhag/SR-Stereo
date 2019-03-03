@@ -30,23 +30,11 @@ class Stereo(Model):
         self.dispScale = dispScale
         self.outputMaxDisp = maxdisp * dispScale  # final output value range of disparity map
 
-    def initModel(self):
-        self.model = self.getModel(self.maxdisp)
-        self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
-        if self.cuda:
-            self.model = nn.DataParallel(self.model)
-            self.model.cuda()
-
     def trainPrepare(self, batch):
         super(Stereo, self).trainPrepare()
         if len(batch) != 0:
             batch.allDisps([disp / self.dispScale if disp is not None else None for disp in batch.allDisps()])
         return batch
-
-    def predictPrepare(self, batch):
-        super(Stereo, self).predictPrepare()
-        autoPad = myUtils.AutoPad(batch[0], self.multiple)
-        return batch, autoPad
 
     def predict(self, batch, mask=(1, 1)):
         super(Stereo, self).predict(batch)
@@ -124,17 +112,15 @@ class Stereo(Model):
         torch.save(saveDict, self.checkpointDir)
         return self.checkpointDir
 
-
-class PSMNet(Stereo):
-    # dataset: only used for suffix of saveFolderName
-    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
-                 saveFolderSuffix=''):
-        super(PSMNet, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
-        self.getModel = rawPSMNet
+class rawPSMNetScale(rawPSMNet):
+    def __init__(self, maxdisp, dispScale=1, multiple=16):
+        super(rawPSMNetScale, self).__init__(maxdisp)
+        self.multiple = multiple
         self.__imagenet_stats = {'mean': [0.485, 0.456, 0.406],
                                  'std': [0.229, 0.224, 0.225]}
+        self.dispScale = dispScale
 
-    def _preprocess(self, batch):
+    def forward(self, left, right):
         def normalize(nTensor):
             nTensorClone = nTensor.clone()
             for tensor in nTensorClone:
@@ -142,8 +128,33 @@ class PSMNet(Stereo):
                     t.sub_(m).div_(s)
             return nTensorClone
 
-        batch.allRGBs([normalize(im) for im in batch.allRGBs()])
-        return batch
+        left, right = normalize(left), normalize(right)
+
+        if self.training:
+            outputs = super(rawPSMNetScale, self).forward(left, right)
+        else:
+            autoPad = myUtils.AutoPad(left, self.multiple)
+
+            left, right = autoPad.pad((left, right))
+            outputs = super(rawPSMNetScale, self).forward(left, right)
+            outputs = autoPad.unpad(outputs)
+        # outputs = myUtils.forNestingList(outputs, lambda disp: disp * self.dispScale)
+        return outputs
+
+class PSMNet(Stereo):
+    # dataset: only used for suffix of saveFolderName
+    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
+                 saveFolderSuffix=''):
+        super(PSMNet, self).__init__(maxdisp, dispScale, cuda, half, stage, dataset, saveFolderSuffix)
+
+        self.getModel = rawPSMNetScale
+
+    def initModel(self):
+        self.model = self.getModel(self.maxdisp)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
+        if self.cuda:
+            self.model = nn.DataParallel(self.model)
+            self.model.cuda()
 
     def loss(self, outputs, gts, kitti=False):
         outputs = [output.unsqueeze(1) for output in outputs]
@@ -154,10 +165,15 @@ class PSMNet(Stereo):
                                                                               reduction='mean')
         return loss
 
+    # input: RGB value range 0~1
+    # outputs: disparity range 0~self.maxdisp * self.dispScale
+    def forward(self, imgL, imgR):
+        outputs = self.model(imgL, imgR)
+        return outputs
+
     def trainOneSide(self, imgL, imgR, gt, returnOutputs=False, kitti=False):
         self.optimizer.zero_grad()
-
-        outputs = self.model(imgL, imgR)
+        outputs = self.forward(imgL, imgR)
         loss = self.loss(outputs, gt, kitti=kitti)
         loss.backward()
         self.optimizer.step()
@@ -166,48 +182,44 @@ class PSMNet(Stereo):
 
     def trainPrepare(self, batch):
         batch = super(PSMNet, self).trainPrepare(batch)
-        batch = self._preprocess(batch)
         return batch
 
     def train(self, batch, returnOutputs=False, kitti=False, weights=()):
         myUtils.assertBatchLen(batch, 4)
-        imgL, imgR, dispL, dispR = self.trainPrepare(batch)
+        batch = self.trainPrepare(batch)
+        imgL, imgR = batch.highResRGBs()
 
         losses = myUtils.NameValues()
         outputs = collections.OrderedDict()
-        for inputL, inputR, gt, process, side in zip((imgL, imgR), (imgR, imgL), (dispL, dispR),
-                                                     (lambda im: im, myUtils.flipLR), ('L', 'R')):
-            loss, dispOut = self.trainOneSide(
-                process(inputL), process(inputR), process(gt), returnOutputs, kitti
-            ) if gt is not None else (None, None)
-            losses['loss' + side] = loss
-            outputs['output' + side] = process(dispOut) if dispOut is not None else None
+        for inputL, inputR, gt, process, side in zip(
+                (imgL, imgR), (imgR, imgL), batch.highResDisps(),
+                (lambda im: im, myUtils.flipLR), ('L', 'R')
+        ):
+            if gt is not None:
+                loss, dispOut = self.trainOneSide(
+                    *process([inputL, inputR, gt]), returnOutputs=returnOutputs, kitti=kitti
+                )
+                losses['loss' + side] = loss
+                if returnOutputs:
+                    outputs['output' + side] = process(dispOut)
 
         return losses, outputs
 
-    def predictPrepare(self, batch):
-        batch, autoPad = super(PSMNet, self).predictPrepare(batch)
-        batch = self._preprocess(batch)
-        return batch, autoPad
-
     def predict(self, batch, mask=(1, 1)):
         myUtils.assertBatchLen(batch, 4)
-        batch, autoPad = self.predictPrepare(batch)
-        imgs = batch.lowestResRGBs()
+        self.predictPrepare()
+        imgL, imgR = batch.lowestResRGBs()
 
         with torch.no_grad():
-            imgL, imgR = autoPad.pad(imgs)
             outputs = []
             for inputL, inputR, process, do in zip((imgL, imgR), (imgR, imgL),
                                                    (lambda im: im, myUtils.flipLR), mask):
                 outputs.append(
-                    autoPad.unpad(
-                        process(
-                            self.model(process(inputL),
-                                       process(inputR)
-                                       )
-                        ) * self.dispScale
-                    ) if do else None
+                    process(
+                        self.model(process(inputL),
+                                   process(inputR)
+                                   )
+                    ) * self.dispScale if do else None
                 )
 
             return tuple(outputs)
