@@ -19,9 +19,9 @@ class SRdisp(SR):
             warpTos = (warpToL, warpToR)
             cated = []
             for input in zip((inputL, inputR), (warpToL, warpToR), (maskL, maskR)):
-                if self.args.n_inputs == 7:
+                if self.model.args.n_inputs == 7:
                     cated.append(torch.cat(input, 1))
-                elif self.args.n_inputs == 6:
+                elif self.model.args.n_inputs == 6:
                     cated.append(torch.cat(input[:2], 1))
                 else:
                     raise Exception(

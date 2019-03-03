@@ -68,15 +68,9 @@ class PSMNet(Stereo):
                                                                               reduction='mean')
         return loss
 
-    # input: RGB value range 0~1
-    # outputs: disparity range 0~self.maxdisp * self.dispScale
-    def forward(self, imgL, imgR):
-        outputs = self.model(imgL, imgR)
-        return outputs
-
     def trainOneSide(self, imgL, imgR, gt, returnOutputs=False, kitti=False):
         self.optimizer.zero_grad()
-        outputs = self.forward(imgL, imgR)
+        outputs = self.model.forward(imgL, imgR)
         loss = self.loss(outputs, gt, kitti=kitti)
         loss.backward()
         self.optimizer.step()
@@ -116,7 +110,7 @@ class PSMNet(Stereo):
             for inputL, inputR, process, do in zip((imgL, imgR), (imgR, imgL),
                                                    (lambda im: im, myUtils.flipLR), mask):
                 if do:
-                    output = process(self.forward(process(inputL), process(inputR)))
+                    output = process(self.model.forward(process(inputL), process(inputR)))
                     outputs.append(output)
                 else:
                     outputs.append(None)

@@ -48,7 +48,7 @@ class PSMNetDown(PSMNet):
 
     def trainOneSide(self, imgL, imgR, gts, returnOutputs=False, kitti=False, weights=(1, 0)):
         self.optimizer.zero_grad()
-        outputs = self.forward(imgL, imgR)
+        outputs = self.model.forward(imgL, imgR)
         losses = self.loss(outputs, gts, kitti=kitti)
         loss = sum([weight * loss for weight, loss in zip(weights, losses)])
         loss.backward()
