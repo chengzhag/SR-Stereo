@@ -45,10 +45,8 @@ def main():
     import dataloader
     if args.model in ('SR',):
         mask = (1, 1, 0, 0)
-        cInput = 3
     elif args.model in ('SRdisp',):
         mask = (1, 1, 1, 1)
-        cInput = 7 if args.withMask else 6
     else:
         raise Exception('Error: No model named \'%s\'!' % args.model)
     trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
@@ -67,10 +65,12 @@ def main():
                                            trainImgLoader.trainCrop,
                                            args.batchsize_train,
                                            args.lossWeights))
-    sr = getattr(SR, args.model)(cInput=cInput, cuda=args.cuda,
+    sr = getattr(SR, args.model)(cuda=args.cuda,
                                  half=args.half, stage=stage,
                                  dataset=args.dataset,
                                  saveFolderSuffix=saveFolderSuffix.strSuffix())
+    if hasattr(sr, 'withMask'):
+        sr.withMask(args.withMask)
     epoch, iteration = sr.load(args.loadmodel)
 
     # Train

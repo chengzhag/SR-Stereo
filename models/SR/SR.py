@@ -31,13 +31,13 @@ class RawEDSR(edsr.EDSR):
 
 class SR(Model):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, cInput=3, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
+    def __init__(self, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
         super(SR, self).__init__(cuda, half, stage, dataset, saveFolderSuffix)
-        self.cInput = cInput
+        self.cInput = 3
         self.getModel = RawEDSR
 
     def initModel(self):
-        self.model = RawEDSR(self.cInput)
+        self.model = self.getModel(self.cInput)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.0001, betas=(0.9, 0.999))
         if self.cuda:
             self.model.cuda()

@@ -1,13 +1,18 @@
 import torch
 from utils import myUtils
 from models.SR.warp import warp
-from .SR import SR
-
+from .SR import *
 
 class SRdisp(SR):
     # dataset: only used for suffix of saveFolderName
-    def __init__(self, cInput=6, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
-        super(SRdisp, self).__init__(cInput, cuda, half, stage, dataset, saveFolderSuffix)
+    def __init__(self, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
+        super(SRdisp, self).__init__(cuda, half, stage, dataset, saveFolderSuffix)
+        self.cInput = 6
+        self.getModel = RawEDSR
+
+    def withMask(self, doWith=True):
+        if doWith:
+            self.cInput = 7
 
     def initModel(self):
         super(SRdisp, self).initModel()

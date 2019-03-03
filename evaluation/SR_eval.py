@@ -41,10 +41,8 @@ def main():
     import dataloader
     if args.model in ('SR',):
         mask = (1, 1, 0, 0)
-        cInput = 3
     elif args.model in ('SRdisp',):
         mask = (1, 1, 1, 1)
-        cInput = cInput = 7 if args.withMask else 6
     else:
         raise Exception('Error: No model named \'%s\'!' % args.model)
     _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
@@ -56,9 +54,11 @@ def main():
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
     stage = os.path.join(args.outputFolder, stage) if args.outputFolder is not None else stage
-    sr = getattr(SR, args.model)(cInput=cInput, cuda=args.cuda,
+    sr = getattr(SR, args.model)(cuda=args.cuda,
                                  half=args.half, stage=stage,
                                  dataset=args.dataset)
+    if hasattr(sr, 'withMask'):
+        sr.withMask(args.withMask)
     sr.load(args.loadmodel)
     if not args.resume:
         sr.saveToNew()
