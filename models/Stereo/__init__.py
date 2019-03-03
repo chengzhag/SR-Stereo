@@ -30,12 +30,6 @@ class Stereo(Model):
         self.dispScale = dispScale
         self.outputMaxDisp = maxdisp * dispScale  # final output value range of disparity map
 
-    def trainPrepare(self, batch):
-        super(Stereo, self).trainPrepare()
-        if len(batch) != 0:
-            batch.allDisps([disp / self.dispScale if disp is not None else None for disp in batch.allDisps()])
-        return batch
-
     def predict(self, batch, mask=(1, 1)):
         super(Stereo, self).predict(batch)
 
@@ -113,7 +107,7 @@ class Stereo(Model):
         return self.checkpointDir
 
 class rawPSMNetScale(rawPSMNet):
-    def __init__(self, maxdisp, dispScale=1, multiple=16):
+    def __init__(self, maxdisp, dispScale, multiple):
         super(rawPSMNetScale, self).__init__(maxdisp)
         self.multiple = multiple
         self.__imagenet_stats = {'mean': [0.485, 0.456, 0.406],
@@ -138,7 +132,7 @@ class rawPSMNetScale(rawPSMNet):
             left, right = autoPad.pad((left, right))
             outputs = super(rawPSMNetScale, self).forward(left, right)
             outputs = autoPad.unpad(outputs)
-        # outputs = myUtils.forNestingList(outputs, lambda disp: disp * self.dispScale)
+        outputs = myUtils.forNestingList(outputs, lambda disp: disp * self.dispScale)
         return outputs
 
 class PSMNet(Stereo):
@@ -150,13 +144,18 @@ class PSMNet(Stereo):
         self.getModel = rawPSMNetScale
 
     def initModel(self):
-        self.model = self.getModel(self.maxdisp)
+        self.model = self.getModel(maxdisp=self.maxdisp, dispScale=self.dispScale, multiple=16)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
         if self.cuda:
             self.model = nn.DataParallel(self.model)
             self.model.cuda()
 
+    # input disparity maps: disparity range 0~self.maxdisp * self.dispScale
     def loss(self, outputs, gts, kitti=False):
+        # # To get same loss with PSMNet, disparity should scale back to 0~self.maxdisp
+        # outputs =[output / self.dispScale for output in outputs]
+        # gts = gts / self.dispScale
+
         outputs = [output.unsqueeze(1) for output in outputs]
         # for kitti dataset, only consider loss of none zero disparity pixels in gt
         mask = (gts.detach() > 0) if kitti else (gts.detach() < self.maxdisp)
@@ -178,15 +177,12 @@ class PSMNet(Stereo):
         loss.backward()
         self.optimizer.step()
 
-        return loss.data.item(), outputs[2].detach() * self.dispScale / self.outputMaxDisp if returnOutputs else None
-
-    def trainPrepare(self, batch):
-        batch = super(PSMNet, self).trainPrepare(batch)
-        return batch
+        output = outputs[2].detach() / self.outputMaxDisp if returnOutputs else None
+        return loss.data.item(), output
 
     def train(self, batch, returnOutputs=False, kitti=False, weights=()):
         myUtils.assertBatchLen(batch, 4)
-        batch = self.trainPrepare(batch)
+        self.trainPrepare()
         imgL, imgR = batch.highResRGBs()
 
         losses = myUtils.NameValues()
@@ -208,21 +204,20 @@ class PSMNet(Stereo):
     def predict(self, batch, mask=(1, 1)):
         myUtils.assertBatchLen(batch, 4)
         self.predictPrepare()
+
         imgL, imgR = batch.lowestResRGBs()
 
         with torch.no_grad():
             outputs = []
             for inputL, inputR, process, do in zip((imgL, imgR), (imgR, imgL),
                                                    (lambda im: im, myUtils.flipLR), mask):
-                outputs.append(
-                    process(
-                        self.model(process(inputL),
-                                   process(inputR)
-                                   )
-                    ) * self.dispScale if do else None
-                )
+                if do:
+                    output = process(self.forward(process(inputL), process(inputR)))
+                    outputs.append(output)
+                else:
+                    outputs.append(None)
 
-            return tuple(outputs)
+            return outputs
 
 
 class PSMNetDown(PSMNet):
