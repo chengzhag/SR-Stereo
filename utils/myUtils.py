@@ -233,7 +233,7 @@ class TensorboardLogger:
 
 
 class Batch:
-    def __init__(self, batch, cuda=None, half=None):
+    def __init__(self, batch, cuda=False, half=False):
         if type(batch) in (list, tuple):
             self._assertLen(len(batch))
             self.batch = batch[:]  # deattach with initial list
@@ -248,9 +248,11 @@ class Batch:
         else:
             raise Exception('Error: batch must be class list, tuple or Batch!')
 
-        if cuda is not None:
+        self.half = half
+        if half:
             self.batch = [(im.half() if half else im) if im.numel() else None for im in self.batch]
-        if half is not None:
+        self.cuda = cuda
+        if cuda:
             self.batch = [(im.cuda() if cuda else im) if im is not None else None for im in self.batch]
 
     def _assertLen(self, len):

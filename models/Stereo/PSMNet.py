@@ -99,21 +99,5 @@ class PSMNet(Stereo):
 
         return losses, outputs
 
-    def predict(self, batch, mask=(1, 1)):
-        myUtils.assertBatchLen(batch, 4)
-        self.predictPrepare()
 
-        imgL, imgR = batch.lowestResRGBs()
-
-        with torch.no_grad():
-            outputs = []
-            for inputL, inputR, process, do in zip((imgL, imgR), (imgR, imgL),
-                                                   (lambda im: im, myUtils.flipLR), mask):
-                if do:
-                    output = process(self.model.forward(process(inputL), process(inputR)))
-                    outputs.append(output)
-                else:
-                    outputs.append(None)
-
-            return outputs
 

@@ -27,7 +27,33 @@ class RawEDSR(edsr.EDSR):
     # output: RGB value range 0~1 without quantize
     def forward(self, imgL):
         output = P.data_parallel(super(RawEDSR, self).forward, imgL * self.args.rgb_range) / self.args.rgb_range
+        if not self.training:
+            output = myUtils.quantize(output, 1)
         return output
+
+    def load_state_dict(self, state_dict, strict=False):
+        newModelDict = self.state_dict()
+        selectedModelDict = {}
+        for loadName, loadValue in state_dict.items():
+            if loadName in newModelDict and newModelDict[loadName].size() == loadValue.size():
+                selectedModelDict[loadName] = loadValue
+            else:
+                message = 'Warning! While copying the parameter named {}, ' \
+                          'whose dimensions in the model are {} and ' \
+                          'whose dimensions in the checkpoint are {}.' \
+                          .format(loadName, newModelDict[loadName].size(), loadValue.size())
+                if strict:
+                    raise Exception(message)
+                else:
+                    # try to initialize input layer from weights with different channels
+                    # if loadName == 'head.0.weight':
+                    #     selectedModelDict[loadName] = newModelDict[loadName]
+                    #     selectedModelDict[loadName][:,:3,:,:] = loadValue
+                    #     selectedModelDict[loadName][:, 3:6, :, :] = loadValue
+                    print(message)
+        newModelDict.update(selectedModelDict)
+        super(RawEDSR, self).load_state_dict(newModelDict, strict=False)
+
 
 class SR(Model):
     # dataset: only used for suffix of saveFolderName
@@ -92,7 +118,6 @@ class SR(Model):
     def predictOneSide(self, imgL):
         with torch.no_grad():
             output = self.model.forward(imgL)
-            output = myUtils.quantize(output, 1)
             return output
 
     def test(self, batch, type='l1', returnOutputs=False):
@@ -111,49 +136,4 @@ class SR(Model):
 
         return scores, outputs
 
-    def load(self, checkpointDir):
-        checkpointDir = self.loadPrepare(checkpointDir)
-        if checkpointDir is None:
-            return None, None
-
-        loadStateDict = torch.load(checkpointDir)
-        if 'optimizer' in loadStateDict.keys():
-            self.optimizer.load_state_dict(loadStateDict['optimizer'])
-        loadModelDict = loadStateDict.get('state_dict', loadStateDict)
-
-        newModelDict = self.model.state_dict()
-        selectedModelDict = {}
-        for loadName, loadValue in loadModelDict.items():
-            if loadName in newModelDict and newModelDict[loadName].size() == loadValue.size():
-                selectedModelDict[loadName] = loadValue
-            else:
-                # try to initialize input layer from weights with different channels
-                # if loadName == 'head.0.weight':
-                #     selectedModelDict[loadName] = newModelDict[loadName]
-                #     selectedModelDict[loadName][:,:3,:,:] = loadValue
-                #     selectedModelDict[loadName][:, 3:6, :, :] = loadValue
-                print('Warning! While copying the parameter named {}, '
-                      'whose dimensions in the model are {} and '
-                      'whose dimensions in the checkpoint are {}.'
-                      .format(loadName, newModelDict[loadName].size(), loadValue.size()))
-        newModelDict.update(selectedModelDict)
-        self.model.load_state_dict(newModelDict, strict=False)
-        print('Loading complete! Number of model parameters: %d' % self.nParams())
-
-        epoch = loadStateDict.get('epoch')
-        iteration = loadStateDict.get('iteration')
-        print(f'Checkpoint epoch {epoch}, iteration {iteration}')
-        return epoch, iteration
-
-    def save(self, epoch, iteration, trainLoss):
-        self.savePrepare(epoch, iteration)
-        saveDict = {
-            'epoch': epoch,
-            'iteration': iteration,
-            'state_dict': self.model.state_dict(),
-            'train_loss': trainLoss,
-        }
-        if self.optimizer is not None:
-            saveDict['optimizer'] = self.optimizer.state_dict()
-        torch.save(saveDict, self.checkpointDir)
 

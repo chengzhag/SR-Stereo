@@ -22,16 +22,33 @@ class Stereo(Model):
         self.outputMaxDisp = maxdisp * dispScale  # final output value range of disparity map
 
     def predict(self, batch, mask=(1, 1)):
-        super(Stereo, self).predict(batch)
+        myUtils.assertBatchLen(batch, 4)
+        self.predictPrepare()
+
+        imgL, imgR = batch.lowestResRGBs()
+
+        with torch.no_grad():
+            outputs = []
+            for inputL, inputR, process, do in zip((imgL, imgR), (imgR, imgL),
+                                                   (lambda im: im, myUtils.flipLR), mask):
+                if do:
+                    output = process(self.model.forward(process(inputL), process(inputR)))
+                    outputs.append(output)
+                else:
+                    outputs.append(None)
+
+            return outputs
 
     def test(self, batch, type='l1', returnOutputs=False, kitti=False):
+        myUtils.assertBatchLen(batch, 4)
+
         disps = batch.lowestResDisps()
         myUtils.assertDisp(*disps)
 
         scores = myUtils.NameValues()
         outputs = collections.OrderedDict()
         mask = [disp is not None for disp in disps]
-        dispOuts = self.predict(batch.lastScaleBatch(), mask)
+        dispOuts = self.predict(batch, mask)
         for gt, dispOut, side in zip(disps, dispOuts, ('L', 'R')):
             if dispOut is not None:
                 if dispOut.dim() == 3:
@@ -50,36 +67,13 @@ class Stereo(Model):
 
         return scores, outputs
 
-    def load(self, checkpointDir):
-        checkpointDir = self.loadPrepare(checkpointDir)
-        if checkpointDir is None:
-            return None, None
-
-        loadStateDict = torch.load(checkpointDir)
-
-        self.model.load_state_dict(loadStateDict['state_dict'])
-        if 'optimizer' in loadStateDict.keys():
-            self.optimizer.load_state_dict(loadStateDict['optimizer'])
-        print('Loading complete! Number of model parameters: %d' % self.nParams())
-
-        epoch = loadStateDict.get('epoch')
-        iteration = loadStateDict.get('iteration')
-        print(f'Checkpoint epoch {epoch}, iteration {iteration}')
-        return epoch, iteration
-
-    def save(self, epoch, iteration, trainLoss):
-        self.savePrepare(epoch, iteration)
-        saveDict ={
-            'epoch': epoch,
-            'iteration': iteration,
-            'state_dict': self.model.state_dict(),
-            'train_loss': trainLoss,
+    def save(self, epoch, iteration, trainLoss, additionalInfo=None):
+        additionalInfo = {} if additionalInfo is None else additionalInfo
+        additionalInfo.update({
             'maxdisp': self.maxdisp,
             'dispScale': self.dispScale,
             'outputMaxDisp': self.outputMaxDisp
-        }
-        if self.optimizer is not None:
-            saveDict['optimizer'] = self.optimizer.state_dict()
-        torch.save(saveDict, self.checkpointDir)
-        return self.checkpointDir
+        })
+        super(Stereo, self).save(epoch, iteration, trainLoss, additionalInfo)
+
 

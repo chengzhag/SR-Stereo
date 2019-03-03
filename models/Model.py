@@ -115,6 +115,23 @@ class Model:
             self.initModel()
         return checkpointDirs
 
+    def load(self, checkpointDir):
+        checkpointDir = self.loadPrepare(checkpointDir)
+        if checkpointDir is None:
+            return None, None
+
+        loadStateDict = torch.load(checkpointDir)
+
+        self.model.load_state_dict(loadStateDict['state_dict'])
+        if 'optimizer' in loadStateDict.keys():
+            self.optimizer.load_state_dict(loadStateDict['optimizer'])
+        print('Loading complete! Number of model parameters: %d' % self.nParams())
+
+        epoch = loadStateDict.get('epoch')
+        iteration = loadStateDict.get('iteration')
+        print(f'Checkpoint epoch {epoch}, iteration {iteration}')
+        return epoch, iteration
+
     def nParams(self):
         return sum([p.data.nelement() for p in self.model.parameters()])
 
@@ -123,3 +140,18 @@ class Model:
         self.checkpointDir = os.path.join(self.checkpointFolder,
                                           'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
         myUtils.checkDir(self.checkpointFolder)
+
+    def save(self, epoch, iteration, trainLoss, additionalInfo=None):
+        self.savePrepare(epoch, iteration)
+        saveDict = {
+            'epoch': epoch,
+            'iteration': iteration,
+            'state_dict': self.model.state_dict(),
+            'train_loss': trainLoss,
+        }
+        if additionalInfo is not None:
+            saveDict.update(additionalInfo)
+        if self.optimizer is not None:
+            saveDict['optimizer'] = self.optimizer.state_dict()
+        torch.save(saveDict, self.checkpointDir)
+        return self.checkpointDir

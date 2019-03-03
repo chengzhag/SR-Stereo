@@ -97,7 +97,7 @@ class PSMNetDown(PSMNet):
 
     def test(self, batch, type='l1', returnOutputs=False, kitti=False):
         myUtils.assertBatchLen(batch, 8)
-        batch = myUtils.Batch(batch.highResRGBs() + batch.lowestResDisps())
+        batch = myUtils.Batch(batch.highResRGBs() + batch.lowestResDisps(), cuda=batch.cuda, half=batch.half)
         return super(PSMNetDown, self).test(batch, type, returnOutputs, kitti)
 
 
