@@ -37,9 +37,6 @@ class PSMNetDown(PSMNet):
         self.outputMaxDisp = self.outputMaxDisp // 2
         self.getModel = RawPSMNetDown
 
-    def initModel(self):
-        super(PSMNetDown, self).initModel()
-
     def loss(self, outputs, gts, kitti=False):
         losses = []
         for output, gt in zip(outputs, gts):

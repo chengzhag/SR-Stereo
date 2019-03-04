@@ -123,7 +123,10 @@ class Model:
         loadStateDict = torch.load(checkpointDir)
 
         loadModelDict = loadStateDict.get('state_dict', loadStateDict)
-        self.model.load_state_dict(loadModelDict)
+        try:
+            self.model.load_state_dict(loadModelDict)
+        except RuntimeError:
+            self.model.module.load_state_dict(loadModelDict)
 
         if 'optimizer' in loadStateDict.keys():
             self.optimizer.load_state_dict(loadStateDict['optimizer'])
