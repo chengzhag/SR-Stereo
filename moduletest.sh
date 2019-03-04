@@ -8,15 +8,15 @@ export CUDA_VISIBLE_DEVICES=0
 
 # test Stereo_train/eval with PSMNet
 echo 'test Stereo_train/eval with PSMNet'
-PYTHONPATH=./ python train/Stereo_train.py --outputFolder moduletests --dispscale 0.5 --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 0.25 --trainCrop 128 256 --epochs 3 --log_every 1 --test_every 1  --eval_fcn outlier --batchsize_train 4 --batchsize_test 2 --lr 0.001 --model PSMNet --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar
+PYTHONPATH=./ python train/Stereo_train.py --outputFolder moduletests --dispscale 1 --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 0.5 --trainCrop 128 256 --epochs 3 --log_every 1 --test_every 1  --eval_fcn outlier --batchsize_train 4 --batchsize_test 1 --lr 0.001 --model PSMNet --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar
 
 # test Stereo_train/eval with PSMNet
 echo 'test Stereo_train/eval with PSMNetDown'
-PYTHONPATH=./ python train/Stereo_train.py --outputFolder moduletests --dispscale 0.5 --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 0.25 0.125 --trainCrop 128 256 --epochs 3 --log_every 1 --test_every 1 --eval_fcn outlier --batchsize_train 4 --batchsize_test 2 --lr 0.001 --lossWeights 0.5 0.5 --model PSMNetDown --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar
+PYTHONPATH=./ python train/Stereo_train.py --outputFolder moduletests --dispscale 1 --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 0.5 0.25 --trainCrop 128 256 --epochs 3 --log_every 1 --test_every 1 --eval_fcn outlier --batchsize_train 4 --batchsize_test 1 --lr 0.001 --lossWeights 0.5 0.5 --model PSMNetDown --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar
 
 # test Stereo_eval with PSMNet
 echo 'test Stereo_eval with PSMNet'
-PYTHONPATH=./ python evaluation/Stereo_eval.py --outputFolder moduletests --dispscale 0.5 --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 0.25 --eval_fcn outlier --batchsize_test 2 --model PSMNet --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar
+PYTHONPATH=./ python evaluation/Stereo_eval.py --outputFolder moduletests --dispscale 1 --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 0.5 --eval_fcn outlier --batchsize_test 1 --model PSMNet --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar
 
 # test SR_train/eval with EDSR
 echo 'test SR_train/eval with EDSR'

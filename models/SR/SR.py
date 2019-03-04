@@ -1,5 +1,6 @@
 import torch.optim as optim
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from evaluation import evalFcn
 from utils import myUtils
@@ -9,24 +10,14 @@ import torch.nn.parallel as P
 import collections
 
 class RawEDSR(edsr.EDSR):
-    def __init__(self, cInput):
-        class Arg:
-            def __init__(self):
-                self.n_resblocks = 16
-                self.n_feats = 64
-                self.scale = [2]
-                self.rgb_range = 255
-                self.n_colors = 3
-                self.n_inputs = cInput
-                self.res_scale = 1
-
-        self.args = Arg()
-        super(RawEDSR, self).__init__(self.args)
+    def __init__(self, args):
+        super(RawEDSR, self).__init__(args)
+        self.rgb_range = args.rgb_range
 
     # input: RGB value range 0~1
     # output: RGB value range 0~1 without quantize
     def forward(self, imgL):
-        output = P.data_parallel(super(RawEDSR, self).forward, imgL * self.args.rgb_range) / self.args.rgb_range
+        output = super(RawEDSR, self).forward(imgL * self.rgb_range) / self.rgb_range
         if not self.training:
             output = myUtils.quantize(output, 1)
         return output
@@ -63,20 +54,32 @@ class SR(Model):
         self.getModel = RawEDSR
 
     def initModel(self):
-        self.model = self.getModel(self.cInput)
+        class Arg:
+            def __init__(self, cInput):
+                self.n_resblocks = 16
+                self.n_feats = 64
+                self.scale = [2]
+                self.rgb_range = 255
+                self.n_colors = 3
+                self.n_inputs = cInput
+                self.res_scale = 1
+
+        self.args = Arg(self.cInput)
+        self.model = self.getModel(self.args)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.0001, betas=(0.9, 0.999))
         if self.cuda:
+            self.model = nn.DataParallel(self.model)
             self.model.cuda()
 
     # outputs, gts: RGB value range 0~1
     def loss(self, outputs, gts):
         # To get same loss with orignal EDSR, input range should scale to 0~self.args.rgb_range
-        loss = F.smooth_l1_loss(outputs * self.model.args.rgb_range, gts * self.model.args.rgb_range, reduction='mean')
+        loss = F.smooth_l1_loss(outputs * self.args.rgb_range, gts * self.args.rgb_range, reduction='mean')
         return loss
 
     def trainOneSide(self, imgL, imgH, returnOutputs=False):
         self.optimizer.zero_grad()
-        output = self.model.forward(imgL)
+        output = self.model(imgL)
         loss = self.loss(imgH, output)
         with self.amp_handle.scale_loss(loss, self.optimizer) as scaled_loss:
             scaled_loss.backward()
@@ -117,7 +120,7 @@ class SR(Model):
     # output: RGB value range 0~1
     def predictOneSide(self, imgL):
         with torch.no_grad():
-            output = self.model.forward(imgL)
+            output = self.model(imgL)
             return output
 
     def test(self, batch, type='l1', returnOutputs=False):
@@ -129,7 +132,7 @@ class SR(Model):
         outputsIm = self.predict(batch.lastScaleBatch(), mask=mask)
         for gt, output, side in zip(batch.highResRGBs(), outputsIm, ('L', 'R')):
             scores[type + side] = evalFcn.getEvalFcn(type)(
-                gt * self.model.args.rgb_range, output * self.model.args.rgb_range
+                gt * self.args.rgb_range, output * self.args.rgb_range
             )if output is not None else None
             if returnOutputs:
                 outputs['output' + side] = output

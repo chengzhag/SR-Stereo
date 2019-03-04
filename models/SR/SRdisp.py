@@ -24,13 +24,13 @@ class SRdisp(SR):
             warpTos = (warpToL, warpToR)
             cated = []
             for input in zip((inputL, inputR), (warpToL, warpToR), (maskL, maskR)):
-                if self.model.args.n_inputs == 7:
+                if self.args.n_inputs == 7:
                     cated.append(torch.cat(input, 1))
-                elif self.model.args.n_inputs == 6:
+                elif self.args.n_inputs == 6:
                     cated.append(torch.cat(input[:2], 1))
                 else:
                     raise Exception(
-                        'Error: self.model.args.n_inputs = %d which is not supporty!' % self.model.args.n_inputs)
+                        'Error: self.model.args.n_inputs = %d which is not supporty!' % self.args.n_inputs)
             return cated, warpTos
 
     def train(self, batch, returnOutputs=False):

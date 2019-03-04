@@ -82,10 +82,11 @@ class SRStereo(Stereo):
         (srGtL, srGtR), (dispHighGTs, dispLowGTs) = gts
 
         # get SR outputs loss
-        lossSR = 0
+        lossSR = None
         if all([t is not None for t in (srGtL, srGtR)]) :
             for outSr, srGt in zip((outSrL, outSrR), (srGtL, srGtR)):
-                lossSR += self._sr.loss(outSr, srGt)
+                lossSRside = self._sr.loss(outSr, srGt)
+                lossSR = lossSRside if lossSR is None else lossSR + lossSRside
         losses.append(lossSR)
 
         # get disparity losses
@@ -103,8 +104,7 @@ class SRStereo(Stereo):
             ((srGtL, srGtR), dispGTs),
             kitti=kitti
         )
-
-        loss = sum([weight * loss for weight, loss in zip(weights, losses)])
+        loss = sum([weight * loss for weight, loss in zip(weights, losses) if loss is not None])
         with self.amp_handle.scale_loss(loss, self.optimizer) as scaled_loss:
             scaled_loss.backward()
         self.optimizer.step()
@@ -120,15 +120,17 @@ class SRStereo(Stereo):
             outputs = []
 
         losses = [loss] + losses
-        return [loss.data.item() for loss in losses], outputs
+        return [loss.data.item() if hasattr(loss, 'data') else loss for loss in losses], outputs
 
     # weights: weights of
     #   SR output losses (lossSR),
     #   SR disparity map losses (lossDispHigh),
     #   normal sized disparity map losses (lossDispLow)
     def train(self, batch, returnOutputs=False, kitti=False, weights=(0, 1, 0)):
-        myUtils.assertBatchLen(batch, 8)
+        myUtils.assertBatchLen(batch, (4, 8))
         self.trainPrepare()
+        if len(batch) == 4:
+            batch = myUtils.Batch([None] * 4 + batch.batch)
         imgLowL, imgLowR = batch.lowestResRGBs()
         imgHighL, imgHighR = batch.highResRGBs()
 
@@ -150,7 +152,8 @@ class SRStereo(Stereo):
                     weights=weights
                 )
                 for suffix, loss in zip(('', 'Sr', 'DispHigh', 'DispLow'), lossesList):
-                    losses['loss' + suffix + side] = loss
+                    if loss is not None:
+                        losses['loss' + suffix + side] = loss
 
                 if returnOutputs:
                     suffixSR = ('SrL', 'SrR') if side == 'L' else ('SrR', 'SrL')
