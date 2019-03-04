@@ -23,9 +23,15 @@ class Train(Base):
                                            kitti=self.trainImgLoader.kitti,
                                            weights=self.lossWeights)
         if log:
-            for disp, input, side in zip(batch.lowestResDisps(), batch.lowestResRGBs(), ('L', 'R')):
+            for disp, input, sr, side in zip(
+                    batch.lowestResDisps(),
+                    batch.lowestResRGBs(),
+                    batch.highResRGBs() if len(batch) == 8 else (None, None),
+                    ('L', 'R')):
                 if disp is not None:
-                    outputs['gt' + side] = disp / self.model.outputMaxDisp
+                    outputs['gtDisp' + side] = disp / self.model.outputMaxDisp
+                if sr is not None:
+                    outputs['gtSr' + side] = sr
                 outputs['input' + side] = input # lowestResRGBs should be input in most cases
 
         return losses, outputs

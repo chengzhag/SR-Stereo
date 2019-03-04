@@ -128,7 +128,7 @@ class Model:
         except RuntimeError:
             self.model.module.load_state_dict(loadModelDict)
 
-        if 'optimizer' in loadStateDict.keys():
+        if 'optimizer' in loadStateDict.keys() and self.optimizer is not None:
             self.optimizer.load_state_dict(loadStateDict['optimizer'])
         print('Loading complete! Number of model parameters: %d' % self.nParams())
 
