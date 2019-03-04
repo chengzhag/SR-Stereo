@@ -10,11 +10,10 @@ import torch.optim as optim
 
 class RawPSMNetScale(rawPSMNet):
     def __init__(self, maxdisp, dispScale, multiple):
-        super(RawPSMNetScale, self).__init__(maxdisp)
+        super(RawPSMNetScale, self).__init__(maxdisp, dispScale)
         self.multiple = multiple
         self.__imagenet_stats = {'mean': [0.485, 0.456, 0.406],
                                  'std': [0.229, 0.224, 0.225]}
-        self.dispScale = dispScale
 
     # input: RGB value range 0~1
     # outputs: disparity range 0~self.maxdisp * self.dispScale
@@ -36,7 +35,6 @@ class RawPSMNetScale(rawPSMNet):
             left, right = autoPad.pad((left, right))
             outputs = super(RawPSMNetScale, self).forward(left, right)
             outputs = autoPad.unpad(outputs)
-        outputs = myUtils.forNestingList(outputs, lambda disp: disp * self.dispScale)
         return outputs
 
 class PSMNet(Stereo):
