@@ -10,8 +10,9 @@ from train.Train import Train as Base
 
 
 class Train(Base):
-    def __init__(self, trainImgLoader, nEpochs, lr=(0.001,), logEvery=1, testEvery=1, ndisLog=1, Test=None, lossWeights=(1,)):
-        super(Train, self).__init__(trainImgLoader, nEpochs, lr, logEvery, testEvery, ndisLog, Test)
+    def __init__(self, trainImgLoader, nEpochs, lr=(0.001,), logEvery=1, testEvery=1, ndisLog=1, Test=None,
+                 lossWeights=(1,), startEpoch=1):
+        super(Train, self).__init__(trainImgLoader, nEpochs, lr, logEvery, testEvery, ndisLog, Test, startEpoch)
         self.lossWeights = lossWeights
 
     def _trainIt(self, batch, log):
@@ -22,19 +23,22 @@ class Train(Base):
                                            kitti=self.trainImgLoader.kitti,
                                            weights=self.lossWeights)
         if log:
-            imgs = batch.lowestResDisps()
-
-            for im, side in zip(imgs, ('L', 'R')):
-                outputs['gt' + side] = im / self.model.outputMaxDisp
+            for disp, input, side in zip(batch.lowestResDisps(), batch.lowestResRGBs(), ('L', 'R')):
+                outputs['gt' + side] = disp / self.model.outputMaxDisp
+                outputs['input' + side] = input # lowestResRGBs should be input in most cases
 
         return losses, outputs
+
+    def log(self, additionalValue=(), endMessage=None):
+        super(Train, self).log(additionalValue=(('lossWeights', self.lossWeights),))
 
 
 def main():
     parser = myUtils.getBasicParser(
         ['outputFolder', 'maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
-         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half', 'lossWeights'],
+         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half',
+         'lossWeights', 'randomLR', 'resume'],
         description='train or finetune Stereo net')
 
     args = parser.parse_args()
@@ -50,28 +54,31 @@ def main():
                                                              trainCrop=args.trainCrop,
                                                              batchSizes=(args.batchsize_train, args.batchsize_test),
                                                              loadScale=args.load_scale,
-                                                             mode='training')
+                                                             mode='training',
+                                                             randomLR=args.randomLR)
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
     stage = os.path.join(args.outputFolder, stage) if args.outputFolder is not None else stage
-    saveFolderSuffix = myUtils.NameValues(('loadScale', 'trainCrop', 'batchSize'),
-                                          (trainImgLoader.loadScale[0] * 10,
+    saveFolderSuffix = myUtils.NameValues(('loadScale', 'trainCrop', 'batchSize','lossWeights'),
+                                          (trainImgLoader.loadScale,
                                            trainImgLoader.trainCrop,
-                                           args.batchsize_train))
+                                           args.batchsize_train,
+                                           args.lossWeights))
     stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale,
                                          cuda=args.cuda, half=args.half,
                                          stage=stage,
                                          dataset=args.dataset,
                                          saveFolderSuffix=saveFolderSuffix.strSuffix())
-    stereo.load(args.loadmodel)
+    epoch, iteration = stereo.load(args.loadmodel)
 
     # Train
     test = Stereo_eval.Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
                                   ndisLog=args.ndis_log)
     train = Train(trainImgLoader=trainImgLoader, nEpochs=args.epochs, lr=args.lr,
                   logEvery=args.log_every, ndisLog=args.ndis_log,
-                  testEvery=args.test_every, Test=test, lossWeights=args.lossWeights)
+                  testEvery=args.test_every, Test=test, lossWeights=args.lossWeights,
+                  startEpoch=epoch + 1 if args.resume else 1)
     train(model=stereo)
 
 

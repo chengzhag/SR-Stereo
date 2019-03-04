@@ -56,9 +56,10 @@ class hourglass(nn.Module):
 
 
 class PSMNet(nn.Module):
-    def __init__(self, maxdisp):
+    def __init__(self, maxdisp, dispScale=1):
         super(PSMNet, self).__init__()
         self.maxdisp = maxdisp
+        self.dispScale = int(dispScale)
 
         self.feature_extraction = feature_extraction()
 
@@ -117,8 +118,8 @@ class PSMNet(nn.Module):
 
         for i in range(self.maxdisp // 4):
             if i > 0:
-                cost[:, :refimg_fea.size()[1], i, :, i:] = refimg_fea[:, :, :, i:]
-                cost[:, refimg_fea.size()[1]:, i, :, i:] = targetimg_fea[:, :, :, :-i]
+                cost[:, :refimg_fea.size()[1], i, :, (i * self.dispScale):] = refimg_fea[:, :, :, (i * self.dispScale):]
+                cost[:, refimg_fea.size()[1]:, i, :, (i * self.dispScale):] = targetimg_fea[:, :, :, :(-i * self.dispScale)]
             else:
                 cost[:, :refimg_fea.size()[1], i, :, :] = refimg_fea
                 cost[:, refimg_fea.size()[1]:, i, :, :] = targetimg_fea
@@ -158,6 +159,6 @@ class PSMNet(nn.Module):
         pred3 = disparityregression(self.maxdisp)(pred3)
 
         if self.training:
-            return pred1, pred2, pred3
+            return pred1 * self.dispScale, pred2 * self.dispScale, pred3 * self.dispScale
         else:
-            return pred3
+            return pred3 * self.dispScale

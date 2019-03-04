@@ -8,8 +8,8 @@ from train.Train import Train as Base
 
 
 class Train(Base):
-    def __init__(self, trainImgLoader, nEpochs, lr=(0.001,), logEvery=1, testEvery=1, ndisLog=1, Test=None):
-        super(Train, self).__init__(trainImgLoader, nEpochs, lr, logEvery, testEvery, ndisLog, Test)
+    def __init__(self, trainImgLoader, nEpochs, lr=(0.001,), logEvery=1, testEvery=1, ndisLog=1, Test=None, startEpoch=1):
+        super(Train, self).__init__(trainImgLoader, nEpochs, lr, logEvery, testEvery, ndisLog, Test, startEpoch)
 
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
@@ -30,7 +30,8 @@ def main():
     parser = myUtils.getBasicParser(
         ['outputFolder', 'datapath', 'model', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
-         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half', 'withMask'],
+         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half',
+         'withMask', 'randomLR', 'lossWeights', 'resume'],
         description='train or finetune SR net')
 
     args = parser.parse_args()
@@ -44,10 +45,8 @@ def main():
     import dataloader
     if args.model in ('SR',):
         mask = (1, 1, 0, 0)
-        cInput = 3
     elif args.model in ('SRdisp',):
         mask = (1, 1, 1, 1)
-        cInput = 7 if args.withMask else 6
     else:
         raise Exception('Error: No model named \'%s\'!' % args.model)
     trainImgLoader, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
@@ -55,28 +54,32 @@ def main():
                                                              batchSizes=(args.batchsize_train, args.batchsize_test),
                                                              loadScale=(args.load_scale[0], args.load_scale[0] / 2),
                                                              mode='training',
-                                                             preprocess=False,
-                                                             mask=mask)
+                                                             mask=mask,
+                                                             randomLR=args.randomLR)
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
     stage = os.path.join(args.outputFolder, stage) if args.outputFolder is not None else stage
-    saveFolderSuffix = myUtils.NameValues(('loadScale', 'trainCrop', 'batchSize'),
-                                          (trainImgLoader.loadScale[0] * 10,
+    saveFolderSuffix = myUtils.NameValues(('loadScale', 'trainCrop', 'batchSize','lossWeights'),
+                                          (trainImgLoader.loadScale,
                                            trainImgLoader.trainCrop,
-                                           args.batchsize_train))
-    sr = getattr(SR, args.model)(cInput=cInput, cuda=args.cuda,
+                                           args.batchsize_train,
+                                           args.lossWeights))
+    sr = getattr(SR, args.model)(cuda=args.cuda,
                                  half=args.half, stage=stage,
                                  dataset=args.dataset,
                                  saveFolderSuffix=saveFolderSuffix.strSuffix())
-    sr.load(args.loadmodel)
+    if hasattr(sr, 'withMask'):
+        sr.withMask(args.withMask)
+    epoch, iteration = sr.load(args.loadmodel)
 
     # Train
     test = SR_eval.Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
                               ndisLog=args.ndis_log)
     train = Train(trainImgLoader=trainImgLoader, nEpochs=args.epochs, lr=args.lr,
                   logEvery=args.log_every, ndisLog=args.ndis_log,
-                  testEvery=args.test_every, Test=test)
+                  testEvery=args.test_every, Test=test,
+                  startEpoch = epoch + 1 if args.resume else 1)
     train(model=sr)
 
 

@@ -55,7 +55,7 @@ def main():
     import dataloader
 
     parser = myUtils.getBasicParser(
-        ['outputFolder', 'maxdisp', 'seed', 'datapath', 'load_scale', 'nsample_save'],
+        ['outputFolder', 'maxdisp', 'seed', 'datapath', 'load_scale', 'nsample_save', 'randomLR'],
         description='listCarlaKittiFiles module test')
     args = parser.parse_args()
 
@@ -65,7 +65,8 @@ def main():
     trainImgLoader, _ = dataloader.getDataLoader(datapath=args.datapath, dataset='carla_kitti',
                                                  batchSizes=(1, 0),
                                                  loadScale=args.load_scale,
-                                                 mode='rawScaledTensor')
+                                                 mode='rawScaledTensor',
+                                                 randomLR=args.randomLR)
 
     logFolder = [folder for folder in args.datapath.split('/') if folder != '']
     logFolder[-1] += '_listTest'
@@ -73,9 +74,10 @@ def main():
 
     for iSample, sample in enumerate(trainImgLoader, 1):
         for name, im in zip(('inputL', 'inputR', 'gtL', 'gtR'), sample):
-            myUtils.logFirstNIms(writer, 'listCarlaKittiFiles/' + name, im,
-                                 args.maxdisp if im is not None and im.dim() == 3 else 255,
-                                 global_step=iSample, n=args.nsample_save)
+            if im.numel() > 0:
+                myUtils.logFirstNIms(writer, 'listCarlaKittiFiles/' + name, im,
+                                     args.maxdisp if im is not None and im.dim() == 3 else 255,
+                                     global_step=iSample, n=args.nsample_save)
         if iSample >= args.nsample_save:
             break
 

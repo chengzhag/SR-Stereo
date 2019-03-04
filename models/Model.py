@@ -8,6 +8,7 @@ from evaluation import evalFcn
 from utils import myUtils
 from apex import amp
 
+
 class Model:
     def __init__(self, cuda=True, half=False, stage='unnamed', dataset=None, saveFolderSuffix=''):
         self.cuda = cuda
@@ -18,11 +19,12 @@ class Model:
         self.startTime = time.localtime(time.time())
         self.multiple = 16
 
-        self.saveFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) \
+        self._newFolderName = time.strftime('%y%m%d%H%M%S_', self.startTime) \
                               + self.__class__.__name__ \
                               + saveFolderSuffix
-        if dataset is not None: self.saveFolderName += ('_%s' % dataset)
-        self.saveFolder = os.path.join('logs', stage, self.saveFolderName)
+        if dataset is not None:
+            self._newFolderName += ('_%s' % dataset)
+        self._newFolder = os.path.join('logs', stage, self._newFolderName)
         self.logFolder = None
         self.checkpointDir = None
         self.checkpointFolder = None
@@ -31,16 +33,21 @@ class Model:
         self.model = None
         self.optimizer = None
 
+    def saveToNew(self):
+        self.checkpointFolder = self._newFolder
+        self.logFolder = os.path.join(self._newFolder, 'logs')
+
     def initModel(self):
         pass
 
-    def trainPrepare(self, batch=()):
-        if self.model is None:
-            self.initModel()
-        # When training, log files should be saved to saveFolder.
-        self.logFolder = os.path.join(self.saveFolder, 'logs')
-        self.model.train()
-        return batch
+    def trainPrepare(self):
+        if type(self.model) in (list, tuple):
+            for m in self.model:
+                m.trainPrepare()
+        else:
+            if self.model is None:
+                self.initModel()
+            self.model.train()
 
     def loss(self, outputs, gts):
         raise Exception('Error: please overtide \'Model.loss()\' without calling it!')
@@ -48,37 +55,105 @@ class Model:
     def train(self, batch):
         raise Exception('Error: please overtide \'Model.train()\' without calling it!')
 
-    def predictPrepare(self, batch=()):
-        self.model.eval()
-        return batch
+    def predictPrepare(self):
+        if type(self.model) in (list, tuple):
+            for m in self.model:
+                m.predictPrepare()
+        else:
+            self.model.eval()
 
     def predict(self, batch):
         raise Exception('Error: please overtide \'Model.predict()\' without calling it!')
 
-    def beforeLoad(self, checkpointDir):
-        if checkpointDir is not None:
-            print('Loading checkpoint from %s' % checkpointDir)
+    # For multi checkpointModel, optimizer state dict is saved to a independent folder.
+    # If input checkpointDirs fewer than maxCheckPoints,
+    #   optimizer checkpoint is not specified,
+    #   new optimizer checkpoint will be saved to self.newFolder
+    # If input checkpointDirs with amount of maxCheckPoints, optimizer checkpoint is the last one
+    def loadPrepare(self, checkpointDirs, maxCheckPoints=1):
+        if checkpointDirs is not None:
+            print('Loading checkpoint from %s' % checkpointDirs)
         else:
             print('No checkpoint specified. Will initialize weights randomly.')
             return None
-        checkpointDir = checkpointDir[0] \
-            if type(checkpointDir) in (list, tuple) and len(checkpointDir) == 1 \
-            else checkpointDir
-        # update checkpointDir
-        self.checkpointDir = checkpointDir
-        self.checkpointFolder, _ = os.path.split(self.checkpointDir)
-        # When testing, log files should be saved to checkpointFolder.
-        # Here checkpointFolder is setted as default logging folder.
-        self.logFolder = os.path.join(self.checkpointFolder, 'logs')
 
-        return checkpointDir
+        if type(checkpointDirs) in (list, tuple):
+            if len(checkpointDirs) == 1:
+                checkpointDirs = checkpointDirs[0]
+
+            elif len(checkpointDirs) >= 1:
+                if len(checkpointDirs) > maxCheckPoints:
+                    raise Exception(f'Error: Specified {len(checkpointDirs)} checkpoints. Only {maxCheckPoints} is(are) needed!')
+                # for model composed with multiple models, check if checkpointDirs are together
+                modelRoot = None
+                checkpointDirs = [myUtils.scanCheckpoint(dir) for dir in checkpointDirs]
+                for dir in checkpointDirs:
+                    checkpointFolder, _ = os.path.split(dir)
+                    checkpointRoot = os.path.join(*checkpointFolder.split('/')[:-2])
+                    if modelRoot is None:
+                        modelRoot = checkpointRoot
+                    elif modelRoot != checkpointRoot:
+                        raise Exception('Error: For good project structure, '
+                                        'checkpoints of model combinations should be placed together like: '
+                                        'pycharmruns (running stage)/SRStereo_eval_test (model)/SR_train (components)/'
+                                        '190228011913_SR_loadScale_10_trainCrop_96_1360_batchSize_4_carla_kitti (runs)/'
+                                        '*.tar (checkpoints)')
+                if len(checkpointDirs) == maxCheckPoints:
+                    self.checkpointDir = checkpointDirs[-1]
+
+        if type(checkpointDirs) is str:
+            checkpointDirs = myUtils.scanCheckpoint(checkpointDirs)
+
+            # update checkpointDir
+            self.checkpointDir = checkpointDirs
+
+        if self.checkpointFolder is None:
+            self.checkpointFolder, _ = os.path.split(self.checkpointDir)
+            self.logFolder = os.path.join(self.checkpointFolder, 'logs')
+
+        if self.model is None:
+            self.initModel()
+        return checkpointDirs
+
+    def load(self, checkpointDir):
+        checkpointDir = self.loadPrepare(checkpointDir)
+        if checkpointDir is None:
+            return None, None
+
+        loadStateDict = torch.load(checkpointDir)
+
+        loadModelDict = loadStateDict.get('state_dict', loadStateDict)
+        self.model.load_state_dict(loadModelDict)
+
+        if 'optimizer' in loadStateDict.keys():
+            self.optimizer.load_state_dict(loadStateDict['optimizer'])
+        print('Loading complete! Number of model parameters: %d' % self.nParams())
+
+        epoch = loadStateDict.get('epoch')
+        iteration = loadStateDict.get('iteration')
+        print(f'Checkpoint epoch {epoch}, iteration {iteration}')
+        return epoch, iteration
 
     def nParams(self):
         return sum([p.data.nelement() for p in self.model.parameters()])
 
-    def beforeSave(self, epoch, iteration):
+    def savePrepare(self, epoch, iteration):
         # update checkpointDir
-        self.checkpointDir = os.path.join(self.saveFolder, 'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
-        self.checkpointFolder = self.saveFolder
-        self.logFolder = os.path.join(self.checkpointFolder, 'logs')
-        myUtils.checkDir(self.saveFolder)
+        self.checkpointDir = os.path.join(self.checkpointFolder,
+                                          'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
+        myUtils.checkDir(self.checkpointFolder)
+
+    def save(self, epoch, iteration, trainLoss, additionalInfo=None):
+        self.savePrepare(epoch, iteration)
+        saveDict = {
+            'epoch': epoch,
+            'iteration': iteration,
+            'state_dict': self.model.state_dict(),
+            'train_loss': trainLoss,
+        }
+        if additionalInfo is not None:
+            saveDict.update(additionalInfo)
+        if self.optimizer is not None:
+            saveDict['optimizer'] = self.optimizer.state_dict()
+        torch.save(saveDict, self.checkpointDir)
+        return self.checkpointDir

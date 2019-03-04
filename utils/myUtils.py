@@ -24,15 +24,25 @@ class NameValues(collections.OrderedDict):
         return str
 
     def strSuffix(self, prefix='', suffix=''):
-        str = ''
+        sSuffix = ''
         for name, value in super(NameValues, self).items():
-            str += '_%s' % (prefix + name + suffix)
-            if type(value) in (list, tuple):
-                for v in value:
-                    str += '_%.0f' % (v)
-            else:
-                str += '_%.0f' % (value)
-        return str
+            sSuffix += '_%s' % (prefix + name + suffix)
+
+            def addValue(sAppend, values):
+                if type(values) == int:
+                    return sAppend + '_' + str(values)
+                elif type(values) == float:
+                    return sAppend + '_%.1f' % values
+                elif type(values) in (list, tuple):
+                    for v in values:
+                        sAppend = addValue(sAppend, v)
+                    return sAppend
+                else:
+                    raise Exception('Error: Type of values should be in int, float, list, tuple!')
+
+            sSuffix = addValue(sSuffix, value)
+
+        return sSuffix
 
 
 
@@ -43,29 +53,20 @@ class AutoPad:
         self.WPad = ((self.W - 1) // multiple + 1) * multiple
 
     def pad(self, imgs):
-        if type(imgs) in (list, tuple):
-            imgsPad = [self.pad(im) for im in imgs]
-        else:
-            imgsPad = torch.zeros([self.N, self.C, self.HPad, self.WPad], dtype=imgs.dtype,
-                                  device=imgs.device.type)
-            imgsPad[:, :, (self.HPad - self.H):, (self.WPad - self.W):] = imgs
-        return imgsPad
+        def _pad(img):
+            imgPad = torch.zeros([self.N, self.C, self.HPad, self.WPad], dtype=img.dtype,
+                                  device=img.device.type)
+            imgPad[:, :, (self.HPad - self.H):, (self.WPad - self.W):] = img
+            return imgPad
+        return forNestingList(imgs, _pad)
 
     def unpad(self, imgs):
-        if type(imgs) in (list, tuple):
-            imgs = [self.unpad(im) for im in imgs]
-        else:
-            imgs = imgs[:, (self.HPad - self.H):, (self.WPad - self.W):]
-        return imgs
+        return forNestingList(imgs, lambda img: img[:, (self.HPad - self.H):, (self.WPad - self.W):])
 
 
 # Flip among W dimension. For NCHW data type.
 def flipLR(ims):
-    if type(ims) in (list, tuple):
-        return [flipLR(im) for im in ims]
-    else:
-        return ims.flip(-1)
-
+    return forNestingList(ims, lambda im: im.flip(-1) if im is not None else None)
 
 def assertDisp(dispL=None, dispR=None):
     if (dispL is None or dispL.numel() == 0) and (dispR is None or dispR.numel() == 0):
@@ -126,10 +127,12 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                                                          help='datapath'),
                  'load_scale': lambda: parser.add_argument('--load_scale', type=float, default=[1], nargs='+',
                                                            help='scaling applied to data during loading'),
+                 'randomLR': lambda: parser.add_argument('--randomLR', type=str, default=None,
+                                                        help='enables randomly loading left or right images (disp/rgb)'),
                  # training
                  'batchsize_train': lambda: parser.add_argument('--batchsize_train', type=int, default=3,
                                                                 help='training batch size'),
-                 'trainCrop': lambda: parser.add_argument('--trainCrop', type=float, default=(256, 512), nargs=2,
+                 'trainCrop': lambda: parser.add_argument('--trainCrop', type=int, default=(256, 512), nargs=2,
                                                           help='size of random crop (H x W) applied to data during training'),
                  'log_every': lambda: parser.add_argument('--log_every', type=int, default=10,
                                                           help='log every log_every iterations. set to 0 to stop logging'),
@@ -140,6 +143,10 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                  'lr': lambda: parser.add_argument('--lr', type=float, default=[0.001], help='', nargs='+'),
                  'lossWeights': lambda: parser.add_argument('--lossWeights', type=float, default=[1], nargs='+',
                                                            help='weights of losses if model have multiple losses'),
+                 'resume': lambda: parser.add_argument('--resume', action='store_true', default=False,
+                                                           help='resume specified training '
+                                                                '(or save evaluation results to old folder)'
+                                                                ' else save/log into a new folders'),
                  # evaluation
                  'eval_fcn': lambda: parser.add_argument('--eval_fcn', type=str, default='outlier',
                                                          help='evaluation function used in testing'),
@@ -226,21 +233,31 @@ class TensorboardLogger:
 
 
 class Batch:
-    def __init__(self, batch, cuda=None, half=None):
-        if type(batch) not in (list, tuple, Batch):
-            raise Exception('Error: batch must be class list, tuple or Batch!')
-        if len(batch) % 4 != 0:
-            raise Exception(f'Error: input batch with length {len(batch)} doesnot match required 4n!')
-
+    def __init__(self, batch, cuda=False, half=False):
         if type(batch) in (list, tuple):
+            self._assertLen(len(batch))
             self.batch = batch[:]  # deattach with initial list
         elif type(batch) is Batch:
+            self._assertLen(len(batch))
             self.batch = batch.batch[:]
+        elif type(batch) is int:
+            self._assertLen(batch)
+            if batch % 4 != 0:
+                raise Exception(f'Error: input batch with length {len(batch)} doesnot match required 4n!')
+            self.batch = [None] * batch
+        else:
+            raise Exception('Error: batch must be class list, tuple or Batch!')
 
-        if cuda is not None:
+        self.half = half
+        if half:
             self.batch = [(im.half() if half else im) if im.numel() else None for im in self.batch]
-        if half is not None:
+        self.cuda = cuda
+        if cuda:
             self.batch = [(im.cuda() if cuda else im) if im is not None else None for im in self.batch]
+
+    def _assertLen(self, len):
+        if len % 4 != 0:
+            raise Exception(f'Error: input batch with length {len} doesnot match required 4n!')
 
     def __len__(self):
         return len(self.batch)
@@ -301,3 +318,40 @@ class Batch:
             self.batch[2::4] = set[:len(set) // 2]
             self.batch[3::4] = set[len(set) // 2:]
         return self.batch[2::4] + self.batch[3::4]
+
+def forNestingList(l, fcn):
+    if type(l) in (list, tuple):
+        l = [forNestingList(e, fcn) for e in l]
+        return l
+    else:
+        return fcn(l)
+
+def scanCheckpoint(checkpointDirs):
+    # if checkpoint is folder
+    if os.path.isdir(checkpointDirs):
+        filenames = [d for d in os.listdir(checkpointDirs) if os.path.isfile(os.path.join(checkpointDirs, d))]
+        filenames.sort()
+        latestCheckpointName = None
+        latestEpoch = None
+
+        def _getEpoch(name):
+            try:
+                keywords = name.split('_')
+                epoch = keywords[keywords.index('epoch') + 1]
+                return int(epoch)
+            except ValueError:
+                return None
+
+        for filename in filenames:
+            if any(filename.endswith(extension) for extension in ('.tar', '.pt')):
+                if latestCheckpointName is None:
+                    latestCheckpointName = filename
+                    latestEpoch = _getEpoch(filename)
+                else:
+                    epoch = _getEpoch(filename)
+                    if epoch > latestEpoch or epoch is None:
+                        latestCheckpointName = filename
+                        latestEpoch = epoch
+        checkpointDirs = os.path.join(checkpointDirs, latestCheckpointName)
+
+    return checkpointDirs

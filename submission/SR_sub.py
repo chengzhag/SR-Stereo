@@ -50,7 +50,6 @@ def main():
                                             batchSizes=batchSizes,
                                             loadScale=(args.load_scale[0], args.load_scale[0] / 2),
                                             mode='submission',
-                                            preprocess=False,
                                             mask=(1, 1, 0, 0))
 
     # Load model

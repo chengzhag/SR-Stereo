@@ -7,7 +7,7 @@ import sys
 
 
 class Train:
-    def __init__(self, trainImgLoader, nEpochs, lr=(0.001, ), logEvery=1, testEvery=1, ndisLog=1, Test=None):
+    def __init__(self, trainImgLoader, nEpochs, lr=(0.001, ), logEvery=1, testEvery=1, ndisLog=1, Test=None, startEpoch=1):
         self.trainImgLoader = trainImgLoader
         self.logEvery = logEvery
         self.testEvery = testEvery
@@ -17,9 +17,11 @@ class Train:
         self.lr = lr
         self.lrNow = lr[0]
         self.nEpochs = nEpochs
+        self.startEpoch = startEpoch
         self.global_step = 0
         self.tensorboardLogger = myUtils.TensorboardLogger()
-        self.test.tensorboardLogger = self.tensorboardLogger # should be initialized in _trainIt 
+        self.test.tensorboardLogger = self.tensorboardLogger # should be initialized in _trainIt
+
         
     def _trainIt(self, batch, log):
         return None, None
@@ -29,14 +31,17 @@ class Train:
         # 'model.model is None' means no checkpoint is loaded and presetted maxdisp is used
         if model.model is None:
             model.initModel()
+
+        if self.startEpoch == 1:
+            self.model.saveToNew()
         self.log()
         # Train
         ticFull = time.time()
 
         epoch = None
         batch_idx = None
-        self.global_step = 0
-        for epoch in range(1, self.nEpochs + 1):
+        self.global_step = (self.startEpoch - 1) * len(self.trainImgLoader)
+        for epoch in range(self.startEpoch, self.nEpochs + 1):
             print('This is %d-th epoch' % (epoch))
             self.lrNow = myUtils.adjustLearningRate(self.model.optimizer, epoch, self.lr)
 
@@ -73,8 +78,9 @@ class Train:
                     lossesAvg = None
 
                     for name, im in ims.items():
-                        self.tensorboardLogger.logFirstNIms('trainImages/' + name, im, 1,
-                                                            global_step=self.global_step, n=self.ndisLog)
+                        if im is not None:
+                            self.tensorboardLogger.logFirstNIms('trainImages/' + name, im, 1,
+                                                                global_step=self.global_step, n=self.ndisLog)
 
                 totalTrainLoss += sum(lossesPairs.values()) / len(lossesPairs.values())
 
@@ -115,8 +121,9 @@ class Train:
         self.log(endMessage=endMessage)
 
     def log(self, additionalValue=(), endMessage=None):
-        myUtils.checkDir(self.model.saveFolder)
-        logDir = os.path.join(self.model.saveFolder, 'train_info.txt')
+        logFolder = self.model.checkpointFolder
+        myUtils.checkDir(logFolder)
+        logDir = os.path.join(logFolder, 'train_info.txt')
         with open(logDir, "a") as log:
             def writeNotNone(name, value):
                 if value is not None: log.write(name + ': ' + str(value) + '\n')

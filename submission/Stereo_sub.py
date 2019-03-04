@@ -41,7 +41,7 @@ def main():
                                             batchSizes=batchSizes,
                                             loadScale=args.load_scale,
                                             mode='submission',
-                                            mask=(1, 1, 1, 0))
+                                            mask=(1, 1, 0, 0))
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))

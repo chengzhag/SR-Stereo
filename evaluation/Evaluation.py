@@ -39,8 +39,9 @@ class Evaluation:
             if doLog:
                 self.tensorboardLogger.set(self.model.logFolder)
                 for name, im in ims.items():
-                    self.tensorboardLogger.logFirstNIms('testImages/' + name, im, 1,
-                                                        global_step=1, n=self.ndisLog)
+                    if im is not None:
+                        self.tensorboardLogger.logFirstNIms('testImages/' + name, im, 1,
+                                                            global_step=1, n=self.ndisLog)
 
             timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
 
@@ -60,18 +61,12 @@ class Evaluation:
         return avgTestScores
 
     # log file will be saved to where chkpoint file is
-    def log(self, epoch=None, it=None, global_step=None, additionalValue=()):
+    def log(self, epoch=None, it=None, global_step=None, additionalValue=None):
         logDir = os.path.join(self.model.checkpointFolder, 'test_results.txt')
         with open(logDir, "a") as log:
-            pass
-        with open(logDir, "r+") as log:
             def writeNotNone(name, value):
                 if value is not None: log.write(name + ': ' + str(value) + '\n')
 
-            log.seek(0)
-            logOld = log.read()
-
-            log.seek(0)
             log.write('---------------------- %s ----------------------\n\n' % self.localtime)
 
             log.write('python ')
@@ -89,12 +84,11 @@ class Evaluation:
                          ('global_step', global_step),
                          ('testTime', self.testTime),
                          )
-            for pairs in (baseInfos, self.testResults.items(), additionalValue.items()):
+            for pairs in (baseInfos, self.testResults.items(),
+                          additionalValue.items() if additionalValue is not None else ()):
                 for (name, value) in pairs:
                     writeNotNone(name, value)
                 log.write('\n')
-
-            log.write(logOld)
 
         # save Tensorboard logs to where checkpoint is.
         for name, value in self.testResults.items():
