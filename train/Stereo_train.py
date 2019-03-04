@@ -24,7 +24,8 @@ class Train(Base):
                                            weights=self.lossWeights)
         if log:
             for disp, input, side in zip(batch.lowestResDisps(), batch.lowestResRGBs(), ('L', 'R')):
-                outputs['gt' + side] = disp / self.model.outputMaxDisp
+                if disp is not None:
+                    outputs['gt' + side] = disp / self.model.outputMaxDisp
                 outputs['input' + side] = input # lowestResRGBs should be input in most cases
 
         return losses, outputs

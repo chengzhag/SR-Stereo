@@ -43,14 +43,14 @@ class PSMNetDown(PSMNet):
     def loss(self, outputs, gts, kitti=False):
         losses = []
         for output, gt in zip(outputs, gts):
-            losses.append(super(PSMNetDown, self).loss(output, gt, kitti=kitti) if gt is not None else 0)
+            losses.append(super(PSMNetDown, self).loss(output, gt, kitti=kitti) if gt is not None else None)
         return losses
 
     def trainOneSide(self, imgL, imgR, gts, returnOutputs=False, kitti=False, weights=(1, 0)):
         self.optimizer.zero_grad()
         outDispHighs, outDispLows = self.model.forward(imgL, imgR)
         losses = self.loss((outDispHighs, outDispLows), gts, kitti=kitti)
-        loss = sum([weight * loss for weight, loss in zip(weights, losses)])
+        loss = sum([weight * loss for weight, loss in zip(weights, losses) if loss is not None])
         with self.amp_handle.scale_loss(loss, self.optimizer) as scaled_loss:
             scaled_loss.backward()
         self.optimizer.step()
@@ -84,7 +84,8 @@ class PSMNetDown(PSMNet):
                     weights=weights
                 )
                 for suffix, loss in zip(('', 'High', 'Low'), lossesList):
-                    losses['lossDisp' + suffix + side] = loss
+                    if loss is not None:
+                        losses['lossDisp' + suffix + side] = loss
 
                 if returnOutputs:
                     for suffix, output in zip(('High', 'Low'), outputsList):

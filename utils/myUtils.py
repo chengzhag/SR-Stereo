@@ -199,6 +199,9 @@ def adjustLearningRate(optimizer, epoch, lr):
 def assertBatchLen(batch, length):
     if type(batch) is not Batch:
         raise Exception('Error: batch must be class Batch!')
+    if type(length) in (list, tuple):
+        if len(batch) not in length:
+            raise Exception(f'Error: input batch with length {len(batch)} doesnot match required {length}!')
     elif len(batch) != length:
         raise Exception(f'Error: input batch with length {len(batch)} doesnot match required {length}!')
 
@@ -249,9 +252,10 @@ class Batch:
             raise Exception('Error: batch must be class list, tuple or Batch!')
 
         self.half = half
-        if half:
-            self.batch = [(im.half() if half else im) if im.numel() else None for im in self.batch]
         self.cuda = cuda
+        self.batch = [(im if im.numel() else None) if im is not None else None for im in self.batch]
+        if half:
+            self.batch = [(im.half() if half else im) if im is not None else None for im in self.batch]
         if cuda:
             self.batch = [(im.cuda() if cuda else im) if im is not None else None for im in self.batch]
 
