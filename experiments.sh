@@ -4,7 +4,7 @@ carla_kitti_dataset=/media/omnisky/zcSSD/SR-Stereo/datasets/carla_kitti/carla_ki
 sceneflow_dataset=/media/omnisky/zcSSD/SR-Stereo/datasets/sceneflow/
 kitti2015_dataset=/media/omnisky/zcSSD/SR-Stereo/datasets/kitti/data_scene_flow/training/
 kitti2012_dataset=/media/omnisky/zcSSD/SR-Stereo/datasets/kitti/data_stereo_flow/training/
-export CUDA_VISIBLE_DEVICES=1,2,3
+export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 ## test: SR_SRdisp_compare_test (DONE)
 ## test subject: Compare SRdisp (EDSR with inputL/R and warpToR/L) with SR (original EDSR_baseline_x2 net)
@@ -43,14 +43,21 @@ export CUDA_VISIBLE_DEVICES=1,2,3
 #PYTHONPATH=./ python train/SR_train.py --model SR --outputFolder experiments/SR_cropsize_test --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 80 1632 --epochs 5 --log_every 50 --test_every -1 --eval_fcn l1 --batchsize_train 4 --batchsize_test 4 --lr 0.0001 --loadmodel logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt
 
 
-# test: Stereo1_Stereo2_compare_test (DONE)
+# test: Stereo1_Stereo2_compare_test (TODO)
 # test subject: Compare Stereo2 (SR input) with Stereo1 (KITTI-size input PSMNet)
 ## step 1: training
-#PYTHONPATH=./ python train/Stereo_train.py --model PSMNet --dispscale 2 --outputFolder experiments/Stereo1_Stereo2_compare_test --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every -1 --batchsize_train 4 --batchsize_test 2 --lr 0.001 2 0.0002 5 0.0001 --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --load_scale 1
-#PYTHONPATH=./ python train/Stereo_train.py --model PSMNet --dispscale 1 --outputFolder experiments/Stereo1_Stereo2_compare_test --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 1 --batchsize_train 4 --batchsize_test 4 --lr 0.001 2 0.0002 5 0.0001 --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --load_scale 0.5
-#PYTHONPATH=./ python train/Stereo_train.py --model PSMNetDown --dispscale 2 --outputFolder experiments/Stereo1_Stereo2_compare_test --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every -1 --batchsize_train 4 --batchsize_test 2 --lr 0.001 2 0.0002 5 0.0001 --lossWeights 1 0 --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --load_scale 1 0.5
-#PYTHONPATH=./ python train/Stereo_train.py --model PSMNetDown --dispscale 2 --outputFolder experiments/Stereo1_Stereo2_compare_test --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every -1 --batchsize_train 4 --batchsize_test 2 --lr 0.001 2 0.0002 5 0.0001 --lossWeights 0 1 --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --load_scale 1 0.5
+PYTHONPATH=./ python train/Stereo_train.py --model PSMNetDown --dispscale 2 --outputFolder experiments/Stereo1_Stereo2_compare_test --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every -1 --batchsize_train 4 --batchsize_test 2 --lr 0.001 2 0.0002 5 0.0001 --lossWeights 1 0 --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --load_scale 1 0.5
+PYTHONPATH=./ python train/Stereo_train.py --model PSMNet --dispscale 1 --outputFolder experiments/Stereo1_Stereo2_compare_test --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 1 --batchsize_train 4 --batchsize_test 4 --lr 0.001 2 0.0002 5 0.0001 --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --load_scale 0.5
 ## step 2: evaluation
-PYTHONPATH=./ python evaluation/Stereo_eval.py --model PSMNetDown --dispscale 2 --datapath $carla_kitti_dataset --dataset carla_kitti --batchsize_test 3 --eval_fcn outlier --half --loadmodel logs/experiments/Stereo1_Stereo2_compare_test/Stereo_train/190303111117_PSMNet_loadScale_1.0_trainCrop_128_1024_batchSize_4_lossWeights_1_carla_kitti/checkpoint_epoch_0005_it_01000.tar --load_scale 1 0.5 --half --resume
+#PYTHONPATH=./ python evaluation/Stereo_eval.py --model PSMNetDown --dispscale 2 --datapath $carla_kitti_dataset --dataset carla_kitti --batchsize_test 3 --eval_fcn outlier --half --loadmodel logs/experiments/Stereo1_Stereo2_compare_test/Stereo_train/190303111117_PSMNet_loadScale_1.0_trainCrop_128_1024_batchSize_4_lossWeights_1_carla_kitti/checkpoint_epoch_0005_it_01000.tar --load_scale 1 0.5 --half --resume
 #PYTHONPATH=./ python evaluation/Stereo_eval.py --model PSMNet --dispscale 1 --datapath $carla_kitti_dataset --dataset carla_kitti --batchsize_test 3 --eval_fcn outlier --half --loadmodel logs/experiments/Stereo1_Stereo2_compare_test/Stereo_train/190303115921_PSMNet_loadScale_0.5_trainCrop_128_1024_batchSize_4_lossWeights_1_carla_kitti/checkpoint_epoch_0005_it_01000.tar --load_scale 0.5 --half --resume
+
+# test: Stereo2_lossWeights_test (TODO)
+# test subject: lossDisp = weight1 * lossDispHigh + weight2 * lossDispLow, weight1 + weight2 = 1
+#PYTHONPATH=./ python train/Stereo_train.py --model PSMNetDown --dispscale 2 --outputFolder experiments/Stereo2_lossWeights_test --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every -1 --batchsize_train 4 --batchsize_test 2 --lr 0.001 2 0.0002 5 0.0001 --lossWeights 1 0 --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --load_scale 1 0.5
+PYTHONPATH=./ python train/Stereo_train.py --model PSMNetDown --dispscale 2 --outputFolder experiments/Stereo2_lossWeights_test --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every -1 --batchsize_train 4 --batchsize_test 2 --lr 0.001 2 0.0002 5 0.0001 --lossWeights 0 1 --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --load_scale 1 0.5
+PYTHONPATH=./ python train/Stereo_train.py --model PSMNetDown --dispscale 2 --outputFolder experiments/Stereo2_lossWeights_test --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every -1 --batchsize_train 4 --batchsize_test 2 --lr 0.001 2 0.0002 5 0.0001 --lossWeights 0.5 0.5 --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --load_scale 1 0.5
+PYTHONPATH=./ python train/Stereo_train.py --model PSMNetDown --dispscale 2 --outputFolder experiments/Stereo2_lossWeights_test --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every -1 --batchsize_train 4 --batchsize_test 2 --lr 0.001 2 0.0002 5 0.0001 --lossWeights 0.25 0.75 --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --load_scale 1 0.5
+PYTHONPATH=./ python train/Stereo_train.py --model PSMNetDown --dispscale 2 --outputFolder experiments/Stereo2_lossWeights_test --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every -1 --batchsize_train 4 --batchsize_test 2 --lr 0.001 2 0.0002 5 0.0001 --lossWeights 0.75 0.25 --loadmodel logs/pretrained/PSMNet_pretrained_sceneflow/PSMNet_pretrained_sceneflow.tar --load_scale 1 0.5
+
 
