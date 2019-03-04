@@ -22,7 +22,7 @@ class Evaluation(Base):
         if log:
             for disp, input, side in zip(batch.lowestResDisps(), batch.lowestResRGBs(), ('L', 'R')):
                 outputs['gt' + side] = disp / self.model.outputMaxDisp
-                outputs['input' + side] = input # lowestResRGBs should be input in most cases
+                outputs['input' + side] = input  # lowestResRGBs should be input in most cases
 
         return scores, outputs
 
@@ -49,7 +49,8 @@ def main():
     stage, _ = os.path.splitext(os.path.basename(__file__))
     stage = os.path.join(args.outputFolder, stage) if args.outputFolder is not None else stage
     stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale,
-                                         half=args.half, cuda=args.cuda, stage=stage)
+                                         half=args.half, cuda=args.cuda, stage=stage,
+                                         saveFolderSuffix=myUtils.getSuffix(args.loadmodel))
     stereo.load(args.loadmodel)
     if not args.resume:
         stereo.saveToNew()

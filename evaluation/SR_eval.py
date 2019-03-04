@@ -56,7 +56,8 @@ def main():
     stage = os.path.join(args.outputFolder, stage) if args.outputFolder is not None else stage
     sr = getattr(SR, args.model)(cuda=args.cuda,
                                  half=args.half, stage=stage,
-                                 dataset=args.dataset)
+                                 dataset=args.dataset,
+                                 saveFolderSuffix=myUtils.getSuffix(args.loadmodel))
     if hasattr(sr, 'withMask'):
         sr.withMask(args.withMask)
     sr.load(args.loadmodel)

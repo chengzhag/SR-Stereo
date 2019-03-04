@@ -86,7 +86,7 @@ class Model:
                     raise Exception(f'Error: Specified {len(checkpointDirs)} checkpoints. Only {maxCheckPoints} is(are) needed!')
                 # for model composed with multiple models, check if checkpointDirs are together
                 modelRoot = None
-                checkpointDirs = [myUtils.scanCheckpoint(dir) for dir in checkpointDirs]
+                checkpointDirs = myUtils.scanCheckpoint(checkpointDirs)
                 for dir in checkpointDirs:
                     checkpointFolder, _ = os.path.split(dir)
                     checkpointRoot = os.path.join(*checkpointFolder.split('/')[:-2])
