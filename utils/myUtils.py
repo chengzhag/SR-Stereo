@@ -327,31 +327,52 @@ def forNestingList(l, fcn):
         return fcn(l)
 
 def scanCheckpoint(checkpointDirs):
-    # if checkpoint is folder
-    if os.path.isdir(checkpointDirs):
-        filenames = [d for d in os.listdir(checkpointDirs) if os.path.isfile(os.path.join(checkpointDirs, d))]
-        filenames.sort()
-        latestCheckpointName = None
-        latestEpoch = None
+    if type(checkpointDirs) in (list, tuple):
+        checkpointDirs = [scanCheckpoint(dir) for dir in checkpointDirs]
+    else:
+        # if checkpoint is folder
+        if os.path.isdir(checkpointDirs):
+            filenames = [d for d in os.listdir(checkpointDirs) if os.path.isfile(os.path.join(checkpointDirs, d))]
+            filenames.sort()
+            latestCheckpointName = None
+            latestEpoch = None
 
-        def _getEpoch(name):
-            try:
-                keywords = name.split('_')
-                epoch = keywords[keywords.index('epoch') + 1]
-                return int(epoch)
-            except ValueError:
-                return None
+            def _getEpoch(name):
+                try:
+                    keywords = name.split('_')
+                    epoch = keywords[keywords.index('epoch') + 1]
+                    return int(epoch)
+                except ValueError:
+                    return None
 
-        for filename in filenames:
-            if any(filename.endswith(extension) for extension in ('.tar', '.pt')):
-                if latestCheckpointName is None:
-                    latestCheckpointName = filename
-                    latestEpoch = _getEpoch(filename)
-                else:
-                    epoch = _getEpoch(filename)
-                    if epoch > latestEpoch or epoch is None:
+            for filename in filenames:
+                if any(filename.endswith(extension) for extension in ('.tar', '.pt')):
+                    if latestCheckpointName is None:
                         latestCheckpointName = filename
-                        latestEpoch = epoch
-        checkpointDirs = os.path.join(checkpointDirs, latestCheckpointName)
+                        latestEpoch = _getEpoch(filename)
+                    else:
+                        epoch = _getEpoch(filename)
+                        if epoch > latestEpoch or epoch is None:
+                            latestCheckpointName = filename
+                            latestEpoch = epoch
+            checkpointDirs = os.path.join(checkpointDirs, latestCheckpointName)
 
     return checkpointDirs
+
+def getSuffix(checkpointDirOrFolder):
+    # saveFolderSuffix = myUtils.NameValues(('loadScale', 'trainCrop', 'batchSize', 'lossWeights'),
+    #                                       (trainImgLoader.loadScale,
+    #                                        trainImgLoader.trainCrop,
+    #                                        args.batchsize_train,
+    #                                        args.lossWeights))
+    if type(checkpointDirOrFolder) is str or \
+            (type(checkpointDirOrFolder) in (list, tuple) and len(checkpointDirOrFolder) == 1):
+        checkpointDir = scanCheckpoint(checkpointDirOrFolder[0])
+        checkpointFolder, _ = os.path.split(checkpointDir)
+        checkpointFolder = checkpointFolder.split('/')[-1]
+        saveFolderSuffix = checkpointFolder.split('_')[2:]
+        saveFolderSuffix = ['_' + suffix for suffix in saveFolderSuffix]
+        saveFolderSuffix = ''.join(saveFolderSuffix)
+    else:
+        saveFolderSuffix = NameValues((),())
+    return saveFolderSuffix
