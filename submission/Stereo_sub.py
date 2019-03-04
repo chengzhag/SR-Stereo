@@ -18,11 +18,13 @@ class Submission(Base):
             dispOut = (dispOut * 256).astype('uint16')
             return dispOut
 
-        dispOut = self.model.predict(*batch.deattach().lowResRGBs(), mode='left')
+        dispOut = self.model.predict(batch.detach(), mask=(1, 0))[0]
 
         outputs = collections.OrderedDict()
         outputs['dispOutL'] = preprocess(dispOut)
-        outputs['gtL'] = preprocess(batch.highResDisps()[0])
+        gtL = batch.highResDisps()[0]
+        if gtL is not None:
+            outputs['gtL'] = preprocess(gtL)
         return outputs
 
 
@@ -41,7 +43,7 @@ def main():
                                             batchSizes=batchSizes,
                                             loadScale=args.load_scale,
                                             mode='submission',
-                                            mask=(1, 1, 0, 0))
+                                            mask=(1, 1, 1, 0))
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))

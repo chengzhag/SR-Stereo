@@ -14,7 +14,7 @@ class Train(Base):
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
 
-        losses, outputs = self.model.train(batch.deattach(), returnOutputs=log)
+        losses, outputs = self.model.train(batch.detach(), returnOutputs=log)
 
         if log:
             imgs = batch.lowResRGBs() + batch.highResRGBs()
