@@ -14,7 +14,7 @@ class Evaluation(Base):
     def _evalIt(self, batch, log):
         super(Evaluation, self)._evalIt(batch, log)
 
-        scores, outputs = self.model.test(batch.deattach(),
+        scores, outputs = self.model.test(batch.detach(),
                                           type=self.evalFcn,
                                           returnOutputs=log,
                                           kitti=self.testImgLoader.kitti)

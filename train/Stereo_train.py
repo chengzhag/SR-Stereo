@@ -18,7 +18,7 @@ class Train(Base):
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
 
-        losses, outputs = self.model.train(batch.deattach(),
+        losses, outputs = self.model.train(batch.detach(),
                                            returnOutputs=log,
                                            kitti=self.trainImgLoader.kitti,
                                            weights=self.lossWeights)

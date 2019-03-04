@@ -272,7 +272,7 @@ class Batch:
     def __setitem__(self, key, value):
         self.batch[key] = value
 
-    def deattach(self):
+    def detach(self):
         return Batch(self)
 
     def lastScaleBatch(self):

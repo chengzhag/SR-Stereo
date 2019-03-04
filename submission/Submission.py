@@ -24,8 +24,7 @@ class Submission:
         tic = time.time()
         ticFull = time.time()
         for iIm, batch in enumerate(self.subImgLoader, 1):
-            batch = [(data.half() if self.model.half else data) if data.numel() else None for data in batch]
-            batch = [(data.cuda() if self.model.cuda else data) if data is not None else None for data in batch]
+            batch = myUtils.Batch(batch, cuda=self.model.cuda, half=self.model.half)
             name = self.subImgLoader.dataset.name(iIm - 1)
             name, extension = os.path.splitext(name)
 

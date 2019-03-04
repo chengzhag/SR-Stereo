@@ -12,10 +12,6 @@ class Submission(Base):
         super(Submission, self).__init__(subImgLoader)
 
     def _subIt(self, batch):
-        outputs = collections.OrderedDict()
-        inputs = batch.lowResRGBs()
-        gts = batch.highResRGBs()
-
         def preprocess(im):
             output = im.squeeze()
             output = output.data.cpu().numpy()
@@ -23,13 +19,16 @@ class Submission(Base):
             output = (output * 255).astype('uint8')
             return output
 
-        for i, suffix in enumerate(('L', 'R')):
-            if inputs[i] is not None:
-                output = self.model.predict(inputs[i])
-                outputs['output' + suffix] = preprocess(output)
-                outputs['input' + suffix] = preprocess(inputs[i])
-            if gts[i] is not None:
-                outputs['gt' + suffix] = preprocess(gts[i])
+        outSRs = self.model.predict(batch=batch.lastScaleBatch().detach())
+
+        inputs = batch.lowResRGBs()
+        gts = batch.highResRGBs()
+        outputs = collections.OrderedDict()
+        for input, outSR, gt, suffix in zip(inputs, outSRs, gts, ('L', 'R')):
+            if input is not None:
+                outputs['output' + suffix] = preprocess(outSR)
+                outputs['input' + suffix] = preprocess(input)
+                outputs['gt' + suffix] = preprocess(gt)
 
         return outputs
 
