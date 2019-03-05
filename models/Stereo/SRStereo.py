@@ -59,22 +59,24 @@ class SRStereo(Stereo):
         return outputs
 
     def test(self, batch, type='l1', returnOutputs=False, kitti=False):
-        myUtils.assertBatchLen(batch, 4)
+        myUtils.assertBatchLen(batch, (4, 8))
+        if len(batch) == 8:
+            batch = batch.lastScaleBatch()
 
         # Test with outputing sr images
-        # srs = self._sr.predict(batch)
-        #
-        # stereoBatch = myUtils.Batch(8)
-        # stereoBatch.highResRGBs(srs)
-        # stereoBatch.lowestResDisps(batch.lowestResDisps())
-        # scores, outputs = self._stereo.test(stereoBatch, type=type, returnOutputs=returnOutputs, kitti=kitti)
-        #
-        # for sr, side in zip(srs, ('L', 'R')):
-        #     outputs['outputSr' + side] = sr
-        # return scores, outputs
+        srs = self._sr.predict(batch)
 
-        # Test without outputing sr images
-        return super(SRStereo, self).test(batch, type=type, returnOutputs=returnOutputs, kitti=kitti)
+        stereoBatch = myUtils.Batch(8)
+        stereoBatch.highResRGBs(srs)
+        stereoBatch.lowestResDisps(batch.lowestResDisps())
+        scores, outputs = self._stereo.test(stereoBatch, type=type, returnOutputs=returnOutputs, kitti=kitti)
+
+        for sr, side in zip(srs, ('L', 'R')):
+            outputs['outputSr' + side] = sr
+        return scores, outputs
+
+        # # Test without outputing sr images
+        # return super(SRStereo, self).test(batch, type=type, returnOutputs=returnOutputs, kitti=kitti)
 
     def loss(self, outputs, gts, kitti=False):
         losses = []
@@ -151,7 +153,7 @@ class SRStereo(Stereo):
                     kitti=kitti,
                     weights=weights
                 )
-                for suffix, loss in zip(('', 'Sr', 'DispHigh', 'DispLow'), lossesList):
+                for suffix, loss in zip(('', 'Sr', 'DispHigh', 'Disp'), lossesList):
                     if loss is not None:
                         losses['loss' + suffix + side] = loss
 

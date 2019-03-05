@@ -378,5 +378,5 @@ def getSuffix(checkpointDirOrFolder):
         saveFolderSuffix = ['_' + suffix for suffix in saveFolderSuffix]
         saveFolderSuffix = ''.join(saveFolderSuffix)
     else:
-        saveFolderSuffix = NameValues((),())
+        saveFolderSuffix = ''
     return saveFolderSuffix
