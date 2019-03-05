@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="kc110_server_95" showNewOnTargetInSync="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="kc110_server_199" showNewOnTargetInSync="false">
     <serverData>
+      <paths name="kc110_server_199">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/media/liu/zcSSD/SR-Stereo/SR-Stereo" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="kc110_server_95">
         <serverdata>
           <mappings>
