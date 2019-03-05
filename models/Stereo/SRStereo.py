@@ -55,8 +55,10 @@ class SRStereo(Stereo):
 
         # Another method to predict which can test forward fcn
         outputs = super(SRStereo, self).predict(batch, mask)
-        outputs = [output[1][1] for output in outputs]
-        return outputs
+        outputsReturn = []
+        for (outSrL, outSrR), (outDispHighs, outDispLows) in outputs:
+            outputsReturn.append(outDispLows)
+        return outputsReturn
 
     def test(self, batch, type='l1', returnOutputs=False, kitti=False):
         myUtils.assertBatchLen(batch, (4, 8))
@@ -89,6 +91,7 @@ class SRStereo(Stereo):
             for outSr, srGt in zip((outSrL, outSrR), (srGtL, srGtR)):
                 lossSRside = self._sr.loss(outSr, srGt)
                 lossSR = lossSRside if lossSR is None else lossSR + lossSRside
+        lossSR /= 2
         losses.append(lossSR)
 
         # get disparity losses
@@ -113,10 +116,10 @@ class SRStereo(Stereo):
 
         if returnOutputs:
             with torch.no_grad():
-                outputs = (myUtils.quantize(outSrL, 1),
-                           myUtils.quantize(outSrR, 1),
-                           outDispHighs[2] / (self.outputMaxDisp * 2),
-                           outDispLows[2] / self.outputMaxDisp)
+                outputs = (myUtils.quantize(outSrL.detach(), 1),
+                           myUtils.quantize(outSrR.detach(), 1),
+                           outDispHighs[2].detach() / (self.outputMaxDisp * 2),
+                           outDispLows[2].detach() / self.outputMaxDisp)
                 outputs = [output.detach() for output in outputs]
         else:
             outputs = []
