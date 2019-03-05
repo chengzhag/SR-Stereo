@@ -4,7 +4,10 @@ carla_kitti_dataset=/media/omnisky/zcSSD/SR-Stereo/datasets/carla_kitti/carla_ki
 sceneflow_dataset=/media/omnisky/zcSSD/SR-Stereo/datasets/sceneflow/
 kitti2015_dataset=/media/omnisky/zcSSD/SR-Stereo/datasets/kitti/data_scene_flow/training/
 kitti2012_dataset=/media/omnisky/zcSSD/SR-Stereo/datasets/kitti/data_stereo_flow/training/
-export CUDA_VISIBLE_DEVICES=0
+
+#carla_kitti_dataset=/media/hardder3/stc/carla_kitti/carla_kitti_sr_lowquality_moduletest
+
+export CUDA_VISIBLE_DEVICES=3
 
 # test Stereo_train/eval with PSMNet
 echo 'test Stereo_train/eval with PSMNet'

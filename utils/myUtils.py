@@ -136,6 +136,10 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                                                           help='size of random crop (H x W) applied to data during training'),
                  'log_every': lambda: parser.add_argument('--log_every', type=int, default=10,
                                                           help='log every log_every iterations. set to 0 to stop logging'),
+                 'save_every': lambda: parser.add_argument('--save_every', type=int, default=1,
+                                                          help='save every save_every epochs; '
+                                                               'set to -1 to train without saving; '
+                                                               'set to 0 to save after the last epoch.'),
                  'test_every': lambda: parser.add_argument('--test_every', type=int, default=1,
                                                            help='test every test_every epochs. set to 0 to stop testing'),
                  'epochs': lambda: parser.add_argument('--epochs', type=int, default=10,

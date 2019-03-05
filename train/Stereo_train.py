@@ -11,8 +11,8 @@ from train.Train import Train as Base
 
 class Train(Base):
     def __init__(self, trainImgLoader, nEpochs, lr=(0.001,), logEvery=1, testEvery=1, ndisLog=1, Test=None,
-                 lossWeights=(1,), startEpoch=1):
-        super(Train, self).__init__(trainImgLoader, nEpochs, lr, logEvery, testEvery, ndisLog, Test, startEpoch)
+                 lossWeights=(1,), startEpoch=1, saveEvery=1):
+        super(Train, self).__init__(trainImgLoader, nEpochs, lr, logEvery, testEvery, ndisLog, Test, startEpoch, saveEvery)
         self.lossWeights = lossWeights
 
     def _trainIt(self, batch, log):
@@ -44,7 +44,7 @@ def main():
     parser = myUtils.getBasicParser(
         ['outputFolder', 'maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
-         'batchsize_train', 'log_every', 'test_every', 'epochs', 'lr', 'half',
+         'batchsize_train', 'log_every', 'test_every', 'save_every', 'epochs', 'lr', 'half',
          'lossWeights', 'randomLR', 'resume'],
         description='train or finetune Stereo net')
 
@@ -85,7 +85,7 @@ def main():
     train = Train(trainImgLoader=trainImgLoader, nEpochs=args.epochs, lr=args.lr,
                   logEvery=args.log_every, ndisLog=args.ndis_log,
                   testEvery=args.test_every, Test=test, lossWeights=args.lossWeights,
-                  startEpoch=epoch + 1 if args.resume else 1)
+                  startEpoch=epoch + 1 if args.resume else 1, saveEvery=args.save_every)
     train(model=stereo)
 
 

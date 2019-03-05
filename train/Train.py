@@ -7,10 +7,11 @@ import sys
 
 
 class Train:
-    def __init__(self, trainImgLoader, nEpochs, lr=(0.001, ), logEvery=1, testEvery=1, ndisLog=1, Test=None, startEpoch=1):
+    def __init__(self, trainImgLoader, nEpochs, lr=(0.001, ), logEvery=1, testEvery=1, ndisLog=1, Test=None, startEpoch=1, saveEvery=1):
         self.trainImgLoader = trainImgLoader
         self.logEvery = logEvery
         self.testEvery = testEvery
+        self.saveEvery = saveEvery
         self.ndisLog = max(ndisLog, 0)
         self.model = None
         self.test = Test
@@ -49,14 +50,14 @@ class Train:
             totalTrainLoss = 0
             lossesAvg = None
             tic = time.time()
-            torch.cuda.empty_cache()
+            # torch.cuda.empty_cache()
             for batch_idx, batch in enumerate(self.trainImgLoader, 1):
                 batch = myUtils.Batch(batch, cuda=self.model.cuda, half=self.model.half)
 
                 self.global_step += 1
                 # torch.cuda.empty_cache()
 
-                doLog = self.global_step % self.logEvery == 0 and self.logEvery > 0
+                doLog = self.logEvery > 0 and self.global_step % self.logEvery == 0
                 lossesPairs, ims = self._trainIt(batch=batch, log=doLog)
 
                 if lossesAvg is None:
@@ -95,8 +96,10 @@ class Train:
 
             print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / batch_idx))
             # save
-            model.save(epoch=epoch, iteration=batch_idx,
-                       trainLoss=totalTrainLoss / len(self.trainImgLoader))
+            if (self.saveEvery > 0 and epoch % self.saveEvery == 0)\
+                    or (self.saveEvery == 0 and epoch == self.nEpochs):
+                model.save(epoch=epoch, iteration=batch_idx,
+                           trainLoss=totalTrainLoss / len(self.trainImgLoader))
             # test
             if ((self.testEvery > 0 and epoch % self.testEvery == 0)
                 or (self.testEvery == 0 and epoch == self.nEpochs)) \
