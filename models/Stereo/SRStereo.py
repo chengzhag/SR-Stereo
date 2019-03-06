@@ -55,26 +55,30 @@ class SRStereo(Stereo):
 
         # Another method to predict which can test forward fcn
         outputs = super(SRStereo, self).predict(batch, mask)
-        outputs = [output[1][1] for output in outputs]
-        return outputs
+        outputsReturn = []
+        for (outSrL, outSrR), (outDispHighs, outDispLows) in outputs:
+            outputsReturn.append(outDispLows)
+        return outputsReturn
 
     def test(self, batch, type='l1', returnOutputs=False, kitti=False):
-        myUtils.assertBatchLen(batch, 4)
+        myUtils.assertBatchLen(batch, (4, 8))
+        if len(batch) == 8:
+            batch = batch.lastScaleBatch()
 
         # Test with outputing sr images
-        # srs = self._sr.predict(batch)
-        #
-        # stereoBatch = myUtils.Batch(8)
-        # stereoBatch.highResRGBs(srs)
-        # stereoBatch.lowestResDisps(batch.lowestResDisps())
-        # scores, outputs = self._stereo.test(stereoBatch, type=type, returnOutputs=returnOutputs, kitti=kitti)
-        #
-        # for sr, side in zip(srs, ('L', 'R')):
-        #     outputs['outputSr' + side] = sr
-        # return scores, outputs
+        srs = self._sr.predict(batch)
 
-        # Test without outputing sr images
-        return super(SRStereo, self).test(batch, type=type, returnOutputs=returnOutputs, kitti=kitti)
+        stereoBatch = myUtils.Batch(8)
+        stereoBatch.highResRGBs(srs)
+        stereoBatch.lowestResDisps(batch.lowestResDisps())
+        scores, outputs = self._stereo.test(stereoBatch, type=type, returnOutputs=returnOutputs, kitti=kitti)
+
+        for sr, side in zip(srs, ('L', 'R')):
+            outputs['outputSr' + side] = sr
+        return scores, outputs
+
+        # # Test without outputing sr images
+        # return super(SRStereo, self).test(batch, type=type, returnOutputs=returnOutputs, kitti=kitti)
 
     def loss(self, outputs, gts, kitti=False):
         losses = []
@@ -87,6 +91,7 @@ class SRStereo(Stereo):
             for outSr, srGt in zip((outSrL, outSrR), (srGtL, srGtR)):
                 lossSRside = self._sr.loss(outSr, srGt)
                 lossSR = lossSRside if lossSR is None else lossSR + lossSRside
+        lossSR /= 2
         losses.append(lossSR)
 
         # get disparity losses
@@ -111,10 +116,10 @@ class SRStereo(Stereo):
 
         if returnOutputs:
             with torch.no_grad():
-                outputs = (myUtils.quantize(outSrL, 1),
-                           myUtils.quantize(outSrR, 1),
-                           outDispHighs[2] / (self.outputMaxDisp * 2),
-                           outDispLows[2] / self.outputMaxDisp)
+                outputs = (myUtils.quantize(outSrL.detach(), 1),
+                           myUtils.quantize(outSrR.detach(), 1),
+                           outDispHighs[2].detach() / (self.outputMaxDisp * 2),
+                           outDispLows[2].detach() / self.outputMaxDisp)
                 outputs = [output.detach() for output in outputs]
         else:
             outputs = []
@@ -151,7 +156,7 @@ class SRStereo(Stereo):
                     kitti=kitti,
                     weights=weights
                 )
-                for suffix, loss in zip(('', 'Sr', 'DispHigh', 'DispLow'), lossesList):
+                for suffix, loss in zip(('', 'Sr', 'DispHigh', 'Disp'), lossesList):
                     if loss is not None:
                         losses['loss' + suffix + side] = loss
 

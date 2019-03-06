@@ -3,6 +3,9 @@ import os
 import argparse
 from tensorboardX import SummaryWriter
 import collections
+import cv2
+import numpy as np
+import torchvision.transforms as transforms
 
 class NameValues(collections.OrderedDict):
     def __init__(self, names=(), values=(), prefix='', suffix=''):
@@ -84,7 +87,7 @@ def logFirstNIms(writer, name, im, range, global_step=None, n=0):
             im[im > range] = range
             im[im < 0] = 0
             im = im / range
-            im = gray2rgb(im)
+            im = gray2rgb(im.cpu())
         writer.add_images(name, im, global_step=global_step)
 
 
@@ -92,6 +95,23 @@ def gray2rgb(im):
     if im.dim() == 3:
         im = im.unsqueeze(1)
     return im.repeat(1, 3, 1, 1)
+
+def gray2color(im):
+    if im.dim() == 4 and im.size(1) == 1:
+        im = im.squeeze(1)
+    if im.dim() == 3 and im.size(0) >= 1:
+        imReturn = torch.zeros([im.size(0), 3, im.size(1), im.size(2)], dtype=torch.uint8)
+        for i in range(im.size(0)):
+            imReturn[i, :, :, :] = gray2color(im[i, :, :])
+        return imReturn
+    elif im.dim() == 2:
+        im = (im.numpy() * 255).astype(np.uint8)
+        im = cv2.applyColorMap(im, cv2.COLORMAP_JET)
+        im = torch.from_numpy(cv2.cvtColor(im, cv2.COLOR_BGR2RGB).transpose((2, 0, 1)))
+        return im
+    else:
+        raise Exception('Error: Input of gray2color must have one channel!')
+
 
 
 def checkDir(dir):
@@ -136,6 +156,10 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                                                           help='size of random crop (H x W) applied to data during training'),
                  'log_every': lambda: parser.add_argument('--log_every', type=int, default=10,
                                                           help='log every log_every iterations. set to 0 to stop logging'),
+                 'save_every': lambda: parser.add_argument('--save_every', type=int, default=1,
+                                                          help='save every save_every epochs; '
+                                                               'set to -1 to train without saving; '
+                                                               'set to 0 to save after the last epoch.'),
                  'test_every': lambda: parser.add_argument('--test_every', type=int, default=1,
                                                            help='test every test_every epochs. set to 0 to stop testing'),
                  'epochs': lambda: parser.add_argument('--epochs', type=int, default=10,
@@ -378,5 +402,5 @@ def getSuffix(checkpointDirOrFolder):
         saveFolderSuffix = ['_' + suffix for suffix in saveFolderSuffix]
         saveFolderSuffix = ''.join(saveFolderSuffix)
     else:
-        saveFolderSuffix = NameValues((),())
+        saveFolderSuffix = ''
     return saveFolderSuffix
