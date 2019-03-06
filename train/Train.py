@@ -41,6 +41,7 @@ class Train:
 
         epoch = None
         batch_idx = None
+        lossesAvg = None
         self.global_step = (self.startEpoch - 1) * len(self.trainImgLoader)
         for epoch in range(self.startEpoch, self.nEpochs + 1):
             print('This is %d-th epoch' % (epoch))
@@ -48,7 +49,6 @@ class Train:
 
             # iteration
             totalTrainLoss = 0
-            lossesAvg = None
             tic = time.time()
             # torch.cuda.empty_cache()
             for batch_idx, batch in enumerate(self.trainImgLoader, 1):
