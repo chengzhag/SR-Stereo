@@ -3,6 +3,9 @@ import os
 import argparse
 from tensorboardX import SummaryWriter
 import collections
+import cv2
+import numpy as np
+import torchvision.transforms as transforms
 
 class NameValues(collections.OrderedDict):
     def __init__(self, names=(), values=(), prefix='', suffix=''):
@@ -84,7 +87,7 @@ def logFirstNIms(writer, name, im, range, global_step=None, n=0):
             im[im > range] = range
             im[im < 0] = 0
             im = im / range
-            im = gray2rgb(im)
+            im = gray2color(im.cpu())
         writer.add_images(name, im, global_step=global_step)
 
 
@@ -92,6 +95,23 @@ def gray2rgb(im):
     if im.dim() == 3:
         im = im.unsqueeze(1)
     return im.repeat(1, 3, 1, 1)
+
+def gray2color(im):
+    if im.dim() == 4 and im.size(1) == 1:
+        im = im.squeeze(1)
+    if im.dim() == 3 and im.size(0) >= 1:
+        imReturn = torch.zeros([im.size(0), 3, im.size(1), im.size(2)], dtype=torch.uint8)
+        for i in range(im.size(0)):
+            imReturn[i, :, :, :] = gray2color(im[i, :, :])
+        return imReturn
+    elif im.dim() == 2:
+        im = (im.numpy() * 255).astype(np.uint8)
+        im = cv2.applyColorMap(im, cv2.COLORMAP_JET)
+        im = torch.from_numpy(np.asarray(im).transpose((2, 0, 1)))
+        return im
+    else:
+        raise Exception('Error: Input of gray2color must have one channel!')
+
 
 
 def checkDir(dir):
