@@ -87,7 +87,7 @@ def logFirstNIms(writer, name, im, range, global_step=None, n=0):
             im[im > range] = range
             im[im < 0] = 0
             im = im / range
-            im = gray2color(im.cpu())
+            im = gray2rgb(im.cpu())
         writer.add_images(name, im, global_step=global_step)
 
 
@@ -107,7 +107,7 @@ def gray2color(im):
     elif im.dim() == 2:
         im = (im.numpy() * 255).astype(np.uint8)
         im = cv2.applyColorMap(im, cv2.COLORMAP_JET)
-        im = torch.from_numpy(np.asarray(im).transpose((2, 0, 1))[[2, 1, 0],:,:])
+        im = torch.from_numpy(cv2.cvtColor(im, cv2.COLOR_BGR2RGB).transpose((2, 0, 1)))
         return im
     else:
         raise Exception('Error: Input of gray2color must have one channel!')

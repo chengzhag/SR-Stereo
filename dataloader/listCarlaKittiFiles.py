@@ -77,7 +77,7 @@ def main():
         for name, im in zip(('inputL', 'inputR', 'gtL', 'gtR'), sample):
             if im.numel() > 0:
                 myUtils.logFirstNIms(writer, 'listCarlaKittiFiles/' + name, im,
-                                     args.maxdisp if im is not None and im.dim() == 3 else 255,
+                                     args.maxdisp if im is not None and im.size(1) == 1 else 255,
                                      global_step=iSample, n=args.nsample_save)
         if iSample >= args.nsample_save:
             break
