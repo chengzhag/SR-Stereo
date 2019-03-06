@@ -97,8 +97,7 @@ class PSMNetDown(PSMNet):
         outputs = super(PSMNetDown, self).predict(batch, mask)
         downsampled = []
         for output in outputs:
-            # Down sample to half size
-            downsampled.append(output[1])
+            downsampled.append(output[1] if output is not None else None)
         return downsampled
 
     def test(self, batch, type='l1', returnOutputs=False, kitti=False):
