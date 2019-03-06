@@ -1,5 +1,6 @@
 import os
 import os.path
+import math
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -33,7 +34,7 @@ def dataloader(filepath, trainProportion=0.8):
     test_right_disp = []
 
     for i, episode in enumerate(episodes):
-        if i + 1 <= trainProportion * len(episodes):
+        if i + 1 <= math.ceil(trainProportion * len(episodes)):
             all_left_img += (_scanImages(filepath, episode, 'Camera2RGB'))
             all_right_img += (_scanImages(filepath, episode, 'Camera3RGB'))
             all_left_disp += (_scanImages(filepath, episode, 'Camera2Depth'))
