@@ -84,22 +84,22 @@ class Model:
             elif len(checkpointDirs) >= 1:
                 if len(checkpointDirs) > maxCheckPoints:
                     raise Exception(f'Error: Specified {len(checkpointDirs)} checkpoints. Only {maxCheckPoints} is(are) needed!')
-                # for model composed with multiple models, check if checkpointDirs are together
-                modelRoot = None
-                checkpointDirs = myUtils.scanCheckpoint(checkpointDirs)
-                for dir in checkpointDirs:
-                    checkpointFolder, _ = os.path.split(dir)
-                    checkpointRoot = os.path.join(*checkpointFolder.split('/')[:-2])
-                    if modelRoot is None:
-                        modelRoot = checkpointRoot
-                    elif modelRoot != checkpointRoot:
-                        raise Exception('Error: For good project structure, '
-                                        'checkpoints of model combinations should be placed together like: '
-                                        'pycharmruns (running stage)/SRStereo_eval_test (model)/SR_train (components)/'
-                                        '190228011913_SR_loadScale_10_trainCrop_96_1360_batchSize_4_carla_kitti (runs)/'
-                                        '*.tar (checkpoints)')
-                if len(checkpointDirs) == maxCheckPoints:
-                    self.checkpointDir = checkpointDirs[-1]
+                # # for model composed with multiple models, check if checkpointDirs are together
+                # modelRoot = None
+                # checkpointDirs = myUtils.scanCheckpoint(checkpointDirs)
+                # for dir in checkpointDirs:
+                #     checkpointFolder, _ = os.path.split(dir)
+                #     checkpointRoot = os.path.join(*checkpointFolder.split('/')[:-2])
+                #     if modelRoot is None:
+                #         modelRoot = checkpointRoot
+                #     elif modelRoot != checkpointRoot:
+                #         raise Exception('Error: For good project structure, '
+                #                         'checkpoints of model combinations should be placed together like: '
+                #                         'pycharmruns (running stage)/SRStereo_eval_test (model)/SR_train (components)/'
+                #                         '190228011913_SR_loadScale_10_trainCrop_96_1360_batchSize_4_carla_kitti (runs)/'
+                #                         '*.tar (checkpoints)')
+                # if len(checkpointDirs) == maxCheckPoints:
+                #     self.checkpointDir = checkpointDirs[-1]
 
         if type(checkpointDirs) is str:
             checkpointDirs = myUtils.scanCheckpoint(checkpointDirs)
@@ -107,7 +107,7 @@ class Model:
             # update checkpointDir
             self.checkpointDir = checkpointDirs
 
-        if self.checkpointFolder is None:
+        if self.checkpointFolder is None and self.checkpointDir is not None:
             self.checkpointFolder, _ = os.path.split(self.checkpointDir)
             self.logFolder = os.path.join(self.checkpointFolder, 'logs')
 

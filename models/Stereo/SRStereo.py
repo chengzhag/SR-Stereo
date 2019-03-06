@@ -83,14 +83,19 @@ class SRStereo(Stereo):
     def loss(self, outputs, gts, kitti=False):
         losses = []
         (outSrL, outSrR), (outDispHighs, outDispLows) = outputs
-        (srGtL, srGtR), (dispHighGTs, dispLowGTs) = gts
+        (srGtL, srGtR), (dispHighGTs, dispLowGTs), (inputL, inputR) = gts
 
         # get SR outputs loss
         lossSR = None
-        if all([t is not None for t in (srGtL, srGtR)]) :
-            for outSr, srGt in zip((outSrL, outSrR), (srGtL, srGtR)):
+
+        for outSr, srGt, input in zip((outSrL, outSrR), (srGtL, srGtR), (inputL, inputR)):
+            if all([t is not None for t in (srGtL, srGtR)]):
                 lossSRside = self._sr.loss(outSr, srGt)
-                lossSR = lossSRside if lossSR is None else lossSR + lossSRside
+            else:
+                # KITTI has no SR GT
+                lossSRside = self._sr.loss(nn.AvgPool2d((2, 2))(outSr), input)
+            lossSR = lossSRside if lossSR is None else lossSR + lossSRside
+
         lossSR /= 2
         losses.append(lossSR)
 
@@ -106,7 +111,7 @@ class SRStereo(Stereo):
         (outSrL, outSrR), (outDispHighs, outDispLows) = self.model.forward(inputL, inputR)
         losses = self.loss(
             ((outSrL, outSrR), (outDispHighs, outDispLows)),
-            ((srGtL, srGtR), dispGTs),
+            ((srGtL, srGtR), dispGTs, (inputL, inputR)),
             kitti=kitti
         )
         loss = sum([weight * loss for weight, loss in zip(weights, losses) if loss is not None])
