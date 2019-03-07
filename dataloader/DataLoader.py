@@ -82,7 +82,7 @@ class myImageFloder(data.Dataset):
         def loadIm(dirsIndex, loader, scaleRatios, isRGBorDepth):
             ims = []
             if not randomMask[dirsIndex] or self.dirs[dirsIndex] is None:
-                return [np.array([]),] * len(self.loadScale)
+                return [np.array([], dtype=np.float32),] * len(self.loadScale)
             im0 = loader(self.dirs[dirsIndex][index])
             if type(im0) == np.ndarray:
                 im0 = Image.fromarray(im0)

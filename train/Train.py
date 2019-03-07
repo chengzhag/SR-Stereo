@@ -52,7 +52,7 @@ class Train:
             totalTrainLoss = 0
             totalAvgIt = 0
             tic = time.time()
-            # torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
             for batch_idx, batch in enumerate(self.trainImgLoader, 1):
                 batch = myUtils.Batch(batch, cuda=self.model.cuda, half=self.model.half)
 
