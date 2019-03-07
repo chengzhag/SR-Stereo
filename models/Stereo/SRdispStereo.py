@@ -21,10 +21,11 @@ class SRdispStereo(SRStereo):
         myUtils.assertBatchLen(batch, 4)
         self.predictPrepare()
 
-        cated, warpTos = self._sr.warpAndCat(batch.firstScaleBatch())
+        cated, warpTos = self._sr.warpAndCat(batch)
         batch.highResRGBs(cated)
         outputs = super(SRdispStereo, self).predict(batch, mask)
-        return (warpTos, ) + outputs
+        outputsReturn = [[warpTo] + outputsSide for warpTo, outputsSide in zip(warpTos, outputs)]
+        return outputsReturn
 
     def test(self, batch, evalType='l1', returnOutputs=False, kitti=False):
         myUtils.assertBatchLen(batch, (4, 8))
@@ -32,10 +33,9 @@ class SRdispStereo(SRStereo):
             batch = batch.lastScaleBatch()
 
         scores, outputs, rawOutputs = super(SRdispStereo, self).test(batch, evalType, returnOutputs, kitti)
-        for (warpTos, outSrs, (outDispHigh, outDispLow)), side in zip(rawOutputs, ('L', 'R')):
+        for (warpTo, outSR, (outDispHigh, outDispLow)), side in zip(rawOutputs, ('L', 'R')):
             if returnOutputs:
-                for warpTo, sideSr in zip(warpTos, ('L', 'R')):
-                    if warpTo is not None:
-                        outputs['warpTo' + sideSr + side] = warpTo
+                if warpTo is not None:
+                    outputs['warpTo' + side] = warpTo
         return scores, outputs, rawOutputs
 

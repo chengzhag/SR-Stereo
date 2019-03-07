@@ -54,11 +54,12 @@ class SRStereo(Stereo):
             batch = batch.lastScaleBatch()
 
         scores, outputs, rawOutputs = super(SRStereo, self).test(batch, evalType, returnOutputs, kitti)
-        for (outSrs, (outDispHigh, outDispLow)), side in zip(rawOutputs, ('L', 'R')):
+        for rawOutputsSide, side in zip(rawOutputs, ('L', 'R')):
+            outSRs, (outDispHigh, outDispLow) = rawOutputsSide[-2:]
             if returnOutputs:
                 if outDispHigh is not None:
                     outputs['outputDispHigh' + side] = outDispHigh / (self.outputMaxDisp * 2)
-                for outSr, sideSr in zip(outSrs, ('L', 'R')):
+                for outSr, sideSr in zip(outSRs, ('L', 'R')):
                     if outSr is not None:
                         outputs['outputSr' + side] = outSr
         return scores, outputs, rawOutputs

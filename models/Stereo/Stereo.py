@@ -32,7 +32,7 @@ class Stereo(Model):
             for inputL, inputR, process, do in zip((imgL, imgR), (imgR, imgL),
                                                    (lambda im: im, myUtils.flipLR), mask):
                 if do:
-                    output = process(self.model.forward(process(inputL), process(inputR)))
+                    output = list(process(self.model.forward(process(inputL), process(inputR))))
                     outputs.append(output)
                 else:
                     outputs.append(None)

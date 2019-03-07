@@ -38,10 +38,10 @@ class SRdisp(SR):
         myUtils.assertBatchLen(batch, 4)
         self.predictPrepare()
 
-        cated, warpTos = self.warpAndCat(batch.firstScaleBatch())
+        cated, warpTos = self.warpAndCat(batch)
         batch.highResRGBs(cated)
-        outputs = super(SRdisp, self).predict(batch, mask)
-        return warpTos, outputs
+        outSRs = super(SRdisp, self).predict(batch, mask)
+        return warpTos, outSRs
 
     def test(self, batch, evalType='l1', returnOutputs=False):
         myUtils.assertBatchLen(batch, 8)
