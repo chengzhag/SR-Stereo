@@ -4,6 +4,18 @@ from torch.autograd import Variable
 import numpy as np
 import gc
 
+def warpAndCat(batch, doCatMask):
+    inputL, inputR, dispL, dispR = batch
+    with torch.no_grad():
+        warpToL, warpToR, maskL, maskR = warp(*batch)
+        warpTos = (warpToL, warpToR)
+        cated = []
+        for input in zip((inputL, inputR), (warpToL, warpToR), (maskL, maskR)):
+            if doCatMask:
+                cated.append(torch.cat(input, 1))
+            else:
+                cated.append(torch.cat(input[:2], 1))
+        return cated, warpTos
 
 def warp(left, right, displ, dispr):
     if displ.dim() == 3: displ = displ.unsqueeze(0)

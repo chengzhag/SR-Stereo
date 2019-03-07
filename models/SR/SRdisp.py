@@ -1,6 +1,6 @@
 import torch
 from utils import myUtils
-from models.SR.warp import warp
+from models.SR.warp import warpAndCat
 from .SR import *
 
 class SRdisp(SR):
@@ -17,27 +17,11 @@ class SRdisp(SR):
     def initModel(self):
         super(SRdisp, self).initModel()
 
-    def warpAndCat(self, batch):
-        inputL, inputR, dispL, dispR = batch
-        with torch.no_grad():
-            warpToL, warpToR, maskL, maskR = warp(*batch)
-            warpTos = (warpToL, warpToR)
-            cated = []
-            for input in zip((inputL, inputR), (warpToL, warpToR), (maskL, maskR)):
-                if self.args.n_inputs == 7:
-                    cated.append(torch.cat(input, 1))
-                elif self.args.n_inputs == 6:
-                    cated.append(torch.cat(input[:2], 1))
-                else:
-                    raise Exception(
-                        'Error: self.model.args.n_inputs = %d which is not supporty!' % self.args.n_inputs)
-            return cated, warpTos
-
     def train(self, batch, returnOutputs=False):
         myUtils.assertBatchLen(batch, 8)
         self.trainPrepare()
 
-        cated, warpTos = self.warpAndCat(batch.lastScaleBatch())
+        cated, warpTos = warpAndCat(batch.lastScaleBatch(), doCatMask=(self.cInput == 7))
         batch.lowResRGBs(cated)
         losses, outputs = super(SRdisp, self).train(batch, returnOutputs)
         if returnOutputs:
@@ -51,7 +35,7 @@ class SRdisp(SR):
         myUtils.assertBatchLen(batch, 4)
         self.predictPrepare()
 
-        cated, warpTos = self.warpAndCat(batch.firstScaleBatch())
+        cated, warpTos = warpAndCat(batch.firstScaleBatch(), doCatMask=(self.cInput == 7))
         batch.highResRGBs(cated)
         outputs = super(SRdisp, self).predict(batch, mask)
         return outputs
