@@ -13,7 +13,7 @@ class SRdispStereo(SRStereo):
                  saveFolderSuffix=''):
         super(SRdispStereo, self).__init__(maxdisp=maxdisp, dispScale=dispScale, cuda=cuda, half=half,
                                            stage=stage, dataset=dataset, saveFolderSuffix=saveFolderSuffix)
-        self._sr = SR.SRdisp(cuda=cuda, half=half, stage=stage, dataset=dataset, saveFolderSuffix=saveFolderSuffix)
+        self._getSr = lambda: SR.SRdisp(cuda=cuda, half=half, stage=stage, dataset=dataset, saveFolderSuffix=saveFolderSuffix)
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1

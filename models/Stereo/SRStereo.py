@@ -32,19 +32,23 @@ class SRStereo(Stereo):
                  saveFolderSuffix=''):
         super(SRStereo, self).__init__(maxdisp=maxdisp, dispScale=dispScale, cuda=cuda, half=half,
                                        stage=stage, dataset=dataset, saveFolderSuffix=saveFolderSuffix)
-        self._sr = SR.SR(cuda=cuda, half=half, stage=stage, dataset=dataset, saveFolderSuffix=saveFolderSuffix)
-        self._stereo = PSMNetDown(maxdisp=maxdisp, dispScale=dispScale, cuda=cuda, half=half, stage=stage,
+        self._getSr = lambda: SR.SR(cuda=cuda, half=half, stage=stage, dataset=dataset, saveFolderSuffix=saveFolderSuffix)
+        self._getStereo = lambda: PSMNetDown(maxdisp=maxdisp, dispScale=dispScale, cuda=cuda, half=half, stage=stage,
                                   dataset=dataset,
                                   saveFolderSuffix=saveFolderSuffix)
-        self.outputMaxDisp = self._stereo.outputMaxDisp
         self.getModel = RawSRStereo
+        self._stereo = None
+        self._sr = None
 
     def initModel(self):
+        self._stereo = self._getStereo()
         self._stereo.initModel()
         self._stereo.optimizer = None
+        self._sr = self._getSr()
         self._sr.initModel()
         self._sr.optimizer = None
         self.model = self.getModel(self._stereo.model, self._sr.model)
+        self.outputMaxDisp = self._stereo.outputMaxDisp
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
 
