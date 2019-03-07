@@ -5,7 +5,6 @@ from utils import myUtils
 import collections
 from .SRStereo import SRStereo
 from .. import SR
-from .PSMNetDown import PSMNetDown
 
 
 class SRdispStereo(SRStereo):
@@ -38,4 +37,33 @@ class SRdispStereo(SRStereo):
                 if warpTo is not None:
                     outputs['warpTo' + side] = warpTo
         return scores, outputs, rawOutputs
+
+    # weights: weights of
+    #   SR output losses (lossSR),
+    #   SR disparity map losses (lossDispHigh),
+    #   normal sized disparity map losses (lossDispLow)
+    def train(self, batch, returnOutputs=False, kitti=False, weights=(0, 1, 0)):
+        myUtils.assertBatchLen(batch, (4, 8))
+        if len(batch) == 4:
+            batch = myUtils.Batch([None] * 4 + batch.batch)
+
+        cated, warpTos = self._sr.warpAndCat(batch.lastScaleBatch())
+
+        # if has no highResRGBs, use lowestResRGBs as GTs
+        if all([sr is None for sr in batch.highResRGBs()]):
+            batch.highResRGBs(batch.lowestResRGBs())
+
+        batch.lowestResRGBs(cated)
+
+        losses, outputs = super(SRdispStereo, self).train(
+            batch, returnOutputs=returnOutputs, kitti=kitti, weights=weights
+        )
+        for warpTo, side in zip(warpTos, ('L', 'R')):
+            if returnOutputs:
+                if warpTo is not None:
+                    outputs['warpTo' + side] = warpTo
+
+        return losses, outputs
+
+
 

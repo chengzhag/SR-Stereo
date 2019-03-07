@@ -59,13 +59,14 @@ class SRStereo(Stereo):
 
         scores, outputs, rawOutputs = super(SRStereo, self).test(batch, evalType, returnOutputs, kitti)
         for rawOutputsSide, side in zip(rawOutputs, ('L', 'R')):
-            outSRs, (outDispHigh, outDispLow) = rawOutputsSide[-2:]
-            if returnOutputs:
-                if outDispHigh is not None:
-                    outputs['outputDispHigh' + side] = outDispHigh / (self.outputMaxDisp * 2)
-                for outSr, sideSr in zip(outSRs, ('L', 'R')):
-                    if outSr is not None:
-                        outputs['outputSr' + side] = outSr
+            if rawOutputsSide is not None:
+                outSRs, (outDispHigh, outDispLow) = rawOutputsSide[-2:]
+                if returnOutputs:
+                    if outDispHigh is not None:
+                        outputs['outputDispHigh' + side] = outDispHigh / (self.outputMaxDisp * 2)
+                    for outSr, sideSr in zip(outSRs, ('L', 'R')):
+                        if outSr is not None:
+                            outputs['outputSr' + side] = outSr
         return scores, outputs, rawOutputs
 
     def loss(self, outputs, gts, kitti=False):
@@ -78,10 +79,13 @@ class SRStereo(Stereo):
 
         for outSr, srGt, input in zip((outSrL, outSrR), (srGtL, srGtR), (inputL, inputR)):
             if all([t is not None for t in (outSr, srGt)]):
-                lossSRside = self._sr.loss(outSr, srGt)
+                if outSr.size() == srGt.size():
+                    lossSRside = self._sr.loss(outSr, srGt)
+                else:
+                    lossSRside = self._sr.loss(nn.AvgPool2d((2, 2))(outSr), srGt)
             elif all([t is not None for t in (outSr, input)]):
-                # KITTI has no SR GT
-                lossSRside = self._sr.loss(nn.AvgPool2d((2, 2))(outSr), input)
+                # if dataset has no SR GT, use lowestResRGBs as GTs
+                lossSRside = self._sr.loss(nn.AvgPool2d((2, 2))(outSr), srGt)
             else:
                 lossSRside = None
             lossSR = lossSRside if lossSR is None else lossSR + lossSRside
@@ -135,6 +139,7 @@ class SRStereo(Stereo):
         self.trainPrepare()
         if len(batch) == 4:
             batch = myUtils.Batch([None] * 4 + batch.batch)
+
         imgLowL, imgLowR = batch.lowestResRGBs()
         imgHighL, imgHighR = batch.highResRGBs()
 
