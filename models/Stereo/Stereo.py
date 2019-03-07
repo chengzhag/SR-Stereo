@@ -51,19 +51,19 @@ class Stereo(Model):
         dispOuts = self.predict(batch, mask)
         for gt, dispOut, side in zip(disps, dispOuts, ('L', 'R')):
             if dispOut is not None:
+                if returnOutputs:
+                    outputs['output' + side] = dispOut / self.outputMaxDisp
+
                 if dispOut.dim() == 3:
                     dispOut = dispOut.unsqueeze(1)
 
                 # for kitti dataset, only consider loss of none zero disparity pixels in gt
-                if kitti:
+                if kitti and type != 'outlierPSMNet':
                     mask = gt > 0
                     dispOut = dispOut[mask]
                     gt = gt[mask]
 
                 scores[type + side] = evalFcn.getEvalFcn(type)(gt, dispOut)
-
-                if returnOutputs:
-                    outputs['output' + side] = dispOut / self.outputMaxDisp
 
         return scores, outputs
 

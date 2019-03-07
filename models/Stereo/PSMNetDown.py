@@ -37,10 +37,14 @@ class PSMNetDown(PSMNet):
         self.outputMaxDisp = self.outputMaxDisp // 2
         self.getModel = RawPSMNetDown
 
-    def loss(self, outputs, gts, kitti=False):
+    def loss(self, outputs, gts, kitti=False, outputMaxDisp=None):
+        if outputMaxDisp is not None:
+            raise Exception('Error: outputMaxDisp of PSMNetDown has no use!')
         losses = []
-        for output, gt in zip(outputs, gts):
-            losses.append(super(PSMNetDown, self).loss(output, gt, kitti=kitti) if gt is not None else None)
+        for output, gt, outputMaxDisp in zip(outputs, gts, (self.maxdisp, self.outputMaxDisp)):
+            losses.append(super(PSMNetDown, self).loss(
+                output, gt, kitti=kitti, outputMaxDisp=outputMaxDisp
+            ) if gt is not None else None)
         return losses
 
     def trainOneSide(self, imgL, imgR, gts, returnOutputs=False, kitti=False, weights=(1, 0)):
@@ -97,8 +101,7 @@ class PSMNetDown(PSMNet):
         outputs = super(PSMNetDown, self).predict(batch, mask)
         downsampled = []
         for output in outputs:
-            # Down sample to half size
-            downsampled.append(output[1])
+            downsampled.append(output[1] if output is not None else None)
         return downsampled
 
     def test(self, batch, type='l1', returnOutputs=False, kitti=False):

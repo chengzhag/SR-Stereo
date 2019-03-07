@@ -53,14 +53,10 @@ class PSMNet(Stereo):
             self.model.cuda()
 
     # input disparity maps: disparity range 0~self.maxdisp * self.dispScale
-    def loss(self, outputs, gts, kitti=False):
-        # # To get same loss with PSMNet, disparity should scale back to 0~self.maxdisp
-        # outputs =[output / self.dispScale for output in outputs]
-        # gts = gts / self.dispScale
-
+    def loss(self, outputs, gts, kitti=False, outputMaxDisp=None):
         outputs = [output.unsqueeze(1) for output in outputs]
         # for kitti dataset, only consider loss of none zero disparity pixels in gt
-        mask = (gts.detach() > 0) if kitti else (gts.detach() < self.maxdisp)
+        mask = (gts > 0).detach() if kitti else (gts < outputMaxDisp).detach()
         loss = 0.5 * F.smooth_l1_loss(outputs[0][mask], gts[mask], reduction='mean') + 0.7 * F.smooth_l1_loss(
             outputs[1][mask], gts[mask], reduction='mean') + F.smooth_l1_loss(outputs[2][mask], gts[mask],
                                                                               reduction='mean')
@@ -69,8 +65,9 @@ class PSMNet(Stereo):
     def trainOneSide(self, imgL, imgR, gt, returnOutputs=False, kitti=False):
         self.optimizer.zero_grad()
         outputs = self.model.forward(imgL, imgR)
-        loss = self.loss(outputs, gt, kitti=kitti)
-        loss.backward()
+        loss = self.loss(outputs, gt, kitti=kitti, outputMaxDisp=self.outputMaxDisp)
+        with self.amp_handle.scale_loss(loss, self.optimizer) as scaled_loss:
+            scaled_loss.backward()
         self.optimizer.step()
 
         output = outputs[2].detach() / self.outputMaxDisp if returnOutputs else None

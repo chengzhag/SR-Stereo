@@ -15,9 +15,14 @@ class RawSRStereo(nn.Module):
 
     # input: RGB value range 0~1
     # outputs: disparity range 0~self.maxdisp * self.dispScale / 2
-    def forward(self, left, right):
-        outSrL = self.sr.forward(left)
-        outSrR = self.sr.forward(right)
+    def forward(self, left, right, updateSR=True):
+        if updateSR:
+            outSrL = self.sr.forward(left)
+            outSrR = self.sr.forward(right)
+        else:
+            with torch.no_grad():
+                outSrL = self.sr.forward(left).detach()
+                outSrR = self.sr.forward(right).detach()
         outDispHighs, outDispLows = self.stereo.forward(outSrL, outSrR)
         return (outSrL, outSrR), (outDispHighs, outDispLows)
 
@@ -83,15 +88,23 @@ class SRStereo(Stereo):
     def loss(self, outputs, gts, kitti=False):
         losses = []
         (outSrL, outSrR), (outDispHighs, outDispLows) = outputs
-        (srGtL, srGtR), (dispHighGTs, dispLowGTs) = gts
+        (srGtL, srGtR), (dispHighGTs, dispLowGTs), (inputL, inputR) = gts
 
         # get SR outputs loss
         lossSR = None
-        if all([t is not None for t in (srGtL, srGtR)]) :
-            for outSr, srGt in zip((outSrL, outSrR), (srGtL, srGtR)):
+
+        for outSr, srGt, input in zip((outSrL, outSrR), (srGtL, srGtR), (inputL, inputR)):
+            if all([t is not None for t in (outSr, srGt)]):
                 lossSRside = self._sr.loss(outSr, srGt)
-                lossSR = lossSRside if lossSR is None else lossSR + lossSRside
-        lossSR /= 2
+            elif all([t is not None for t in (outSr, input)]):
+                # KITTI has no SR GT
+                lossSRside = self._sr.loss(nn.AvgPool2d((2, 2))(outSr), input)
+            else:
+                lossSRside = None
+            lossSR = lossSRside if lossSR is None else lossSR + lossSRside
+
+        if lossSR is not None:
+            lossSR /= 2
         losses.append(lossSR)
 
         # get disparity losses
@@ -103,10 +116,13 @@ class SRStereo(Stereo):
     def trainOneSide(self, inputL, inputR, srGtL, srGtR, dispGTs, returnOutputs=False, kitti=False,
                      weights=(0, 0, 1)):
         self.optimizer.zero_grad()
-        (outSrL, outSrR), (outDispHighs, outDispLows) = self.model.forward(inputL, inputR)
+
+        doUpdateSR = weights[0] >= 0
+        (outSrL, outSrR), (outDispHighs, outDispLows) = self.model.forward(inputL, inputR, updateSR=doUpdateSR)
+
         losses = self.loss(
-            ((outSrL, outSrR), (outDispHighs, outDispLows)),
-            ((srGtL, srGtR), dispGTs),
+            ((outSrL, outSrR) if doUpdateSR else (None, None), (outDispHighs, outDispLows)),
+            ((srGtL, srGtR), dispGTs, (inputL, inputR)),
             kitti=kitti
         )
         loss = sum([weight * loss for weight, loss in zip(weights, losses) if loss is not None])

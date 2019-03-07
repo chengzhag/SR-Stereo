@@ -4,6 +4,7 @@ import time
 import os
 from utils import myUtils
 import sys
+import math
 
 
 class Train:
@@ -49,8 +50,9 @@ class Train:
 
             # iteration
             totalTrainLoss = 0
+            totalAvgIt = 0
             tic = time.time()
-            # torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
             for batch_idx, batch in enumerate(self.trainImgLoader, 1):
                 batch = myUtils.Batch(batch, cuda=self.model.cuda, half=self.model.half)
 
@@ -82,8 +84,9 @@ class Train:
                         if im is not None:
                             self.tensorboardLogger.logFirstNIms('trainImages/' + name, im, 1,
                                                                 global_step=self.global_step, n=self.ndisLog)
-
-                totalTrainLoss += sum(lossesPairs.values()) / len(lossesPairs.values())
+                if all([not math.isnan(v) for v in lossesPairs.values()]):
+                    totalTrainLoss += sum(lossesPairs.values()) / len(lossesPairs.values())
+                    totalAvgIt += 1
 
                 timeLeft = (time.time() - tic) / 3600 * (
                         (self.nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
@@ -94,12 +97,13 @@ class Train:
                     lossesPairs.strPrint(''), timeLeft))
                 tic = time.time()
 
-            print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss / batch_idx))
+            totalTrainLoss /= totalAvgIt
+            print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss))
             # save
             if (self.saveEvery > 0 and epoch % self.saveEvery == 0)\
                     or (self.saveEvery == 0 and epoch == self.nEpochs):
                 model.save(epoch=epoch, iteration=batch_idx,
-                           trainLoss=totalTrainLoss / len(self.trainImgLoader))
+                           trainLoss=totalTrainLoss)
             # test
             if ((self.testEvery > 0 and epoch % self.testEvery == 0)
                 or (self.testEvery == 0 and epoch == self.nEpochs)) \
