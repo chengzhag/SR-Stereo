@@ -129,7 +129,8 @@ class SR(Model):
         scores = myUtils.NameValues()
         outputs = collections.OrderedDict()
         mask = [gt is not None for gt in batch.highResRGBs()]
-        outputsIm = self.predict(batch.lastScaleBatch(), mask=mask)
+        rawOutputs = self.predict(batch.lastScaleBatch(), mask=mask)
+        outputsIm = myUtils.getLastNotList(rawOutputs)
         for gt, output, side in zip(batch.highResRGBs(), outputsIm, ('L', 'R')):
             scores[evalType + side] = evalFcn.getEvalFcn(evalType)(
                 gt * self.args.rgb_range, output * self.args.rgb_range
@@ -137,6 +138,6 @@ class SR(Model):
             if returnOutputs:
                 outputs['output' + side] = output
 
-        return scores, outputs
+        return scores, outputs, rawOutputs
 
 

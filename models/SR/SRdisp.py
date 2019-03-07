@@ -14,6 +14,9 @@ class SRdisp(SR):
         if doWith:
             self.cInput = 7
 
+    def warpAndCat(self, batch):
+        return warpAndCat(batch.firstScaleBatch(), doCatMask=(self.cInput == 7))
+
     def initModel(self):
         super(SRdisp, self).initModel()
 
@@ -21,7 +24,7 @@ class SRdisp(SR):
         myUtils.assertBatchLen(batch, 8)
         self.trainPrepare()
 
-        cated, warpTos = warpAndCat(batch.lastScaleBatch(), doCatMask=(self.cInput == 7))
+        cated, warpTos = self.warpAndCat(batch.lastScaleBatch())
         batch.lowResRGBs(cated)
         losses, outputs = super(SRdisp, self).train(batch, returnOutputs)
         if returnOutputs:
@@ -35,8 +38,18 @@ class SRdisp(SR):
         myUtils.assertBatchLen(batch, 4)
         self.predictPrepare()
 
-        cated, warpTos = warpAndCat(batch.firstScaleBatch(), doCatMask=(self.cInput == 7))
+        cated, warpTos = self.warpAndCat(batch.firstScaleBatch())
         batch.highResRGBs(cated)
         outputs = super(SRdisp, self).predict(batch, mask)
-        return outputs
+        return warpTos, outputs
 
+    def test(self, batch, evalType='l1', returnOutputs=False):
+        myUtils.assertBatchLen(batch, 8)
+
+        scores, outputs, rawOutputs = super(SRdisp, self).test(batch, evalType, returnOutputs)
+        warpTos, _ = rawOutputs
+        if returnOutputs:
+            for warpTo, side in zip(warpTos, ('L', 'R')):
+                if warpTo is not None:
+                    outputs['warpTo' + side] = warpTo
+        return scores, outputs, rawOutputs

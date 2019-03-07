@@ -13,7 +13,7 @@ class Evaluation(Base):
     def _evalIt(self, batch, log):
         super(Evaluation, self)._evalIt(batch, log)
 
-        scores, outputs = self.model.test(batch.detach(), evalType=self.evalFcn, returnOutputs=log)
+        scores, outputs, _ = self.model.test(batch.detach(), evalType=self.evalFcn, returnOutputs=log)
 
         if log:
             imgs = batch.lowResRGBs() + batch.highResRGBs()

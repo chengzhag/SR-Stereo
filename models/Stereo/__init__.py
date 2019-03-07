@@ -1,7 +1,7 @@
 from .PSMNet import PSMNet
 from .PSMNetDown import PSMNetDown
 from .SRStereo import SRStereo
-
+from .SRdispStereo import SRdispStereo
 
 # Abandoned
 # class PSMNet_TieCheng(Stereo):
