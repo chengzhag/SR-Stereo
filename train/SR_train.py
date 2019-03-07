@@ -21,7 +21,7 @@ class Train(Base):
 
             for imsSide, side in zip((imgs[0::2], imgs[1::2]), ('L', 'R')):
                 for name, im in zip(('input', 'gt'), imsSide):
-                    outputs[name + side] = im
+                    outputs[name + side] = im.cpu()
 
         return losses, outputs
 

@@ -48,42 +48,21 @@ class SRStereo(Stereo):
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
 
-    def predict(self, batch, mask=(1, 1)):
-        myUtils.assertBatchLen(batch, 4)
-        self.predictPrepare()
-
-        # One method to predict
-        # srs = self._sr.predict(batch)
-        # batch = myUtils.Batch(4)
-        # batch.highResRGBs(srs)
-        # outputs = self._stereo.predict(batch, mask=mask)
-
-        # Another method to predict which can test forward fcn
-        outputs = super(SRStereo, self).predict(batch, mask)
-        outputsReturn = []
-        for (outSrL, outSrR), (outDispHighs, outDispLows) in outputs:
-            outputsReturn.append(outDispLows)
-        return outputsReturn
-
-    def test(self, batch, type='l1', returnOutputs=False, kitti=False):
+    def test(self, batch, evalType='l1', returnOutputs=False, kitti=False):
         myUtils.assertBatchLen(batch, (4, 8))
         if len(batch) == 8:
             batch = batch.lastScaleBatch()
 
-        # Test with outputing sr images
-        srs = self._sr.predict(batch)
-
-        stereoBatch = myUtils.Batch(8)
-        stereoBatch.highResRGBs(srs)
-        stereoBatch.lowestResDisps(batch.lowestResDisps())
-        scores, outputs = self._stereo.test(stereoBatch, type=type, returnOutputs=returnOutputs, kitti=kitti)
-
-        for sr, side in zip(srs, ('L', 'R')):
-            outputs['outputSr' + side] = sr
-        return scores, outputs
-
-        # # Test without outputing sr images
-        # return super(SRStereo, self).test(batch, type=type, returnOutputs=returnOutputs, kitti=kitti)
+        scores, outputs, rawOutputs = super(SRStereo, self).test(batch, evalType, returnOutputs, kitti)
+        for ((outSrL, outSrR), (outDispHigh, outDispLow)), side in zip(rawOutputs, ('L', 'R')):
+            if returnOutputs:
+                if outDispHigh is not None:
+                    outputs['outputDispHigh' + side] = outDispHigh / (self.outputMaxDisp * 2)
+                if outSrL is not None:
+                    outputs['outputSrL' + side] = outSrL
+                if outSrR is not None:
+                    outputs['outputSrR' + side] = outSrR
+        return scores, outputs, rawOutputs
 
     def loss(self, outputs, gts, kitti=False):
         losses = []

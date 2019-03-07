@@ -21,12 +21,50 @@ class RawSRdispStereo(nn.Module):
             cated, warpTos = warpAndCat([left, right, dispL, dispR], False)
             cated, warpTos = [c.detach() for c in cated], [w.detach() for w in warpTos]
         if updateSR:
-            outSrL = self.sr.forward(left)
-            outSrR = self.sr.forward(right)
+            outSrL = self.sr.forward(cated[0])
+            outSrR = self.sr.forward(cated[1])
         else:
             with torch.no_grad():
-                outSrL = self.sr.forward(left).detach()
-                outSrR = self.sr.forward(right).detach()
+                outSrL = self.sr.forward(cated[0]).detach()
+                outSrR = self.sr.forward(cated[1]).detach()
         outDispHighs, outDispLows = self.stereo.forward(outSrL, outSrR)
-        return (outSrL, outSrR), (outDispHighs, outDispLows)
+        return warpTos, (outSrL, outSrR), (outDispHighs, outDispLows)
+
+class SRdispStereo(Stereo):
+    def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
+                 saveFolderSuffix=''):
+        super(SRdispStereo, self).__init__(maxdisp=maxdisp, dispScale=dispScale, cuda=cuda, half=half,
+                                           stage=stage, dataset=dataset, saveFolderSuffix=saveFolderSuffix)
+        self._sr = SR.SRdisp(cuda=cuda, half=half, stage=stage, dataset=dataset, saveFolderSuffix=saveFolderSuffix)
+        self._stereo = PSMNetDown(maxdisp=maxdisp, dispScale=dispScale, cuda=cuda, half=half, stage=stage,
+                                  dataset=dataset,
+                                  saveFolderSuffix=saveFolderSuffix)
+        self.outputMaxDisp = self._stereo.outputMaxDisp
+        self.getModel = RawSRdispStereo
+
+    def initModel(self):
+        self._stereo.initModel()
+        self._stereo.optimizer = None
+        self._sr.initModel()
+        self._sr.optimizer = None
+        self.model = self.getModel(self._stereo.model, self._sr.model)
+
+        self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
+
+    def predict(self, batch, mask=(1, 1)):
+        myUtils.assertBatchLen(batch, 4)
+        self.predictPrepare()
+
+        # # One method to predict
+        # srs = self._sr.predict(batch)
+        # batch = myUtils.Batch(4)
+        # batch.highResRGBs(srs)
+        # outputs = self._stereo.predict(batch, mask=mask)
+
+        # Another method to predict which can test forward fcn
+        outputs = super(SRdispStereo, self).predict(batch, mask)
+        outputsReturn = []
+        for warpTos, (outSrL, outSrR), (outDispHighs, outDispLows) in outputs:
+            outputsReturn.append(outDispLows)
+        return outputsReturn
 

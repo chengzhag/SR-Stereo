@@ -94,19 +94,14 @@ class PSMNetDown(PSMNet):
 
         return losses, outputs
 
-    def predict(self, batch, mask=(1, 1)):
-        myUtils.assertBatchLen(batch, 4)
-        self.predictPrepare()
-
-        outputs = super(PSMNetDown, self).predict(batch, mask)
-        downsampled = []
-        for output in outputs:
-            downsampled.append(output[1] if output is not None else None)
-        return downsampled
-
-    def test(self, batch, type='l1', returnOutputs=False, kitti=False):
+    def test(self, batch, evalType='l1', returnOutputs=False, kitti=False):
         myUtils.assertBatchLen(batch, 8)
         batch = myUtils.Batch(batch.highResRGBs() + batch.lowestResDisps(), cuda=batch.cuda, half=batch.half)
-        return super(PSMNetDown, self).test(batch, type, returnOutputs, kitti)
+        scores, outputs, rawOutputs = super(PSMNetDown, self).test(batch, evalType, returnOutputs, kitti)
+        for (outDispHigh, outDispLow), side in zip(rawOutputs, ('L', 'R')):
+            if returnOutputs:
+                if outDispHigh is not None:
+                    outputs['outputDispHigh' + side] = outDispHigh / (self.outputMaxDisp * 2)
+        return scores, outputs, rawOutputs
 
 

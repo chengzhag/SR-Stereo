@@ -39,7 +39,7 @@ class Stereo(Model):
 
             return outputs
 
-    def test(self, batch, type='l1', returnOutputs=False, kitti=False):
+    def test(self, batch, evalType='l1', returnOutputs=False, kitti=False):
         myUtils.assertBatchLen(batch, 4)
 
         disps = batch.lowestResDisps()
@@ -48,7 +48,15 @@ class Stereo(Model):
         scores = myUtils.NameValues()
         outputs = collections.OrderedDict()
         mask = [disp is not None for disp in disps]
-        dispOuts = self.predict(batch, mask)
+        rawOutputs = self.predict(batch, mask)
+        dispOuts = []
+        def getLastTensor(l):
+            if type(l) in (list, tuple):
+                return getLastTensor(l[-1])
+            else:
+                return l
+        for ouputsSide in rawOutputs:
+            dispOuts.append(getLastTensor(ouputsSide))
         for gt, dispOut, side in zip(disps, dispOuts, ('L', 'R')):
             if dispOut is not None:
                 if returnOutputs:
@@ -58,14 +66,14 @@ class Stereo(Model):
                     dispOut = dispOut.unsqueeze(1)
 
                 # for kitti dataset, only consider loss of none zero disparity pixels in gt
-                if kitti and type != 'outlierPSMNet':
+                if kitti and evalType != 'outlierPSMNet':
                     mask = gt > 0
                     dispOut = dispOut[mask]
                     gt = gt[mask]
 
-                scores[type + side] = evalFcn.getEvalFcn(type)(gt, dispOut)
+                scores[evalType + side] = evalFcn.getEvalFcn(evalType)(gt, dispOut)
 
-        return scores, outputs
+        return scores, outputs, rawOutputs
 
     def save(self, epoch, iteration, trainLoss, additionalInfo=None):
         additionalInfo = {} if additionalInfo is None else additionalInfo

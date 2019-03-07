@@ -28,6 +28,8 @@ class Evaluation:
 
             doLog = batch_idx == 1
             scoresPairs, ims = self._evalIt(batch, log=doLog)
+            if ims is not None:
+                ims = [im.cpu() for im in ims]
 
             try:
                 for name in totalTestScores.keys():
