@@ -58,14 +58,12 @@ class Stereo(Model):
                     dispOut = dispOut.unsqueeze(1)
 
                 # for kitti dataset, only consider loss of none zero disparity pixels in gt
-                if kitti:
+                if kitti and type != 'outlierPSMNet':
                     mask = gt > 0
                     dispOut = dispOut[mask]
                     gt = gt[mask]
 
                 scores[type + side] = evalFcn.getEvalFcn(type)(gt, dispOut)
-
-
 
         return scores, outputs
 

@@ -150,7 +150,7 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                  'randomLR': lambda: parser.add_argument('--randomLR', type=str, default=None,
                                                         help='enables randomly loading left or right images (disp/rgb)'),
                  # training
-                 'batchsize_train': lambda: parser.add_argument('--batchsize_train', type=int, default=3,
+                 'batchsize_train': lambda: parser.add_argument('--batchsize_train', type=int, default=4,
                                                                 help='training batch size'),
                  'trainCrop': lambda: parser.add_argument('--trainCrop', type=int, default=(256, 512), nargs=2,
                                                           help='size of random crop (H x W) applied to data during training'),
@@ -174,7 +174,7 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                  # evaluation
                  'eval_fcn': lambda: parser.add_argument('--eval_fcn', type=str, default='outlier',
                                                          help='evaluation function used in testing'),
-                 'batchsize_test': lambda: parser.add_argument('--batchsize_test', type=int, default=3,
+                 'batchsize_test': lambda: parser.add_argument('--batchsize_test', type=int, default=4,
                                                                help='testing batch size'),
                  # submission
                  'subtype': lambda: parser.add_argument('--subtype', type=str, default='eval',

@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 def getEvalFcn(type):
     if '_' in type:
@@ -26,3 +27,20 @@ def outlier(gt, output, npx=3, acc=0.05):
     nTotal = float(torch.numel(gt))
     nWrong = float(torch.sum((dErr > npx) & ((dErr / gt) > acc)).item())
     return nWrong / nTotal * 100
+
+def outlierPSMNet(disp_true, pred_disp):
+    disp_true = disp_true.squeeze(1)
+    pred_disp = pred_disp.squeeze(1)
+    disp_true = disp_true.data.cpu()
+    pred_disp = pred_disp.data.cpu()
+    # computing 3-px error#
+    true_disp = disp_true
+    index = np.argwhere(true_disp > 0)
+    disp_true[index[0][:], index[1][:], index[2][:]] = np.abs(
+        true_disp[index[0][:], index[1][:], index[2][:]] - pred_disp[index[0][:], index[1][:], index[2][:]])
+    correct = (disp_true[index[0][:], index[1][:], index[2][:]] < 3) | (
+                disp_true[index[0][:], index[1][:], index[2][:]] < true_disp[
+            index[0][:], index[1][:], index[2][:]] * 0.05)
+    torch.cuda.empty_cache()
+
+    return (1 - (float(torch.sum(correct)) / float(len(index[0])))) * 100
