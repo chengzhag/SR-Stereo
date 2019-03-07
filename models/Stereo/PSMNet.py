@@ -66,7 +66,8 @@ class PSMNet(Stereo):
         self.optimizer.zero_grad()
         outputs = self.model.forward(imgL, imgR)
         loss = self.loss(outputs, gt, kitti=kitti, outputMaxDisp=self.outputMaxDisp)
-        loss.backward()
+        with self.amp_handle.scale_loss(loss, self.optimizer) as scaled_loss:
+            scaled_loss.backward()
         self.optimizer.step()
 
         output = outputs[2].detach() / self.outputMaxDisp if returnOutputs else None
