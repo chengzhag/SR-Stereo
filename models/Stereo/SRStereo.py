@@ -54,14 +54,13 @@ class SRStereo(Stereo):
             batch = batch.lastScaleBatch()
 
         scores, outputs, rawOutputs = super(SRStereo, self).test(batch, evalType, returnOutputs, kitti)
-        for ((outSrL, outSrR), (outDispHigh, outDispLow)), side in zip(rawOutputs, ('L', 'R')):
+        for (outSrs, (outDispHigh, outDispLow)), side in zip(rawOutputs, ('L', 'R')):
             if returnOutputs:
                 if outDispHigh is not None:
                     outputs['outputDispHigh' + side] = outDispHigh / (self.outputMaxDisp * 2)
-                if outSrL is not None:
-                    outputs['outputSrL' + side] = outSrL
-                if outSrR is not None:
-                    outputs['outputSrR' + side] = outSrR
+                for outSr, sideSr in zip(outSrs, ('L', 'R')):
+                    if outSr is not None:
+                        outputs['outputSr' + side] = outSr
         return scores, outputs, rawOutputs
 
     def loss(self, outputs, gts, kitti=False):

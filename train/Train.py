@@ -62,7 +62,8 @@ class Train:
                 doLog = self.logEvery > 0 and self.global_step % self.logEvery == 0
                 lossesPairs, ims = self._trainIt(batch=batch, log=doLog)
                 if ims is not None:
-                    ims = [im.cpu() for im in ims]
+                    for name, im in ims.items():
+                        ims[name] = im.cpu()
 
                 if lossesAvg is None:
                     lossesAvg = lossesPairs.copy()

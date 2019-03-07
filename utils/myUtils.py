@@ -354,6 +354,11 @@ def forNestingList(l, fcn):
     else:
         return fcn(l)
 
+def getLastNotList(l):
+    if type(l) in (list, tuple):
+        return getLastNotList(l[-1])
+    else:
+        return l
 def scanCheckpoint(checkpointDirs):
     if type(checkpointDirs) in (list, tuple):
         checkpointDirs = [scanCheckpoint(dir) for dir in checkpointDirs]

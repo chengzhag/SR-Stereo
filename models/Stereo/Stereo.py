@@ -50,13 +50,9 @@ class Stereo(Model):
         mask = [disp is not None for disp in disps]
         rawOutputs = self.predict(batch, mask)
         dispOuts = []
-        def getLastTensor(l):
-            if type(l) in (list, tuple):
-                return getLastTensor(l[-1])
-            else:
-                return l
         for ouputsSide in rawOutputs:
-            dispOuts.append(getLastTensor(ouputsSide))
+            dispOuts.append(myUtils.getLastNotList(ouputsSide))
+
         for gt, dispOut, side in zip(disps, dispOuts, ('L', 'R')):
             if dispOut is not None:
                 if returnOutputs:

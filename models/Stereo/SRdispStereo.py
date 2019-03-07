@@ -51,20 +51,5 @@ class SRdispStereo(Stereo):
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
 
-    def predict(self, batch, mask=(1, 1)):
-        myUtils.assertBatchLen(batch, 4)
-        self.predictPrepare()
 
-        # # One method to predict
-        # srs = self._sr.predict(batch)
-        # batch = myUtils.Batch(4)
-        # batch.highResRGBs(srs)
-        # outputs = self._stereo.predict(batch, mask=mask)
-
-        # Another method to predict which can test forward fcn
-        outputs = super(SRdispStereo, self).predict(batch, mask)
-        outputsReturn = []
-        for warpTos, (outSrL, outSrR), (outDispHighs, outDispLows) in outputs:
-            outputsReturn.append(outDispLows)
-        return outputsReturn
 
