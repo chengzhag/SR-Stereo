@@ -123,9 +123,9 @@ class myImageFloder(data.Dataset):
                 ims += scale(ims[0], scaleMethod, multiScales)
                 ims = [transforms.ToTensor()(im) for im in ims]
 
+            ims = [np.ascontiguousarray(im, dtype=np.float32) for im, scaleRatio in zip(ims, scaleRatios)]
             if not isRGBorDepth:
-                ims = [np.ascontiguousarray(im, dtype=np.float32) / self.dispScale * scaleRatio
-                       for im, scaleRatio in zip(ims, scaleRatios)]
+                ims = [im / self.dispScale * scaleRatio for im, scaleRatio in zip(ims, scaleRatios)]
             return ims
 
         inputL = loadIm(0, self.inputLoader, self.loadScale, True)
@@ -134,7 +134,14 @@ class myImageFloder(data.Dataset):
         gtL = loadIm(2, self.gtLoader, self.loadScale, False)
         gtR = loadIm(3, self.gtLoader, self.loadScale, False)
 
-        r = [im for scale in zip(inputL, inputR, gtL, gtR) for im in scale]
+        outputs = [inputL, inputR, gtL, gtR]
+        for iIms, ims in enumerate(outputs):
+            iCompare = iIms + 1 if iIms % 2 == 0 else iIms - 1
+            for iScale in range(len(ims)):
+                if ims[iScale].size == 0:
+                    ims[iScale] = np.zeros_like(outputs[iCompare][iScale])
+
+        r = [im for scale in zip(*outputs) for im in scale]
 
         return tuple(r)
 
