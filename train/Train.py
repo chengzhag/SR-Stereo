@@ -111,7 +111,7 @@ class Train:
             if ((self.testEvery > 0 and epoch % self.testEvery == 0)
                 or (self.testEvery == 0 and epoch == self.nEpochs)) \
                     and self.test is not None:
-                testScores = self.test(model=self.model).values()
+                testScores = self.test(model=self.model, global_step=self.global_step).values()
                 testScore = sum(testScores) / len(testScores)
                 try:
                     if testScore <= minTestScore:

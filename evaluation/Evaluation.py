@@ -17,7 +17,7 @@ class Evaluation:
     def _evalIt(self, batch, log):
         return None, None
 
-    def __call__(self, model):
+    def __call__(self, model, global_step=1):
         self.model = model
         tic = time.time()
         ticFull = time.time()
@@ -44,7 +44,7 @@ class Evaluation:
                 for name, im in ims.items():
                     if im is not None:
                         self.tensorboardLogger.logFirstNIms('testImages/' + name, im, 1,
-                                                            global_step=1, n=self.ndisLog)
+                                                            global_step=global_step, n=self.ndisLog)
 
             timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
 

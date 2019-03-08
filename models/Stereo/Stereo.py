@@ -49,11 +49,9 @@ class Stereo(Model):
         outputs = collections.OrderedDict()
         mask = [disp is not None for disp in disps]
         rawOutputs = self.predict(batch, mask)
-        dispOuts = []
-        for ouputsSide in rawOutputs:
-            dispOuts.append(myUtils.getLastNotList(ouputsSide))
 
-        for gt, dispOut, side in zip(disps, dispOuts, ('L', 'R')):
+        for gt, dispOut, side in zip(disps, rawOutputs, ('L', 'R')):
+            dispOut = myUtils.getLastNotList(dispOut)
             if dispOut is not None:
                 if returnOutputs:
                     outputs['output' + side] = dispOut / self.outputMaxDisp
