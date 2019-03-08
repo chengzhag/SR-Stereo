@@ -56,12 +56,18 @@ class Stereo(Model):
                 if returnOutputs:
                     outputs['output' + side] = dispOut / self.outputMaxDisp
 
+                if dispOut.dim() == 2:
+                    dispOut = dispOut.unsqueeze(0)
                 if dispOut.dim() == 3:
                     dispOut = dispOut.unsqueeze(1)
 
                 # for kitti dataset, only consider loss of none zero disparity pixels in gt
                 if kitti and evalType != 'outlierPSMNet':
                     mask = gt > 0
+                    dispOut = dispOut[mask]
+                    gt = gt[mask]
+                elif not kitti:
+                    mask = gt < self.outputMaxDisp
                     dispOut = dispOut[mask]
                     gt = gt[mask]
 
