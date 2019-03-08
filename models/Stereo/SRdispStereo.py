@@ -32,7 +32,7 @@ class SRdispStereo(SRStereo):
             batch = batch.lastScaleBatch()
 
         scores, outputs, rawOutputs = super(SRdispStereo, self).test(batch, evalType, returnOutputs, kitti)
-        for (warpTo, outSR, (outDispHigh, outDispLow)), side in zip(rawOutputs, ('L', 'R')):
+        for (warpTo, outSRs, (outDispHigh, outDispLow)), side in zip(rawOutputs, ('L', 'R')):
             if returnOutputs:
                 if warpTo is not None:
                     outputs['warpTo' + side] = warpTo
