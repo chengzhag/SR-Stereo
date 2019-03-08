@@ -66,7 +66,7 @@ class SRStereo(Stereo):
                         outputs['outputDispHigh' + side] = outDispHigh / (self.outputMaxDisp * 2)
                     for outSr, sideSr in zip(outSRs, ('L', 'R')):
                         if outSr is not None:
-                            outputs['outputSr' + side] = outSr
+                            outputs['outputSr' + sideSr + side] = outSr
         return scores, outputs, rawOutputs
 
     def loss(self, outputs, gts, kitti=False):
