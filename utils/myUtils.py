@@ -299,13 +299,13 @@ class Batch:
         self.batch[key] = value
 
     def detach(self):
-        return Batch(self)
+        return Batch(self, cuda=self.cuda, half=self.half)
 
     def lastScaleBatch(self):
-        return Batch(self.batch[-4:])
+        return Batch(self.batch[-4:], cuda=self.cuda, half=self.half)
 
     def firstScaleBatch(self):
-        return Batch(self.batch[:4])
+        return Batch(self.batch[:4], cuda=self.cuda, half=self.half)
 
     def highResRGBs(self, set=None):
         if set is not None:
@@ -411,3 +411,9 @@ def getSuffix(checkpointDirOrFolder):
     else:
         saveFolderSuffix = ''
     return saveFolderSuffix
+
+def depth(l):
+    if type(l) in (tuple, list):
+        return 1 + max(depth(item) for item in l)
+    else:
+        return 0
