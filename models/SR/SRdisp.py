@@ -40,8 +40,9 @@ class SRdisp(SR):
 
         cated, warpTos = self.warpAndCat(batch)
         batch.highResRGBs(cated)
-        outSRs = super(SRdisp, self).predict(batch, mask)
-        return warpTos, outSRs
+        outputs = super(SRdisp, self).predict(batch, mask)
+        outputsReturn = [[warpTo, outputSide] for warpTo, outputSide in zip(warpTos, outputs)]
+        return outputsReturn
 
     def test(self, batch, evalType='l1', returnOutputs=False):
         myUtils.assertBatchLen(batch, 8)
