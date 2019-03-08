@@ -123,20 +123,21 @@ class SR(Model):
             output = self.model(imgL)
             return output
 
-    def test(self, batch, type='l1', returnOutputs=False):
+    def test(self, batch, evalType='l1', returnOutputs=False):
         myUtils.assertBatchLen(batch, 8)
 
         scores = myUtils.NameValues()
         outputs = collections.OrderedDict()
         mask = [gt is not None for gt in batch.highResRGBs()]
-        outputsIm = self.predict(batch.lastScaleBatch(), mask=mask)
-        for gt, output, side in zip(batch.highResRGBs(), outputsIm, ('L', 'R')):
-            scores[type + side] = evalFcn.getEvalFcn(type)(
+        rawOutputs = self.predict(batch.lastScaleBatch(), mask=mask)
+        for gt, output, side in zip(batch.highResRGBs(), rawOutputs, ('L', 'R')):
+            output = myUtils.getLastNotList(output)
+            scores[evalType + side] = evalFcn.getEvalFcn(evalType)(
                 gt * self.args.rgb_range, output * self.args.rgb_range
             )if output is not None else None
             if returnOutputs:
                 outputs['output' + side] = output
 
-        return scores, outputs
+        return scores, outputs, rawOutputs
 
 

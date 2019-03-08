@@ -81,9 +81,9 @@ def assertDisp(dispL=None, dispR=None):
 def logFirstNIms(writer, name, im, range, global_step=None, n=0):
     if im is not None:
         n = min(n, im.size(0))
-        if n > 0:
+        if n > 0 and im.dim() > 2:
             im = im[:n]
-        if im.dim() == 3 or (im.dim() == 4 and im.size(1) == 1):
+        if im.dim() == 3 or im.dim() == 2 or (im.dim() == 4 and im.size(1) == 1):
             im[im > range] = range
             im[im < 0] = 0
             im = im / range
@@ -92,6 +92,8 @@ def logFirstNIms(writer, name, im, range, global_step=None, n=0):
 
 
 def gray2rgb(im):
+    if im.dim() == 2:
+        im = im.unsqueeze(0)
     if im.dim() == 3:
         im = im.unsqueeze(1)
     return im.repeat(1, 3, 1, 1)
@@ -354,6 +356,11 @@ def forNestingList(l, fcn):
     else:
         return fcn(l)
 
+def getLastNotList(l):
+    if type(l) in (list, tuple):
+        return getLastNotList(l[-1])
+    else:
+        return l
 def scanCheckpoint(checkpointDirs):
     if type(checkpointDirs) in (list, tuple):
         checkpointDirs = [scanCheckpoint(dir) for dir in checkpointDirs]

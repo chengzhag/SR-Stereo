@@ -18,7 +18,8 @@ class Submission(Base):
             dispOut = (dispOut * 256).astype('uint16')
             return dispOut
 
-        dispOut = self.model.predict(batch.detach(), mask=(1, 0))[0]
+        rawOutputs = self.model.predict(batch.detach(), mask=(1, 0))[0]
+        dispOut = myUtils.getLastNotList(rawOutputs)
 
         outputs = collections.OrderedDict()
         outputs['dispOutL'] = preprocess(dispOut)

@@ -135,11 +135,11 @@ class myImageFloder(data.Dataset):
         gtR = loadIm(3, self.gtLoader, self.loadScale, False)
 
         outputs = [inputL, inputR, gtL, gtR]
-        for iIms, ims in enumerate(outputs):
-            iCompare = iIms + 1 if iIms % 2 == 0 else iIms - 1
-            for iScale in range(len(ims)):
-                if ims[iScale].size == 0:
-                    ims[iScale] = np.zeros_like(outputs[iCompare][iScale])
+        # for iIms, ims in enumerate(outputs):
+        #     iCompare = iIms + 1 if iIms % 2 == 0 else iIms - 1
+        #     for iScale in range(len(ims)):
+        #         if ims[iScale].size == 0:
+        #             ims[iScale] = np.zeros_like(outputs[iCompare][iScale])
 
         r = [im for scale in zip(*outputs) for im in scale]
 

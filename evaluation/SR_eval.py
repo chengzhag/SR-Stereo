@@ -13,14 +13,14 @@ class Evaluation(Base):
     def _evalIt(self, batch, log):
         super(Evaluation, self)._evalIt(batch, log)
 
-        scores, outputs = self.model.test(batch.detach(), type=self.evalFcn, returnOutputs=log)
+        scores, outputs, _ = self.model.test(batch.detach(), evalType=self.evalFcn, returnOutputs=log)
 
         if log:
             imgs = batch.lowResRGBs() + batch.highResRGBs()
 
             for imsSide, side in zip((imgs[0::2], imgs[1::2]), ('L', 'R')):
                 for name, im in zip(('input', 'gt'), imsSide):
-                    outputs[name + side] = im
+                    outputs[name + side] = im.cpu()
 
         return scores, outputs
 

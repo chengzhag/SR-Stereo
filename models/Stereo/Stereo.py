@@ -30,7 +30,7 @@ class Stereo(Model):
         with torch.no_grad():
             outputs = []
             for inputL, inputR, process, do in zip((imgL, imgR), (imgR, imgL),
-                                                   (lambda im: im, myUtils.flipLR), mask):
+                                                   (lambda im: list(im) if type(im) is tuple else im, myUtils.flipLR), mask):
                 if do:
                     output = process(self.model.forward(process(inputL), process(inputR)))
                     outputs.append(output)
@@ -39,7 +39,7 @@ class Stereo(Model):
 
             return outputs
 
-    def test(self, batch, type='l1', returnOutputs=False, kitti=False):
+    def test(self, batch, evalType='l1', returnOutputs=False, kitti=False):
         myUtils.assertBatchLen(batch, 4)
 
         disps = batch.lowestResDisps()
@@ -48,24 +48,32 @@ class Stereo(Model):
         scores = myUtils.NameValues()
         outputs = collections.OrderedDict()
         mask = [disp is not None for disp in disps]
-        dispOuts = self.predict(batch, mask)
-        for gt, dispOut, side in zip(disps, dispOuts, ('L', 'R')):
+        rawOutputs = self.predict(batch, mask)
+
+        for gt, dispOut, side in zip(disps, rawOutputs, ('L', 'R')):
+            dispOut = myUtils.getLastNotList(dispOut)
             if dispOut is not None:
                 if returnOutputs:
                     outputs['output' + side] = dispOut / self.outputMaxDisp
 
+                if dispOut.dim() == 2:
+                    dispOut = dispOut.unsqueeze(0)
                 if dispOut.dim() == 3:
                     dispOut = dispOut.unsqueeze(1)
 
                 # for kitti dataset, only consider loss of none zero disparity pixels in gt
-                if kitti and type != 'outlierPSMNet':
+                if kitti and evalType != 'outlierPSMNet':
                     mask = gt > 0
                     dispOut = dispOut[mask]
                     gt = gt[mask]
+                elif not kitti:
+                    mask = gt < self.outputMaxDisp
+                    dispOut = dispOut[mask]
+                    gt = gt[mask]
 
-                scores[type + side] = evalFcn.getEvalFcn(type)(gt, dispOut)
+                scores[evalType + side] = evalFcn.getEvalFcn(evalType)(gt, dispOut)
 
-        return scores, outputs
+        return scores, outputs, rawOutputs
 
     def save(self, epoch, iteration, trainLoss, additionalInfo=None):
         additionalInfo = {} if additionalInfo is None else additionalInfo

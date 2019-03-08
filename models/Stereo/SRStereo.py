@@ -32,58 +32,42 @@ class SRStereo(Stereo):
                  saveFolderSuffix=''):
         super(SRStereo, self).__init__(maxdisp=maxdisp, dispScale=dispScale, cuda=cuda, half=half,
                                        stage=stage, dataset=dataset, saveFolderSuffix=saveFolderSuffix)
-        self._sr = SR.SR(cuda=cuda, half=half, stage=stage, dataset=dataset, saveFolderSuffix=saveFolderSuffix)
-        self._stereo = PSMNetDown(maxdisp=maxdisp, dispScale=dispScale, cuda=cuda, half=half, stage=stage,
+        self._getSr = lambda: SR.SR(cuda=cuda, half=half, stage=stage, dataset=dataset, saveFolderSuffix=saveFolderSuffix)
+        self._getStereo = lambda: PSMNetDown(maxdisp=maxdisp, dispScale=dispScale, cuda=cuda, half=half, stage=stage,
                                   dataset=dataset,
                                   saveFolderSuffix=saveFolderSuffix)
-        self.outputMaxDisp = self._stereo.outputMaxDisp
         self.getModel = RawSRStereo
+        self._stereo = None
+        self._sr = None
 
     def initModel(self):
+        self._stereo = self._getStereo()
         self._stereo.initModel()
         self._stereo.optimizer = None
+        self._sr = self._getSr()
         self._sr.initModel()
         self._sr.optimizer = None
         self.model = self.getModel(self._stereo.model, self._sr.model)
+        self.outputMaxDisp = self._stereo.outputMaxDisp
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999))
 
-    def predict(self, batch, mask=(1, 1)):
-        myUtils.assertBatchLen(batch, 4)
-        self.predictPrepare()
-
-        # One method to predict
-        # srs = self._sr.predict(batch)
-        # batch = myUtils.Batch(4)
-        # batch.highResRGBs(srs)
-        # outputs = self._stereo.predict(batch, mask=mask)
-
-        # Another method to predict which can test forward fcn
-        outputs = super(SRStereo, self).predict(batch, mask)
-        outputsReturn = []
-        for (outSrL, outSrR), (outDispHighs, outDispLows) in outputs:
-            outputsReturn.append(outDispLows)
-        return outputsReturn
-
-    def test(self, batch, type='l1', returnOutputs=False, kitti=False):
+    def test(self, batch, evalType='l1', returnOutputs=False, kitti=False):
         myUtils.assertBatchLen(batch, (4, 8))
         if len(batch) == 8:
             batch = batch.lastScaleBatch()
 
-        # Test with outputing sr images
-        srs = self._sr.predict(batch)
-
-        stereoBatch = myUtils.Batch(8)
-        stereoBatch.highResRGBs(srs)
-        stereoBatch.lowestResDisps(batch.lowestResDisps())
-        scores, outputs = self._stereo.test(stereoBatch, type=type, returnOutputs=returnOutputs, kitti=kitti)
-
-        for sr, side in zip(srs, ('L', 'R')):
-            outputs['outputSr' + side] = sr
-        return scores, outputs
-
-        # # Test without outputing sr images
-        # return super(SRStereo, self).test(batch, type=type, returnOutputs=returnOutputs, kitti=kitti)
+        scores, outputs, rawOutputs = super(SRStereo, self).test(batch, evalType, returnOutputs, kitti)
+        for rawOutputsSide, side in zip(rawOutputs, ('L', 'R')):
+            if rawOutputsSide is not None:
+                outSRs, (outDispHigh, outDispLow) = rawOutputsSide[-2:]
+                if returnOutputs:
+                    if outDispHigh is not None:
+                        outputs['outputDispHigh' + side] = outDispHigh / (self.outputMaxDisp * 2)
+                    for outSr, sideSr in zip(outSRs, ('L', 'R')):
+                        if outSr is not None:
+                            outputs['outputSr' + side] = outSr
+        return scores, outputs, rawOutputs
 
     def loss(self, outputs, gts, kitti=False):
         losses = []
@@ -95,10 +79,13 @@ class SRStereo(Stereo):
 
         for outSr, srGt, input in zip((outSrL, outSrR), (srGtL, srGtR), (inputL, inputR)):
             if all([t is not None for t in (outSr, srGt)]):
-                lossSRside = self._sr.loss(outSr, srGt)
+                if outSr.size() == srGt.size():
+                    lossSRside = self._sr.loss(outSr, srGt)
+                else:
+                    lossSRside = self._sr.loss(nn.AvgPool2d((2, 2))(outSr), srGt)
             elif all([t is not None for t in (outSr, input)]):
-                # KITTI has no SR GT
-                lossSRside = self._sr.loss(nn.AvgPool2d((2, 2))(outSr), input)
+                # if dataset has no SR GT, use lowestResRGBs as GTs
+                lossSRside = self._sr.loss(nn.AvgPool2d((2, 2))(outSr), srGt)
             else:
                 lossSRside = None
             lossSR = lossSRside if lossSR is None else lossSR + lossSRside
@@ -152,6 +139,7 @@ class SRStereo(Stereo):
         self.trainPrepare()
         if len(batch) == 4:
             batch = myUtils.Batch([None] * 4 + batch.batch)
+
         imgLowL, imgLowR = batch.lowestResRGBs()
         imgHighL, imgHighR = batch.highResRGBs()
 

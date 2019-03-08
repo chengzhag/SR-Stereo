@@ -52,7 +52,7 @@ class Train:
             totalTrainLoss = 0
             totalAvgIt = 0
             tic = time.time()
-            torch.cuda.empty_cache()
+            # torch.cuda.empty_cache()
             for batch_idx, batch in enumerate(self.trainImgLoader, 1):
                 batch = myUtils.Batch(batch, cuda=self.model.cuda, half=self.model.half)
 
@@ -61,6 +61,9 @@ class Train:
 
                 doLog = self.logEvery > 0 and self.global_step % self.logEvery == 0
                 lossesPairs, ims = self._trainIt(batch=batch, log=doLog)
+                if ims is not None:
+                    for name, im in ims.items():
+                        ims[name] = im.cpu()
 
                 if lossesAvg is None:
                     lossesAvg = lossesPairs.copy()
@@ -108,7 +111,7 @@ class Train:
             if ((self.testEvery > 0 and epoch % self.testEvery == 0)
                 or (self.testEvery == 0 and epoch == self.nEpochs)) \
                     and self.test is not None:
-                testScores = self.test(model=self.model).values()
+                testScores = self.test(model=self.model, global_step=self.global_step).values()
                 testScore = sum(testScores) / len(testScores)
                 try:
                     if testScore <= minTestScore:
@@ -122,6 +125,7 @@ class Train:
                 print('Training status: %s' % testReaults.strPrint(''))
                 self.test.log(epoch=epoch, it=batch_idx, global_step=self.global_step,
                               additionalValue=testReaults)
+                torch.cuda.empty_cache()
 
         endMessage = 'Full training time = %.2fh\n' % ((time.time() - ticFull) / 3600)
         print(endMessage)

@@ -1,10 +1,9 @@
 #!/usr/bin/env bash`
 
-carla_kitti_dataset=/media/omnisky/zcSSD/SR-Stereo/datasets/carla_kitti/carla_kitti_sr_lowquality_moduletest/
-sceneflow_dataset=/media/omnisky/zcSSD/SR-Stereo/datasets/sceneflow/
-kitti2015_dataset=/media/omnisky/zcSSD/SR-Stereo/datasets/kitti/data_scene_flow/training/
-kitti2012_dataset=/media/omnisky/zcSSD/SR-Stereo/datasets/kitti/data_stereo_flow/training/
-
+carla_kitti_dataset=../datasets/carla_kitti/carla_kitti_sr_lowquality_moduletest
+sceneflow_dataset=../datasets/sceneflow/
+kitti2015_dataset=../datasets/kitti/data_scene_flow/training/
+kitti2012_dataset=../datasets/kitti/data_stereo_flow/training/
 #carla_kitti_dataset=/media/hardder3/stc/carla_kitti/carla_kitti_sr_lowquality_moduletest
 
 export CUDA_VISIBLE_DEVICES=3

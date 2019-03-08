@@ -14,10 +14,10 @@ class Evaluation(Base):
     def _evalIt(self, batch, log):
         super(Evaluation, self)._evalIt(batch, log)
 
-        scores, outputs = self.model.test(batch.detach(),
-                                          type=self.evalFcn,
-                                          returnOutputs=log,
-                                          kitti=self.testImgLoader.kitti)
+        scores, outputs, _ = self.model.test(batch.detach(),
+                                             evalType=self.evalFcn,
+                                             returnOutputs=log,
+                                             kitti=self.testImgLoader.kitti)
 
         if log:
             for disp, input, side in zip(batch.lowestResDisps(), batch.lowestResRGBs(), ('L', 'R')):
