@@ -30,9 +30,9 @@ class Stereo(Model):
         with torch.no_grad():
             outputs = []
             for inputL, inputR, process, do in zip((imgL, imgR), (imgR, imgL),
-                                                   (lambda im: im, myUtils.flipLR), mask):
+                                                   (lambda im: list(im) if type(im) is tuple else im, myUtils.flipLR), mask):
                 if do:
-                    output = list(process(self.model.forward(process(inputL), process(inputR))))
+                    output = process(self.model.forward(process(inputL), process(inputR)))
                     outputs.append(output)
                 else:
                     outputs.append(None)
