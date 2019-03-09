@@ -20,9 +20,9 @@ class NameValues(collections.OrderedDict):
             str += '%s: ' % (prefix + name + suffix)
             if type(value) in (list, tuple):
                 for v in value:
-                    str += '%.2f%s, ' % (v, unit)
+                    str += '%.3f%s, ' % (v, unit)
             else:
-                str += '%.2f%s, ' % (value, unit)
+                str += '%.3f%s, ' % (value, unit)
 
         return str
 
