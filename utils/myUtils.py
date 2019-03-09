@@ -421,4 +421,10 @@ def depth(l):
     else:
         return 0
 
-
+class Filter:
+    def __init__(self, weight=0.1):
+        self.weight = weight
+        self.old = None
+    def __call__(self, x):
+        self.old = x if self.old is None else self.old * (1 - self.weight) + x * self.weight
+        return self.old

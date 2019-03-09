@@ -22,10 +22,11 @@ class Evaluation:
         # save Tensorboard logs to where checkpoint is.
         self.tensorboardLogger.set(self.model.logFolder)
 
+        # Evaluation
         tic = time.time()
         ticFull = time.time()
         scoreUnit = '%' if 'outlier' in self.evalFcn else ''
-
+        filter = myUtils.Filter()
         for batch_idx, batch in enumerate(self.testImgLoader, 1):
             batch = myUtils.Batch(batch, cuda=self.model.cuda, half=self.model.half)
 
@@ -47,7 +48,7 @@ class Evaluation:
                         self.tensorboardLogger.logFirstNIms('testImages/' + name, im, 1,
                                                             global_step=global_step, n=self.ndisLog)
 
-            timeLeft = (time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx)
+            timeLeft = filter((time.time() - tic) / 3600 * (len(self.testImgLoader) - batch_idx))
 
             avgTestScores = totalTestScores.copy()
             for name in avgTestScores.keys():
