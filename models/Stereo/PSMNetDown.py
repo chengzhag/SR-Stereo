@@ -41,7 +41,7 @@ class PSMNetDown(PSMNet):
         if outputMaxDisp is not None:
             raise Exception('Error: outputMaxDisp of PSMNetDown has no use!')
         losses = []
-        for output, gt, outputMaxDisp in zip(outputs, gts, (self.maxdisp, self.outputMaxDisp)):
+        for output, gt, outputMaxDisp in zip(outputs, gts, (self.outputMaxDisp * 2, self.outputMaxDisp)):
             losses.append(super(PSMNetDown, self).loss(
                 output, gt, kitti=kitti, outputMaxDisp=outputMaxDisp
             ) if gt is not None else None)

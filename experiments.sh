@@ -18,22 +18,22 @@ pretrained_EDSR_DIV2K=logs/pretrained/EDSR_pretrained_DIV2K/EDSR_baseline_x2.pt
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 nGPUs=$(( (${#CUDA_VISIBLE_DEVICES} + 1) / 2 ))
 
-## prepare: pretrained_Stereo1_Stereo2 (SERVER 95)
-## train Stereo1
-#PYTHONPATH=./ python train/Stereo_train.py --model PSMNet --dispscale 1 --outputFolder experiments/pretrained_Stereo1_Stereo2 --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 10 --log_every 50 --test_every 2 --eval_fcn l1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 --loadmodel $pretrained_PSMNet_sceneflow --load_scale 0.5 --half
-## train Stereo2
-#PYTHONPATH=./ python train/Stereo_train.py --model PSMNetDown --dispscale 2 --outputFolder experiments/pretrained_Stereo1_Stereo2 --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 10 --log_every 50 --test_every 2 --eval_fcn l1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 --lossWeights 0.75 0.25 --loadmodel $pretrained_PSMNet_sceneflow --load_scale 1 0.5 --half
+# prepare: pretrained_Stereo1_Stereo2 (SERVER 95)
+# train Stereo1
+PYTHONPATH=./ python train/Stereo_train.py --model PSMNet --dispscale 1 --outputFolder experiments/pretrained_Stereo1_Stereo2 --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 10 --log_every 50 --test_every 2 --eval_fcn l1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 --loadmodel $pretrained_PSMNet_sceneflow --load_scale 0.5 --half
+# train Stereo2
+PYTHONPATH=./ python train/Stereo_train.py --model PSMNetDown --dispscale 2 --outputFolder experiments/pretrained_Stereo1_Stereo2 --datapath $carla_kitti_dataset --dataset carla_kitti  --trainCrop 128 1024 --epochs 10 --log_every 50 --test_every 2 --eval_fcn l1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 --lossWeights 0.75 0.25 --loadmodel $pretrained_PSMNet_sceneflow --load_scale 1 0.5 --half
 
 ## experiment settings
 #pretrained_Stereo1=
 #pretrained_Stereo2=
 #
-# experiment 1: SR_SRdisp_compare_carla (SERVER 199)
-# test subject: SRdisp > SR
-# finetune SRdisp
-PYTHONPATH=./ python train/SR_train.py --model SRdisp --outputFolder experiments/SR_SRdisp_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --trainCrop 128 1024 --epochs 20 --log_every 50 --test_every 2 --eval_fcn l1 --batchsize_train 16 --batchsize_test $nGPUs --lr 0.0001 10 0.00005 15 0.00002 --loadmodel $pretrained_EDSR_DIV2K --half
-# finetune SR
-PYTHONPATH=./ python train/SR_train.py --model SR --outputFolder experiments/SR_SRdisp_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --trainCrop 128 1024 --epochs 20 --log_every 50 --test_every 2 --eval_fcn l1 --batchsize_train 16 --batchsize_test $nGPUs  --lr 0.0001 10 0.00005 15 0.00002 --loadmodel $pretrained_EDSR_DIV2K --half
+## experiment 1: SR_SRdisp_compare_carla (SERVER 199)
+## test subject: SRdisp > SR
+## finetune SRdisp
+#PYTHONPATH=./ python train/SR_train.py --model SRdisp --outputFolder experiments/SR_SRdisp_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --trainCrop 128 1024 --epochs 20 --log_every 50 --test_every 2 --eval_fcn l1 --batchsize_train 16 --batchsize_test $nGPUs --lr 0.0001 10 0.00005 15 0.00002 --loadmodel $pretrained_EDSR_DIV2K --half
+## finetune SR
+#PYTHONPATH=./ python train/SR_train.py --model SR --outputFolder experiments/SR_SRdisp_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --trainCrop 128 1024 --epochs 20 --log_every 50 --test_every 2 --eval_fcn l1 --batchsize_train 16 --batchsize_test $nGPUs  --lr 0.0001 10 0.00005 15 0.00002 --loadmodel $pretrained_EDSR_DIV2K --half
 
 ## experiment settings
 #pretrained_SR=
