@@ -32,20 +32,24 @@ class SRdispStereoRefine(SRdispStereo):
             psmnetDownOuts = self._stereo.predict(initialBatch)
             outputsReturn = [[[outSRs, psmnetDownOut] for psmnetDownOut in psmnetDownOuts]]
             if it > 0:
-                initialDisps = [myUtils.getLastNotList(disps).unsqueeze(1).type_as(batch[0]) for disps in psmnetDownOuts]
+                initialDisps = [myUtils.getLastNotList(dispsSide).unsqueeze(1).type_as(batch[0]) for dispsSide in psmnetDownOuts]
                 batch.lowestResDisps(initialDisps)
                 for i in range(it):
                     itOutputs = super(SRdispStereoRefine, self).predict(batch.detach(), mask=mask)
                     outputsReturn.append(itOutputs)
-                    dispOuts = [myUtils.getLastNotList(itOutputsSide) for itOutputsSide in itOutputs]
+                    dispOuts = [myUtils.getLastNotList(itOutputsSide).unsqueeze(1).type_as(batch[0])
+                                for itOutputsSide in itOutputs]
                     batch.lowestResDisps(dispOuts)
 
             return outputsReturn
 
-    def test(self, batch, evalType='l1', returnOutputs=False, kitti=False, it=2):
+    def test(self, batch, evalType='l1', returnOutputs=False, kitti=False, it=1):
         myUtils.assertBatchLen(batch, (4, 8))
         if len(batch) == 8:
+            gtSRs = batch.highResRGBs()
             batch = batch.lastScaleBatch()
+        else:
+            gtSRs = (None, None)
 
         disps = batch.lowestResDisps()
         myUtils.assertDisp(*disps)
@@ -57,7 +61,7 @@ class SRdispStereoRefine(SRdispStereo):
 
         for it, rawOutput in enumerate(rawOutputs):
             itSuffix = str(it)
-            for gt, rawOutputSide, side in zip(disps, rawOutput, ('L', 'R')):
+            for gtDisp, gtSR, rawOutputSide, side, iSide in zip(disps, gtSRs, rawOutput, ('L', 'R'), (0, 1)):
                 if it == 0:
                     outSRs, (outDispHigh, dispOut) = rawOutputSide
                 else:
@@ -71,26 +75,28 @@ class SRdispStereoRefine(SRdispStereo):
                     for outSr, sideSr in zip(outSRs, ('L', 'R')):
                         if outSr is not None:
                             outputs['outputSr' + sideSr + side + itSuffix] = outSr
+                if gtSR is not None:
+                    scores['l1' + 'Sr' + side + itSuffix] = evalFcn.l1(gtSR, outSRs[iSide])
 
                 if dispOut is not None:
                     if returnOutputs:
-                        outputs['output' + side + itSuffix] = dispOut / self.outputMaxDisp
+                        outputs['outputDispLow' + side + itSuffix] = dispOut / self.outputMaxDisp
 
                     if dispOut.dim() == 2:
                         dispOut = dispOut.unsqueeze(0)
                     if dispOut.dim() == 3:
                         dispOut = dispOut.unsqueeze(1)
 
-                    # for kitti dataset, only consider loss of none zero disparity pixels in gt
+                    # for kitti dataset, only consider loss of none zero disparity pixels in gtDisp
                     if kitti and evalType != 'outlierPSMNet':
-                        mask = gt > 0
+                        mask = gtDisp > 0
                         dispOut = dispOut[mask]
-                        gt = gt[mask]
+                        gtDisp = gtDisp[mask]
                     elif not kitti:
-                        mask = gt < self.outputMaxDisp
+                        mask = gtDisp < self.outputMaxDisp
                         dispOut = dispOut[mask]
-                        gt = gt[mask]
+                        gtDisp = gtDisp[mask]
 
-                    scores[evalType + side + itSuffix] = evalFcn.getEvalFcn(evalType)(gt, dispOut)
+                    scores[evalType + side + itSuffix] = evalFcn.getEvalFcn(evalType)(gtDisp, dispOut)
 
         return scores, outputs, rawOutputs
