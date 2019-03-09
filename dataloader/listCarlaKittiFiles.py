@@ -46,6 +46,7 @@ def dataloader(filepath, trainProportion=0.8, shuffle=False):
             test_left_disp += (_scanImages(filepath, episode, 'Camera2Depth'))
             test_right_disp += (_scanImages(filepath, episode, 'Camera3Depth'))
 
+    random.seed(2019)
     def shuffleLists(lists):
         c = list(zip(*lists))
         random.shuffle(c)
