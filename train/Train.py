@@ -93,15 +93,20 @@ class Train:
 
                 timeLeft = (time.time() - tic) / 3600 * (
                         (self.nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
-                print('globalIt %d/%d, it %d/%d, epoch %d/%d, %sleft %.2fh' % (
+                printMessage = 'globalIt %d/%d, it %d/%d, epoch %d/%d, %sleft %.2fh' % (
                     self.global_step, len(self.trainImgLoader) * self.nEpochs,
                     batch_idx, len(self.trainImgLoader),
                     epoch, self.nEpochs,
-                    lossesPairs.strPrint(''), timeLeft))
+                    lossesPairs.strPrint(''), timeLeft)
+                self.tensorboardLogger.writer.add_text('trainPrint/iterations', printMessage, global_step=self.global_step)
+                print(printMessage)
                 tic = time.time()
 
             totalTrainLoss /= totalAvgIt
-            print('epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss))
+            printMessage = 'epoch %d done, total training loss = %.3f' % (epoch, totalTrainLoss)
+            print(printMessage)
+            self.tensorboardLogger.writer.add_text('trainPrint/epochs', printMessage, global_step=self.global_step)
+
             # save
             if (self.saveEvery > 0 and epoch % self.saveEvery == 0)\
                     or (self.saveEvery == 0 and epoch == self.nEpochs):
@@ -122,13 +127,18 @@ class Train:
                     minTestScoreEpoch = epoch
                 testReaults = myUtils.NameValues(
                     ('minTestScore', 'minTestScoreEpoch'), (minTestScore, minTestScoreEpoch))
-                print('Training status: %s' % testReaults.strPrint(''))
+                printMessage = 'Training status: %s' % testReaults.strPrint('')
+                self.tensorboardLogger.writer.add_text('trainPrint/testResults', printMessage,
+                                                       global_step=self.global_step)
+                print(printMessage)
                 self.test.log(epoch=epoch, it=batch_idx, global_step=self.global_step,
                               additionalValue=testReaults)
                 torch.cuda.empty_cache()
 
         endMessage = 'Full training time = %.2fh\n' % ((time.time() - ticFull) / 3600)
         print(endMessage)
+        self.tensorboardLogger.writer.add_text('trainPrint/timeInfo', endMessage,
+                                               global_step=self.global_step)
         self.log(endMessage=endMessage)
 
     def log(self, additionalValue=(), endMessage=None):

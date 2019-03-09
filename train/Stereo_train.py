@@ -77,8 +77,8 @@ def main():
                                          stage=stage,
                                          dataset=args.dataset,
                                          saveFolderSuffix=saveFolderSuffix.strSuffix())
-    if hasattr(stereo, 'setItRefine'):
-        stereo.setItRefine(args.itRefine)
+    if hasattr(stereo, 'itRefine'):
+        stereo.itRefine = args.itRefine
     epoch, iteration = stereo.load(args.loadmodel)
 
     # Train

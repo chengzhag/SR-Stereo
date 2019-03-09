@@ -52,13 +52,20 @@ class Evaluation:
             for name in avgTestScores.keys():
                 avgTestScores[name] /= batch_idx
 
-            print('it %d/%d, %s%sleft %.2fh' % (
+            printMessage = 'it %d/%d, %s%sleft %.2fh' % (
                 batch_idx, len(self.testImgLoader),
-                scoresPairs.strPrint(scoreUnit), avgTestScores.strPrint(scoreUnit, suffix='Avg'), timeLeft))
+                scoresPairs.strPrint(scoreUnit), avgTestScores.strPrint(scoreUnit, suffix='Avg'), timeLeft)
+            print(printMessage)
+            self.tensorboardLogger.writer.add_text('testPrint/iterations', printMessage,
+                                                   global_step=batch_idx)
+
             tic = time.time()
 
         self.testTime = time.time() - ticFull
-        print('Full testing time = %.2fh' % (self.testTime / 3600))
+        timeInfo = 'Full testing time = %.2fh' % (self.testTime / 3600)
+        print(timeInfo)
+        self.tensorboardLogger.writer.add_text('testPrint/timeInfo', timeInfo,
+                                               global_step=global_step)
         self.testResults = avgTestScores
         self.localtime = time.asctime(time.localtime(time.time()))
         return avgTestScores

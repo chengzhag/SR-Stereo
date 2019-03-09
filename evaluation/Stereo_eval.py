@@ -52,8 +52,8 @@ def main():
     stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale,
                                          half=args.half, cuda=args.cuda, stage=stage,
                                          saveFolderSuffix=myUtils.getSuffix(args.loadmodel))
-    if hasattr(stereo, 'setItRefine'):
-        stereo.setItRefine(args.itRefine)
+    if hasattr(stereo, 'itRefine'):
+        stereo.itRefine = args.itRefine
     stereo.load(args.loadmodel)
     if not args.resume:
         stereo.saveToNew()

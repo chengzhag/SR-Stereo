@@ -15,10 +15,7 @@ class SRdispStereoRefine(SRdispStereo):
                  saveFolderSuffix=''):
         super(SRdispStereoRefine, self).__init__(maxdisp=maxdisp, dispScale=dispScale, cuda=cuda, half=half,
                                            stage=stage, dataset=dataset, saveFolderSuffix=saveFolderSuffix)
-        self._itRefine=0
-
-    def setItRefine(self, itRefine):
-        self._itRefine = itRefine
+        self.itRefine=0
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
@@ -35,10 +32,10 @@ class SRdispStereoRefine(SRdispStereo):
             initialBatch.lowestResRGBs(outSRs)
             psmnetDownOuts = self._stereo.predict(initialBatch)
             outputsReturn = [[[outSRs, psmnetDownOut] for psmnetDownOut in psmnetDownOuts]]
-            if self._itRefine > 0:
+            if self.itRefine > 0:
                 initialDisps = [myUtils.getLastNotList(dispsSide).unsqueeze(1).type_as(batch[0]) for dispsSide in psmnetDownOuts]
                 batch.lowestResDisps(initialDisps)
-                for i in range(self._itRefine):
+                for i in range(self.itRefine):
                     itOutputs = super(SRdispStereoRefine, self).predict(batch.detach(), mask=mask)
                     outputsReturn.append(itOutputs)
                     dispOuts = [myUtils.getLastNotList(itOutputsSide).unsqueeze(1).type_as(batch[0])
