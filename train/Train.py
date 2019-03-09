@@ -187,4 +187,4 @@ class Train:
         with open(logDir, "a") as log:
             log.write(writeMessage)
 
-        self.tensorboardLogger.writer.add_text('trainPrint/trainInfo', writeMessage)
+        self.tensorboardLogger.writer.add_text('trainPrint/trainInfo', writeMessage, global_step=self.global_step)
