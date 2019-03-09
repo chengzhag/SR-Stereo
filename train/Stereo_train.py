@@ -17,11 +17,12 @@ class Train(Base):
 
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
-
+        progress = self.global_step / (len(self.trainImgLoader) * self.nEpochs)
         losses, outputs = self.model.train(batch.detach(),
                                            returnOutputs=log,
                                            kitti=self.trainImgLoader.kitti,
-                                           weights=self.lossWeights)
+                                           weights=self.lossWeights,
+                                           progress=progress)
         if log:
             for disp, input, sr, side in zip(
                     batch.lowestResDisps(),

@@ -64,7 +64,7 @@ class PSMNetDown(PSMNet):
         losses = [loss] + losses
         return [loss.data.item() for loss in losses], dispOuts
 
-    def train(self, batch, returnOutputs=False, kitti=False, weights=(1, 0)):
+    def train(self, batch, returnOutputs=False, kitti=False, weights=(1, 0), progress=0):
         myUtils.assertBatchLen(batch, 8)
         self.trainPrepare()
 

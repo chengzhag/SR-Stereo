@@ -7,7 +7,7 @@ from .SRdispStereo import SRdispStereo
 from .. import SR
 import torch.nn.functional as F
 from evaluation import evalFcn
-
+import random
 
 
 class SRdispStereoRefine(SRdispStereo):
@@ -101,3 +101,40 @@ class SRdispStereoRefine(SRdispStereo):
                     scores[evalType + side + itSuffix] = evalFcn.getEvalFcn(evalType)(gtDisp, dispOut)
 
         return scores, outputs, rawOutputs
+
+    # weights: weights of
+    #   SR output losses (lossSR),
+    #   SR disparity map losses (lossDispHigh),
+    #   normal sized disparity map losses (lossDispLow)
+    def train(self, batch, returnOutputs=False, kitti=False, weights=(0, 1, 0), progress=0):
+        myUtils.assertBatchLen(batch, (4, 8))
+        if len(batch) == 4:
+            batch = myUtils.Batch([None] * 4 + batch.batch)
+
+        # if has no highResRGBs, use lowestResRGBs as GTs
+        if all([sr is None for sr in batch.highResRGBs()]):
+            batch.highResRGBs(batch.lowestResRGBs())
+
+        # probability of training with dispsOut as input:
+        # progress = [0, 2/3]: p = [0, 1]
+        # progress > 2/3: p = 1
+        if random.random() < progress * 1.5:
+            self.itRefine = random.randint(0, 1)
+            rawOuputs = self.predict(batch.lastScaleBatch(), mask=(1, 1))[-1]
+            dispsOut = [myUtils.getLastNotList(rawOutputsSide).unsqueeze(1) for rawOutputsSide in rawOuputs]
+            warpBatch = myUtils.Batch(batch.lowestResRGBs() + dispsOut, cuda=batch.cuda, half=batch.half)
+        else:
+            warpBatch = batch.lastScaleBatch()
+
+        cated, warpTos = self._sr.warpAndCat(warpBatch)
+        batch.lowestResRGBs(cated)
+
+        losses, outputs = super(SRdispStereo, self).train(
+            batch, returnOutputs=returnOutputs, kitti=kitti, weights=weights
+        )
+        for warpTo, side in zip(warpTos, ('L', 'R')):
+            if returnOutputs:
+                if warpTo is not None:
+                    outputs['warpTo' + side] = warpTo
+
+        return losses, outputs

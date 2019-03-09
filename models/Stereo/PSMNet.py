@@ -73,7 +73,7 @@ class PSMNet(Stereo):
         output = outputs[2].detach() / self.outputMaxDisp if returnOutputs else None
         return loss.data.item(), output
 
-    def train(self, batch, returnOutputs=False, kitti=False, weights=()):
+    def train(self, batch, returnOutputs=False, kitti=False, weights=(), progress=0):
         myUtils.assertBatchLen(batch, 4)
         self.trainPrepare()
         imgL, imgR = batch.highResRGBs()

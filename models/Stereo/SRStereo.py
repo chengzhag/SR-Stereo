@@ -142,7 +142,7 @@ class SRStereo(Stereo):
     #   SR output losses (lossSR),
     #   SR disparity map losses (lossDispHigh),
     #   normal sized disparity map losses (lossDispLow)
-    def train(self, batch, returnOutputs=False, kitti=False, weights=(0, 1, 0)):
+    def train(self, batch, returnOutputs=False, kitti=False, weights=(0, 1, 0), progress=0):
         myUtils.assertBatchLen(batch, (4, 8))
         self.trainPrepare()
         if len(batch) == 4:
