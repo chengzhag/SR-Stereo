@@ -46,7 +46,7 @@ class Train:
         batch_idx = None
         lossesAvg = None
         self.global_step = (self.startEpoch - 1) * len(self.trainImgLoader)
-
+        filter = myUtils.Filter()
         for epoch in range(self.startEpoch, self.nEpochs + 1):
             print('This is %d-th epoch' % (epoch))
             self.lrNow = myUtils.adjustLearningRate(self.model.optimizer, epoch, self.lr)
@@ -91,8 +91,8 @@ class Train:
                     totalTrainLoss += sum(lossesPairs.values()) / len(lossesPairs.values())
                     totalAvgIt += 1
 
-                timeLeft = (time.time() - tic) / 3600 * (
-                        (self.nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx)
+                timeLeft = filter((time.time() - tic) / 3600 * (
+                        (self.nEpochs - epoch + 1) * len(self.trainImgLoader) - batch_idx))
                 printMessage = 'globalIt %d/%d, it %d/%d, epoch %d/%d, %sleft %.2fh' % (
                     self.global_step, len(self.trainImgLoader) * self.nEpochs,
                     batch_idx, len(self.trainImgLoader),
