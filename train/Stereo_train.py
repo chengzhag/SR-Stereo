@@ -37,7 +37,7 @@ class Train(Base):
         return losses, outputs
 
     def log(self, additionalValue=(), endMessage=None):
-        super(Train, self).log(additionalValue=(('lossWeights', self.lossWeights),))
+        super(Train, self).log(additionalValue=myUtils.NameValues(['lossWeights'], [self.lossWeights]))
 
 
 def main():

@@ -8,7 +8,8 @@ import math
 
 
 class Train:
-    def __init__(self, trainImgLoader, nEpochs, lr=(0.001, ), logEvery=1, testEvery=1, ndisLog=1, Test=None, startEpoch=1, saveEvery=1):
+    def __init__(self, trainImgLoader, nEpochs, lr=(0.001,), logEvery=1, testEvery=1, ndisLog=1, Test=None,
+                 startEpoch=1, saveEvery=1):
         self.trainImgLoader = trainImgLoader
         self.logEvery = logEvery
         self.testEvery = testEvery
@@ -22,9 +23,8 @@ class Train:
         self.startEpoch = startEpoch
         self.global_step = 0
         self.tensorboardLogger = myUtils.TensorboardLogger()
-        self.test.tensorboardLogger = self.tensorboardLogger # should be initialized in _trainIt
+        self.test.tensorboardLogger = self.tensorboardLogger  # should be initialized in _trainIt
 
-        
     def _trainIt(self, batch, log):
         return None, None
 
@@ -36,14 +36,17 @@ class Train:
 
         if self.startEpoch == 1:
             self.model.saveToNew()
+        # save Tensorboard logs to where checkpoint is.
+        self.tensorboardLogger.set(self.model.logFolder)
         self.log()
+
         # Train
         ticFull = time.time()
-
         epoch = None
         batch_idx = None
         lossesAvg = None
         self.global_step = (self.startEpoch - 1) * len(self.trainImgLoader)
+
         for epoch in range(self.startEpoch, self.nEpochs + 1):
             print('This is %d-th epoch' % (epoch))
             self.lrNow = myUtils.adjustLearningRate(self.model.optimizer, epoch, self.lr)
@@ -71,8 +74,6 @@ class Train:
                     for name in lossesAvg.keys():
                         lossesAvg[name] += lossesPairs[name]
 
-                # save Tensorboard logs to where checkpoint is.
-                self.tensorboardLogger.set(self.model.logFolder)
                 if doLog:
                     for name in lossesAvg.keys():
                         lossesAvg[name] /= self.logEvery
@@ -97,7 +98,8 @@ class Train:
                     batch_idx, len(self.trainImgLoader),
                     epoch, self.nEpochs,
                     lossesPairs.strPrint(''), timeLeft)
-                self.tensorboardLogger.writer.add_text('trainPrint/iterations', printMessage, global_step=self.global_step)
+                self.tensorboardLogger.writer.add_text('trainPrint/iterations', printMessage,
+                                                       global_step=self.global_step)
                 print(printMessage)
                 tic = time.time()
 
@@ -107,7 +109,7 @@ class Train:
             self.tensorboardLogger.writer.add_text('trainPrint/epochs', printMessage, global_step=self.global_step)
 
             # save
-            if (self.saveEvery > 0 and epoch % self.saveEvery == 0)\
+            if (self.saveEvery > 0 and epoch % self.saveEvery == 0) \
                     or (self.saveEvery == 0 and epoch == self.nEpochs):
                 model.save(epoch=epoch, iteration=batch_idx,
                            trainLoss=totalTrainLoss)
@@ -127,7 +129,7 @@ class Train:
                 testReaults = myUtils.NameValues(
                     ('minTestScore', 'minTestScoreEpoch'), (minTestScore, minTestScoreEpoch))
                 printMessage = 'Training status: %s' % testReaults.strPrint('')
-                self.tensorboardLogger.writer.add_text('trainPrint/testResults', printMessage,
+                self.tensorboardLogger.writer.add_text('trainPrint/epochs', printMessage,
                                                        global_step=self.global_step)
                 print(printMessage)
                 self.test.log(epoch=epoch, it=batch_idx, global_step=self.global_step,
@@ -136,47 +138,53 @@ class Train:
 
         endMessage = 'Full training time = %.2fh\n' % ((time.time() - ticFull) / 3600)
         print(endMessage)
-        self.tensorboardLogger.writer.add_text('trainPrint/timeInfo', endMessage,
+        self.tensorboardLogger.writer.add_text('trainPrint/epochs', endMessage,
                                                global_step=self.global_step)
         self.log(endMessage=endMessage)
 
-    def log(self, additionalValue=(), endMessage=None):
+    def log(self, additionalValue=None, endMessage=None):
         logFolder = self.model.checkpointFolder
         myUtils.checkDir(logFolder)
-        logDir = os.path.join(logFolder, 'train_info.txt')
+        logDir = os.path.join(logFolder, 'train_info.md')
+
+        writeMessage = ''
+        if endMessage is None:
+            writeMessage += '---------------------- %s ----------------------\n\n' % \
+                            time.asctime(time.localtime(time.time()))
+            writeMessage += 'bash param: '
+            for arg in sys.argv:
+                writeMessage += arg + ' '
+            writeMessage += '\n\n'
+
+            baseInfos = (('data', self.trainImgLoader.datapath),
+                         ('load_scale', self.trainImgLoader.loadScale),
+                         ('trainCrop', self.trainImgLoader.trainCrop),
+                         ('checkpoint', self.model.checkpointDir),
+                         ('nEpochs', self.nEpochs),
+                         ('lr', self.lr),
+                         ('logEvery', self.logEvery),
+                         ('testEvery', self.testEvery),
+                         ('ndisLog', self.ndisLog),
+                         )
+            for pairs, title in zip((baseInfos, additionalValue.items() if additionalValue is not None else ()),
+                                    ('basic info:', 'additional values:')):
+                if len(pairs) > 0:
+                    writeMessage += title + '\n\n'
+                    for (name, value) in pairs:
+                        if value is not None:
+                            writeMessage += '- ' + name + ': ' + str(value) + '\n'
+                    writeMessage += '\n'
+
+        else:
+            writeMessage += endMessage
+            if additionalValue is not None:
+                writeMessage += 'additional values:\n\n'
+                for (name, value) in additionalValue.items():
+                    if value is not None:
+                        writeMessage += '- ' + name + ': ' + str(value) + '\n'
+                writeMessage += '\n'
+
         with open(logDir, "a") as log:
-            def writeNotNone(name, value):
-                if value is not None: log.write(name + ': ' + str(value) + '\n')
+            log.write(writeMessage)
 
-            if endMessage is None:
-                log.write(
-                    '---------------------- %s ----------------------\n\n' % time.asctime(time.localtime(time.time())))
-
-                log.write('python ')
-                for arg in sys.argv:
-                    log.write(arg + ' ')
-                log.write('\n\n')
-
-                baseInfos = (('data', self.trainImgLoader.datapath),
-                             ('load_scale', self.trainImgLoader.loadScale),
-                             ('trainCrop', self.trainImgLoader.trainCrop),
-                             ('checkpoint', self.model.checkpointDir),
-                             ('nEpochs', self.nEpochs),
-                             ('lr', self.lr),
-                             ('logEvery', self.logEvery),
-                             ('testEvery', self.testEvery),
-                             ('ndisLog', self.ndisLog),
-                             )
-
-                nameValues = baseInfos + additionalValue
-                for pairs in (baseInfos, additionalValue):
-                    for (name, value) in pairs:
-                        writeNotNone(name, value)
-                    log.write('\n')
-
-            else:
-                log.write(endMessage)
-                for pairs in (additionalValue,):
-                    for (name, value) in pairs:
-                        writeNotNone(name, value)
-                    log.write('\n')
+        self.tensorboardLogger.writer.add_text('trainPrint/trainInfo', writeMessage)
