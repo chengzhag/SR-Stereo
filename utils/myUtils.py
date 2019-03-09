@@ -190,6 +190,9 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                  # SRdisp specified param
                  'withMask': lambda: parser.add_argument('--withMask', action='store_true', default=False,
                                                          help='input 7 channels with mask to SRdisp instead of 6'),
+                 # SRdispStereoRefine specified param
+                 'itRefine': lambda: parser.add_argument('--itRefine', type=int, default=1,
+                                                             help='iterations of refining process'),
                  }
 
     if len(includeKeys):

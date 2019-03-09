@@ -45,7 +45,7 @@ def main():
         ['outputFolder', 'maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
          'batchsize_train', 'log_every', 'test_every', 'save_every', 'epochs', 'lr', 'half',
-         'lossWeights', 'randomLR', 'resume'],
+         'lossWeights', 'randomLR', 'resume', 'itRefine'],
         description='train or finetune Stereo net')
 
     args = parser.parse_args()
@@ -77,6 +77,8 @@ def main():
                                          stage=stage,
                                          dataset=args.dataset,
                                          saveFolderSuffix=saveFolderSuffix.strSuffix())
+    if hasattr(stereo, 'setItRefine'):
+        stereo.setItRefine(args.itRefine)
     epoch, iteration = stereo.load(args.loadmodel)
 
     # Train

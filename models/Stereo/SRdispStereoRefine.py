@@ -15,10 +15,14 @@ class SRdispStereoRefine(SRdispStereo):
                  saveFolderSuffix=''):
         super(SRdispStereoRefine, self).__init__(maxdisp=maxdisp, dispScale=dispScale, cuda=cuda, half=half,
                                            stage=stage, dataset=dataset, saveFolderSuffix=saveFolderSuffix)
+        self._itRefine=0
+
+    def setItRefine(self, itRefine):
+        self._itRefine = itRefine
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
-    def predict(self, batch, mask=(1,1), it=0):
+    def predict(self, batch, mask=(1,1)):
         myUtils.assertBatchLen(batch, 4)
         self.predictPrepare()
 
@@ -31,10 +35,10 @@ class SRdispStereoRefine(SRdispStereo):
             initialBatch.lowestResRGBs(outSRs)
             psmnetDownOuts = self._stereo.predict(initialBatch)
             outputsReturn = [[[outSRs, psmnetDownOut] for psmnetDownOut in psmnetDownOuts]]
-            if it > 0:
+            if self._itRefine > 0:
                 initialDisps = [myUtils.getLastNotList(dispsSide).unsqueeze(1).type_as(batch[0]) for dispsSide in psmnetDownOuts]
                 batch.lowestResDisps(initialDisps)
-                for i in range(it):
+                for i in range(self._itRefine):
                     itOutputs = super(SRdispStereoRefine, self).predict(batch.detach(), mask=mask)
                     outputsReturn.append(itOutputs)
                     dispOuts = [myUtils.getLastNotList(itOutputsSide).unsqueeze(1).type_as(batch[0])
@@ -43,7 +47,7 @@ class SRdispStereoRefine(SRdispStereo):
 
             return outputsReturn
 
-    def test(self, batch, evalType='l1', returnOutputs=False, kitti=False, it=1):
+    def test(self, batch, evalType='l1', returnOutputs=False, kitti=False):
         myUtils.assertBatchLen(batch, (4, 8))
         if len(batch) == 8:
             gtSRs = batch.highResRGBs()
@@ -57,7 +61,7 @@ class SRdispStereoRefine(SRdispStereo):
         scores = myUtils.NameValues()
         outputs = collections.OrderedDict()
         mask = [disp is not None for disp in disps]
-        rawOutputs = self.predict(batch, mask, it=it)
+        rawOutputs = self.predict(batch, mask)
 
         for it, rawOutput in enumerate(rawOutputs):
             itSuffix = str(it)
