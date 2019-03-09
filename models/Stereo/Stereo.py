@@ -50,11 +50,11 @@ class Stereo(Model):
         mask = [disp is not None for disp in disps]
         rawOutputs = self.predict(batch, mask)
 
-        for gt, rawOutputSide, side in zip(disps, rawOutputs, ('L', 'R')):
-            dispOut = myUtils.getLastNotList(rawOutputSide)
+        for gt, rawOutputsSide, side in zip(disps, rawOutputs, ('L', 'R')):
+            dispOut = myUtils.getLastNotList(rawOutputsSide)
             if dispOut is not None:
                 if returnOutputs:
-                    outputs['output' + side] = dispOut / self.outputMaxDisp
+                    outputs['outputDisp' + side] = dispOut / self.outputMaxDisp
 
                 if dispOut.dim() == 2:
                     dispOut = dispOut.unsqueeze(0)

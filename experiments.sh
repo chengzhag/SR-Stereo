@@ -31,9 +31,9 @@ nGPUs=$(( (${#CUDA_VISIBLE_DEVICES} + 1) / 2 ))
 # experiment 1: SR_SRdisp_compare_carla (SERVER 199)
 # test subject: SRdisp > SR
 # finetune SRdisp
-PYTHONPATH=./ python train/SR_train.py --model SRdisp --outputFolder experiments/SR_SRdisp_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --trainCrop 128 1024 --epochs 20 --log_every 50 --test_every 2 --eval_fcn l1 --batchsize_train 16 --batchsize_test $(( 3 * $nGPUs)) --lr 0.0001 10 0.00005 15 0.000025 --loadmodel $pretrained_EDSR_DIV2K --half
+#PYTHONPATH=./ python train/SR_train.py --model SRdisp --outputFolder experiments/SR_SRdisp_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --trainCrop 128 1024 --epochs 20 --log_every 50 --test_every 2 --eval_fcn l1 --batchsize_train 4 --batchsize_test $(( 3 * $nGPUs)) --lr 0.0001 10 0.00005 15 0.000025 --loadmodel $pretrained_EDSR_DIV2K --half
 ## finetune SR
-#PYTHONPATH=./ python train/SR_train.py --model SR --outputFolder experiments/SR_SRdisp_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --trainCrop 128 1024 --epochs 20 --log_every 50 --test_every 2 --eval_fcn l1 --batchsize_train 16 --batchsize_test $(( 3 * $nGPUs))  --lr 0.0001 10 0.00005 15 0.000025 --loadmodel $pretrained_EDSR_DIV2K --half
+#PYTHONPATH=./ python train/SR_train.py --model SR --outputFolder experiments/SR_SRdisp_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --trainCrop 128 1024 --epochs 20 --log_every 50 --test_every 2 --eval_fcn l1 --batchsize_train 4 --batchsize_test $(( 3 * $nGPUs))  --lr 0.0001 10 0.00005 15 0.000025 --loadmodel $pretrained_EDSR_DIV2K --half
 
 ## experiment settings
 #pretrained_SR=
