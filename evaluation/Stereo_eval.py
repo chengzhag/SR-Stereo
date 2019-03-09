@@ -31,7 +31,7 @@ class Evaluation(Base):
 def main():
     parser = myUtils.getBasicParser(
         ['outputFolder', 'maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
-         'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half', 'resume'],
+         'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half', 'resume', 'itRefine'],
         description='evaluate Stereo net or SR-Stereo net')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -52,6 +52,8 @@ def main():
     stereo = getattr(Stereo, args.model)(maxdisp=args.maxdisp, dispScale=args.dispscale,
                                          half=args.half, cuda=args.cuda, stage=stage,
                                          saveFolderSuffix=myUtils.getSuffix(args.loadmodel))
+    if hasattr(stereo, 'itRefine'):
+        stereo.itRefine = args.itRefine
     stereo.load(args.loadmodel)
     if not args.resume:
         stereo.saveToNew()

@@ -6,6 +6,8 @@ import collections
 from .Stereo import Stereo
 from .. import SR
 from .PSMNetDown import PSMNetDown
+from evaluation import evalFcn
+
 
 class RawSRStereo(nn.Module):
     def __init__(self, stereo, sr):
@@ -56,17 +58,23 @@ class SRStereo(Stereo):
         myUtils.assertBatchLen(batch, (4, 8))
         if len(batch) == 8:
             batch = batch.lastScaleBatch()
+            gtSRs = batch.highResRGBs()
+            batch = batch.lastScaleBatch()
+        else:
+            gtSRs = (None, None)
 
         scores, outputs, rawOutputs = super(SRStereo, self).test(batch, evalType, returnOutputs, kitti)
-        for rawOutputsSide, side in zip(rawOutputs, ('L', 'R')):
+        for rawOutputsSide, side, gtSR, iSide in zip(rawOutputs, ('L', 'R'), gtSRs, (0, 1)):
             if rawOutputsSide is not None:
                 outSRs, (outDispHigh, outDispLow) = rawOutputsSide[-2:]
+                if gtSR is not None:
+                    scores['l1' + 'Sr' + side] = evalFcn.l1(gtSR, outSRs[iSide])
                 if returnOutputs:
                     if outDispHigh is not None:
                         outputs['outputDispHigh' + side] = outDispHigh / (self.outputMaxDisp * 2)
                     for outSr, sideSr in zip(outSRs, ('L', 'R')):
                         if outSr is not None:
-                            outputs['outputSr' + side] = outSr
+                            outputs['outputSr' + sideSr + side] = outSr
         return scores, outputs, rawOutputs
 
     def loss(self, outputs, gts, kitti=False):
@@ -134,7 +142,7 @@ class SRStereo(Stereo):
     #   SR output losses (lossSR),
     #   SR disparity map losses (lossDispHigh),
     #   normal sized disparity map losses (lossDispLow)
-    def train(self, batch, returnOutputs=False, kitti=False, weights=(0, 1, 0)):
+    def train(self, batch, returnOutputs=False, kitti=False, weights=(0, 1, 0), progress=0):
         myUtils.assertBatchLen(batch, (4, 8))
         self.trainPrepare()
         if len(batch) == 4:

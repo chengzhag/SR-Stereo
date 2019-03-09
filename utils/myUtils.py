@@ -20,9 +20,9 @@ class NameValues(collections.OrderedDict):
             str += '%s: ' % (prefix + name + suffix)
             if type(value) in (list, tuple):
                 for v in value:
-                    str += '%.2f%s, ' % (v, unit)
+                    str += '%.3f%s, ' % (v, unit)
             else:
-                str += '%.2f%s, ' % (value, unit)
+                str += '%.3f%s, ' % (value, unit)
 
         return str
 
@@ -190,6 +190,9 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                  # SRdisp specified param
                  'withMask': lambda: parser.add_argument('--withMask', action='store_true', default=False,
                                                          help='input 7 channels with mask to SRdisp instead of 6'),
+                 # SRdispStereoRefine specified param
+                 'itRefine': lambda: parser.add_argument('--itRefine', type=int, default=1,
+                                                             help='iterations of refining process'),
                  }
 
     if len(includeKeys):
@@ -299,13 +302,13 @@ class Batch:
         self.batch[key] = value
 
     def detach(self):
-        return Batch(self)
+        return Batch(self, cuda=self.cuda, half=self.half)
 
     def lastScaleBatch(self):
-        return Batch(self.batch[-4:])
+        return Batch(self.batch[-4:], cuda=self.cuda, half=self.half)
 
     def firstScaleBatch(self):
-        return Batch(self.batch[:4])
+        return Batch(self.batch[:4], cuda=self.cuda, half=self.half)
 
     def highResRGBs(self, set=None):
         if set is not None:
@@ -411,3 +414,11 @@ def getSuffix(checkpointDirOrFolder):
     else:
         saveFolderSuffix = ''
     return saveFolderSuffix
+
+def depth(l):
+    if type(l) in (tuple, list):
+        return 1 + max(depth(item) for item in l)
+    else:
+        return 0
+
+

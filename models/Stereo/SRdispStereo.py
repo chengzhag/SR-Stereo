@@ -32,7 +32,7 @@ class SRdispStereo(SRStereo):
             batch = batch.lastScaleBatch()
 
         scores, outputs, rawOutputs = super(SRdispStereo, self).test(batch, evalType, returnOutputs, kitti)
-        for (warpTo, outSR, (outDispHigh, outDispLow)), side in zip(rawOutputs, ('L', 'R')):
+        for (warpTo, outSRs, (outDispHigh, outDispLow)), side in zip(rawOutputs, ('L', 'R')):
             if returnOutputs:
                 if warpTo is not None:
                     outputs['warpTo' + side] = warpTo
@@ -42,7 +42,7 @@ class SRdispStereo(SRStereo):
     #   SR output losses (lossSR),
     #   SR disparity map losses (lossDispHigh),
     #   normal sized disparity map losses (lossDispLow)
-    def train(self, batch, returnOutputs=False, kitti=False, weights=(0, 1, 0)):
+    def train(self, batch, returnOutputs=False, kitti=False, weights=(0, 1, 0), progress=0):
         myUtils.assertBatchLen(batch, (4, 8))
         if len(batch) == 4:
             batch = myUtils.Batch([None] * 4 + batch.batch)

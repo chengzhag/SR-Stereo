@@ -21,7 +21,7 @@ class Stereo(Model):
         self.dispScale = dispScale
         self.outputMaxDisp = maxdisp * dispScale  # final output value range of disparity map
 
-    def predict(self, batch, mask=(1, 1)):
+    def predict(self, batch, mask=(1,1)):
         myUtils.assertBatchLen(batch, 4)
         self.predictPrepare()
 
@@ -32,7 +32,7 @@ class Stereo(Model):
             for inputL, inputR, process, do in zip((imgL, imgR), (imgR, imgL),
                                                    (lambda im: list(im) if type(im) is tuple else im, myUtils.flipLR), mask):
                 if do:
-                    output = process(self.model.forward(process(inputL), process(inputR)))
+                    output = process(self.model(process(inputL), process(inputR)))
                     outputs.append(output)
                 else:
                     outputs.append(None)
@@ -50,11 +50,11 @@ class Stereo(Model):
         mask = [disp is not None for disp in disps]
         rawOutputs = self.predict(batch, mask)
 
-        for gt, dispOut, side in zip(disps, rawOutputs, ('L', 'R')):
-            dispOut = myUtils.getLastNotList(dispOut)
+        for gt, rawOutputsSide, side in zip(disps, rawOutputs, ('L', 'R')):
+            dispOut = myUtils.getLastNotList(rawOutputsSide)
             if dispOut is not None:
                 if returnOutputs:
-                    outputs['output' + side] = dispOut / self.outputMaxDisp
+                    outputs['outputDisp' + side] = dispOut / self.outputMaxDisp
 
                 if dispOut.dim() == 2:
                     dispOut = dispOut.unsqueeze(0)

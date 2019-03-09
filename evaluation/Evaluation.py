@@ -19,6 +19,9 @@ class Evaluation:
 
     def __call__(self, model, global_step=1):
         self.model = model
+        # save Tensorboard logs to where checkpoint is.
+        self.tensorboardLogger.set(self.model.logFolder)
+
         tic = time.time()
         ticFull = time.time()
         scoreUnit = '%' if 'outlier' in self.evalFcn else ''
@@ -38,9 +41,7 @@ class Evaluation:
             except NameError:
                 totalTestScores = scoresPairs.copy()
 
-            # save Tensorboard logs to where checkpoint is.
             if doLog:
-                self.tensorboardLogger.set(self.model.logFolder)
                 for name, im in ims.items():
                     if im is not None:
                         self.tensorboardLogger.logFirstNIms('testImages/' + name, im, 1,
@@ -52,47 +53,60 @@ class Evaluation:
             for name in avgTestScores.keys():
                 avgTestScores[name] /= batch_idx
 
-            print('it %d/%d, %s%sleft %.2fh' % (
+            printMessage = 'it %d/%d, %s%sleft %.2fh' % (
                 batch_idx, len(self.testImgLoader),
-                scoresPairs.strPrint(scoreUnit), avgTestScores.strPrint(scoreUnit, suffix='Avg'), timeLeft))
+                scoresPairs.strPrint(scoreUnit), avgTestScores.strPrint(scoreUnit, suffix='Avg'), timeLeft)
+            print(printMessage)
+            self.tensorboardLogger.writer.add_text('testPrint/iterations', printMessage,
+                                                   global_step=global_step)
+
             tic = time.time()
 
         self.testTime = time.time() - ticFull
-        print('Full testing time = %.2fh' % (self.testTime / 3600))
+        timeInfo = 'Full testing time = %.2fh' % (self.testTime / 3600)
+        print(timeInfo)
+        self.tensorboardLogger.writer.add_text('testPrint/epochs', timeInfo,
+                                               global_step=global_step)
         self.testResults = avgTestScores
         self.localtime = time.asctime(time.localtime(time.time()))
         return avgTestScores
 
     # log file will be saved to where chkpoint file is
     def log(self, epoch=None, it=None, global_step=None, additionalValue=None):
-        logDir = os.path.join(self.model.checkpointFolder, 'test_results.txt')
-        with open(logDir, "a") as log:
-            def writeNotNone(name, value):
-                if value is not None: log.write(name + ': ' + str(value) + '\n')
+        logDir = os.path.join(self.model.checkpointFolder, 'test_results.md')
 
-            log.write('---------------------- %s ----------------------\n\n' % self.localtime)
+        writeMessage = ''
+        writeMessage += '---------------------- %s ----------------------\n\n' % self.localtime
+        writeMessage += 'bash param: '
+        for arg in sys.argv:
+            writeMessage += arg + ' '
+        writeMessage += '\n\n'
 
-            log.write('python ')
-            for arg in sys.argv:
-                log.write(arg + ' ')
-            log.write('\n\n')
-
-            baseInfos = (('data', self.testImgLoader.datapath),
-                         ('loadScale', self.testImgLoader.loadScale),
-                         ('trainCrop', self.testImgLoader.trainCrop),
-                         ('checkpoint', self.model.checkpointDir),
-                         ('evalFcn', self.evalFcn),
-                         ('epoch', epoch),
-                         ('iteration', it),
-                         ('global_step', global_step),
-                         ('testTime', self.testTime),
-                         )
-            for pairs in (baseInfos, self.testResults.items(),
-                          additionalValue.items() if additionalValue is not None else ()):
+        baseInfos = (('data', self.testImgLoader.datapath),
+                     ('loadScale', self.testImgLoader.loadScale),
+                     ('trainCrop', self.testImgLoader.trainCrop),
+                     ('checkpoint', self.model.checkpointDir),
+                     ('evalFcn', self.evalFcn),
+                     ('epoch', epoch),
+                     ('iteration', it),
+                     ('global_step', global_step),
+                     ('testTime', self.testTime),
+                     )
+        for pairs, title in zip((baseInfos, self.testResults.items(),
+                          additionalValue.items() if additionalValue is not None else ()),
+                         ('basic info:', 'test results:', 'additional values:')):
+            if len(pairs) > 0:
+                writeMessage += title + '\n\n'
                 for (name, value) in pairs:
-                    writeNotNone(name, value)
-                log.write('\n')
+                    if value is not None:
+                        writeMessage += '- ' + name + ': ' + str(value) + '\n'
+                writeMessage += '\n'
 
-        # save Tensorboard logs to where checkpoint is.
+        with open(logDir, "a") as log:
+            log.write(writeMessage)
+
+        self.tensorboardLogger.writer.add_text('testPrint/epochs', writeMessage,
+                                               global_step=global_step)
+
         for name, value in self.testResults.items():
             self.tensorboardLogger.writer.add_scalar('testLosses/' + name, value, global_step)

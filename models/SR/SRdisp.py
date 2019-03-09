@@ -48,9 +48,9 @@ class SRdisp(SR):
         myUtils.assertBatchLen(batch, 8)
 
         scores, outputs, rawOutputs = super(SRdisp, self).test(batch, evalType, returnOutputs)
-        warpTos, _ = rawOutputs
         if returnOutputs:
-            for warpTo, side in zip(warpTos, ('L', 'R')):
+            for rawOutputsSide, side in zip(rawOutputs, ('L', 'R')):
+                warpTo, _ = rawOutputsSide
                 if warpTo is not None:
                     outputs['warpTo' + side] = warpTo
         return scores, outputs, rawOutputs

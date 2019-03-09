@@ -17,11 +17,12 @@ class Train(Base):
 
     def _trainIt(self, batch, log):
         super(Train, self)._trainIt(batch, log)
-
+        progress = self.global_step / (len(self.trainImgLoader) * self.nEpochs)
         losses, outputs = self.model.train(batch.detach(),
                                            returnOutputs=log,
                                            kitti=self.trainImgLoader.kitti,
-                                           weights=self.lossWeights)
+                                           weights=self.lossWeights,
+                                           progress=progress)
         if log:
             for disp, input, sr, side in zip(
                     batch.lowestResDisps(),
@@ -37,7 +38,7 @@ class Train(Base):
         return losses, outputs
 
     def log(self, additionalValue=(), endMessage=None):
-        super(Train, self).log(additionalValue=(('lossWeights', self.lossWeights),))
+        super(Train, self).log(additionalValue=myUtils.NameValues(['lossWeights'], [self.lossWeights]))
 
 
 def main():
@@ -45,7 +46,7 @@ def main():
         ['outputFolder', 'maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
          'batchsize_train', 'log_every', 'test_every', 'save_every', 'epochs', 'lr', 'half',
-         'lossWeights', 'randomLR', 'resume'],
+         'lossWeights', 'randomLR', 'resume', 'itRefine'],
         description='train or finetune Stereo net')
 
     args = parser.parse_args()
@@ -77,6 +78,8 @@ def main():
                                          stage=stage,
                                          dataset=args.dataset,
                                          saveFolderSuffix=saveFolderSuffix.strSuffix())
+    if hasattr(stereo, 'itRefine'):
+        stereo.itRefine = args.itRefine
     epoch, iteration = stereo.load(args.loadmodel)
 
     # Train

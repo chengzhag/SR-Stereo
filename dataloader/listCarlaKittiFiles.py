@@ -1,6 +1,7 @@
 import os
 import os.path
 import math
+import random
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -20,7 +21,7 @@ def _scanImages(filepath, episodes, folderName):
     return imagedirs
 
 
-def dataloader(filepath, trainProportion=0.8):
+def dataloader(filepath, trainProportion=0.8, shuffle=False):
     episodes = [d for d in os.listdir(filepath) if os.path.isdir(os.path.join(filepath, d))]
     episodes.sort()
 
@@ -44,6 +45,17 @@ def dataloader(filepath, trainProportion=0.8):
             test_right_img += (_scanImages(filepath, episode, 'Camera3RGB'))
             test_left_disp += (_scanImages(filepath, episode, 'Camera2Depth'))
             test_right_disp += (_scanImages(filepath, episode, 'Camera3Depth'))
+
+    random.seed(2019)
+    def shuffleLists(lists):
+        c = list(zip(*lists))
+        random.shuffle(c)
+        lists = list(zip(*c))
+        return lists
+    all_left_img, all_right_img, all_left_disp, all_right_disp = \
+        shuffleLists([all_left_img, all_right_img, all_left_disp, all_right_disp])
+    test_left_img, test_right_img, test_left_disp, test_right_disp = \
+        shuffleLists([test_left_img, test_right_img, test_left_disp, test_right_disp])
 
     return all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp
 
