@@ -39,8 +39,8 @@ class Evaluation:
                 totalTestScores = scoresPairs.copy()
 
             # save Tensorboard logs to where checkpoint is.
+            self.tensorboardLogger.set(self.model.logFolder)
             if doLog:
-                self.tensorboardLogger.set(self.model.logFolder)
                 for name, im in ims.items():
                     if im is not None:
                         self.tensorboardLogger.logFirstNIms('testImages/' + name, im, 1,

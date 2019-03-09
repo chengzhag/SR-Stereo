@@ -72,9 +72,8 @@ class Train:
                         lossesAvg[name] += lossesPairs[name]
 
                 # save Tensorboard logs to where checkpoint is.
+                self.tensorboardLogger.set(self.model.logFolder)
                 if doLog:
-                    self.tensorboardLogger.set(self.model.logFolder)
-
                     for name in lossesAvg.keys():
                         lossesAvg[name] /= self.logEvery
                     lossesAvg['lr'] = self.lrNow
