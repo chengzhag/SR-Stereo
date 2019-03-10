@@ -67,8 +67,8 @@ pretrained_SRdisp_carla=logs/experiments/SR_SRdisp_compare_carla/SR_train/190310
 ## experiment 5: SRdispStereoRefine_SRStereo_compare_carla (TODO)
 ## test subject: SRdispStereoRefine (proposed) > SRStereo
 ## finetune SRdispStereoRefine using same parameters with SRStereo_Stereo1_compare_carla
-#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_SRStereo_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 1 --eval_fcn l1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.00002 --lossWeights 1 0 0 --loadmodel $pretrained_SRdisp_carla $pretrained_Stereo2_carla --half
-#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_SRStereo_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 1 --eval_fcn l1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.00002 --lossWeights 0.5 0.375 0.125 --loadmodel $pretrained_SRdisp_carla $pretrained_Stereo2_carla --half
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_SRStereo_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 1 --eval_fcn l1 --itRefine 1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.00002 --lossWeights 1 0 0 --loadmodel $pretrained_SRdisp_carla $pretrained_Stereo2_carla --half
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_SRStereo_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 1 --eval_fcn l1 --itRefine 1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.00002 --lossWeights 0.5 0.375 0.125 --loadmodel $pretrained_SRdisp_carla $pretrained_Stereo2_carla --half
 
 #
 ## prepare: pretrain_SR_kitti (TODO)
@@ -85,9 +85,9 @@ pretrained_SRdisp_carla=logs/experiments/SR_SRdisp_compare_carla/SR_train/190310
 #SRStereo_PSMNet_kitti_compare_test_epochs=1300
 #SRStereo_PSMNet_kitti_compare_test_Stereo_checkpoint=''
 ## create baseline PSMNet
-#PYTHONPATH=./ python train/Stereo_train.py  --model PSMNet --dispscale 1 --outputFolder experiments/SRStereo_PSMNet_kitti_compare_test --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 256 512 --epochs 300 --log_every 50 --test_every 10 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 200 0.0001 --loadmodel $pretrained_PSMNet_sceneflow --half
+#PYTHONPATH=./ python train/Stereo_train.py  --model PSMNet --dispscale 1 --outputFolder experiments/SRStereo_PSMNet_kitti_compare_test --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 256 512 --epochs 300 --log_every 50 --test_every 10 --eval_fcn outlier --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 200 0.0001 --loadmodel $pretrained_PSMNet_sceneflow --half
 ## fintune SRStereo without updating SR
-#PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder experiments/SRStereo_PSMNet_kitti_compare_test --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 300 --log_every 50 --test_every 10 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 200 0.0001 --lossWeights -1 0 1 --loadmodel $pretrained_EDSR_DIV2K $SRStereo_PSMNet_kitti_compare_test_Stereo_checkpoint --half
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder experiments/SRStereo_PSMNet_kitti_compare_test --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 300 --log_every 50 --test_every 10 --eval_fcn outlier --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 200 0.0001 --lossWeights -1 0 1 --loadmodel $pretrained_EDSR_DIV2K $SRStereo_PSMNet_kitti_compare_test_Stereo_checkpoint --half
 
 
 # prepare: pretrain_SRdisp_kitti (TODO)
