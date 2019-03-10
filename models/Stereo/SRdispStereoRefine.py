@@ -19,7 +19,9 @@ class SRdispStereoRefine(SRdispStereo):
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
-    def predict(self, batch, mask=(1,1)):
+    def predict(self, batch, mask=(1,1), itRefine=None):
+        if itRefine is None:
+            itRefine = self.itRefine
         myUtils.assertBatchLen(batch, 4)
         self.predictPrepare()
 
@@ -32,10 +34,10 @@ class SRdispStereoRefine(SRdispStereo):
             initialBatch.lowestResRGBs(outSRs)
             psmnetDownOuts = self._stereo.predict(initialBatch)
             outputsReturn = [[[outSRs, psmnetDownOut] for psmnetDownOut in psmnetDownOuts]]
-            if self.itRefine > 0:
+            if itRefine > 0:
                 initialDisps = [myUtils.getLastNotList(dispsSide).unsqueeze(1).type_as(batch[0]) for dispsSide in psmnetDownOuts]
                 batch.lowestResDisps(initialDisps)
-                for i in range(self.itRefine):
+                for i in range(itRefine):
                     itOutputs = super(SRdispStereoRefine, self).predict(batch.detach(), mask=mask)
                     outputsReturn.append(itOutputs)
                     dispOuts = [myUtils.getLastNotList(itOutputsSide).unsqueeze(1).type_as(batch[0])
@@ -119,9 +121,9 @@ class SRdispStereoRefine(SRdispStereo):
         # progress = [0, 2/3]: p = [0, 1]
         # progress > 2/3: p = 1
         if random.random() < progress * 1.5:
-            self.itRefine = random.randint(0, 1)
-            dispChoice = self.itRefine
-            rawOuputs = self.predict(batch.lastScaleBatch(), mask=(1, 1))[-1]
+            itRefine = random.randint(0, 1)
+            dispChoice = itRefine
+            rawOuputs = self.predict(batch.lastScaleBatch(), mask=(1, 1), itRefine=itRefine)[-1]
             dispsOut = [myUtils.getLastNotList(rawOutputsSide).unsqueeze(1) for rawOutputsSide in rawOuputs]
             warpBatch = myUtils.Batch(batch.lowestResRGBs() + dispsOut, cuda=batch.cuda, half=batch.half)
         else:
