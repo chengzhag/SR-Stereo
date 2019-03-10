@@ -79,7 +79,7 @@ def main():
     train = Train(trainImgLoader=trainImgLoader, nEpochs=args.epochs, lr=args.lr,
                   logEvery=args.log_every, ndisLog=args.ndis_log,
                   testEvery=args.test_every, Test=test,
-                  startEpoch=epoch + 1 if args.resume else 1, saveEvery=args.save_every)
+                  startEpoch=epoch + 1 if args.resume else 0, saveEvery=args.save_every)
     train(model=sr)
 
 

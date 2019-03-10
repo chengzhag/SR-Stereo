@@ -145,6 +145,7 @@ class Model:
         self.checkpointDir = os.path.join(self.checkpointFolder,
                                           'checkpoint_epoch_%04d_it_%05d.tar' % (epoch, iteration))
         myUtils.checkDir(self.checkpointFolder)
+        print('Saving model to: ' + self.checkpointDir)
 
     def save(self, epoch, iteration, trainLoss, additionalInfo=None):
         self.savePrepare(epoch, iteration)
