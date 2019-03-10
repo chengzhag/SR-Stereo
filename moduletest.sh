@@ -6,7 +6,7 @@ kitti2015_dataset=../datasets/kitti/data_scene_flow/training/
 kitti2012_dataset=../datasets/kitti/data_stereo_flow/training/
 #carla_kitti_dataset=/media/hardder3/stc/carla_kitti/carla_kitti_sr_lowquality_moduletest
 
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=1
 
 # test Stereo_train/eval with PSMNet
 echo 'test Stereo_train/eval with PSMNet'

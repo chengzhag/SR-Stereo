@@ -21,14 +21,18 @@ class Submission(Base):
 
         outSRs = self.model.predict(batch=batch.lastScaleBatch().detach())
 
-        inputs = batch.lowResRGBs()
-        gts = batch.highResRGBs()
+        inputs = batch.lowestResRGBs()
+        if len(batch) == 8:
+            gts = batch.highResRGBs()
+        else:
+            gts = (None, None)
         outputs = collections.OrderedDict()
         for input, outSR, gt, suffix in zip(inputs, outSRs, gts, ('L', 'R')):
             if input is not None:
-                outputs['output' + suffix] = preprocess(outSR)
+                outputs['outputSr' + suffix] = preprocess(outSR)
                 outputs['input' + suffix] = preprocess(input)
-                outputs['gt' + suffix] = preprocess(gt)
+                if gt is not None:
+                    outputs['gtSr' + suffix] = preprocess(gt)
 
         return outputs
 
@@ -47,7 +51,7 @@ def main():
         batchSizes = (0, 1)
     _, imgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
                                             batchSizes=batchSizes,
-                                            loadScale=(args.load_scale[0], args.load_scale[0] / 2),
+                                            loadScale=(args.load_scale[0]),
                                             mode='submission',
                                             mask=(1, 1, 0, 0))
 

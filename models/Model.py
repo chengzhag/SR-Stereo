@@ -124,12 +124,15 @@ class Model:
 
         loadModelDict = loadStateDict.get('state_dict', loadStateDict)
         try:
-            self.model.load_state_dict(loadModelDict)
+            match = self.model.load_state_dict(loadModelDict)
         except RuntimeError:
-            self.model.module.load_state_dict(loadModelDict)
+            match = self.model.module.load_state_dict(loadModelDict)
 
-        if 'optimizer' in loadStateDict.keys() and self.optimizer is not None:
-            self.optimizer.load_state_dict(loadStateDict['optimizer'])
+        if match:
+            if 'optimizer' in loadStateDict.keys() and self.optimizer is not None:
+                self.optimizer.load_state_dict(loadStateDict['optimizer'])
+        else:
+            print('Warning: Checkpoint dosent completely match current model. Optimizer will not be loaded!')
         print('Loading complete! Number of model parameters: %d' % self.nParams())
 
         epoch = loadStateDict.get('epoch')
