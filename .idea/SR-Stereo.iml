@@ -4,7 +4,7 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/datasets/carla_kitti" />
     </content>
-    <orderEntry type="jdk" jdkName="Remote Python 3.6.8 (sftp://liu@192.168.1.199:120/home/liu/anaconda2/envs/zc36_pytorch10/bin/python)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Remote Python 3.6.8 (sftp://xddz@192.168.1.162:22/home/xddz/.conda/envs/zc36_pytorch10/bin/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="TestRunnerService">
