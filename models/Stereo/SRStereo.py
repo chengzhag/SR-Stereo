@@ -57,7 +57,6 @@ class SRStereo(Stereo):
     def test(self, batch, evalType='l1', returnOutputs=False, kitti=False):
         myUtils.assertBatchLen(batch, (4, 8))
         if len(batch) == 8:
-            batch = batch.lastScaleBatch()
             gtSRs = batch.highResRGBs()
             batch = batch.lastScaleBatch()
         else:

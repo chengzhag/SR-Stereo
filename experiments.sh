@@ -53,27 +53,29 @@ pretrained_SRdisp_carla=logs/experiments/SR_SRdisp_compare_carla/SR_train/190310
 ## experiment 3: SRStereo_Stereo1_compare_carla (SERVER 199)
 ## test subject: SRStereo (baseline) > Stereo2 (PSMNet)
 ## finetune SRStereo
-#PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder experiments/SRStereo_Stereo1_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 1 --eval_fcn l1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.0001 --lossWeights -1 0.75 0.25 --loadmodel $pretrained_SR_carla $pretrained_Stereo2_carla --half
-#PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder experiments/SRStereo_Stereo1_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 1 --eval_fcn l1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.00002 --lossWeights 0.5 0.375 0.125 --loadmodel $pretrained_SR_carla $pretrained_Stereo2_carla --half
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder experiments/SRStereo_Stereo1_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 0 --eval_fcn l1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.0001 --lossWeights -1 0.75 0.25 --loadmodel $pretrained_SR_carla $pretrained_Stereo2_carla --half
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder experiments/SRStereo_Stereo1_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 0 --eval_fcn l1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.00002 --lossWeights 0.5 0.375 0.125 --loadmodel $pretrained_SR_carla $pretrained_Stereo2_carla --half
 
 
 ## experiment 4: SRdispStereo_SRStereo_compare_carla (SERVER 162)
 ## test subject: SRdispStereo (upbound) > SRStereo
 ## finetune SRdispStereo using same parameters with SRStereo_Stereo1_compare_carla
-#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereo --dispscale 2 --outputFolder experiments/SRdispStereo_SRStereo_compare_test --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 1 --eval_fcn l1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.0001 --lossWeights -1 0.75 0.25 --loadmodel $pretrained_SRdisp_carla $pretrained_Stereo2_carla --half
-#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereo --dispscale 2 --outputFolder experiments/SRdispStereo_SRStereo_compare_test --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 1 --eval_fcn l1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.00002 --lossWeights 0.5 0.375 0.125 --loadmodel $pretrained_SRdisp_carla $pretrained_Stereo2_carla --half
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereo --dispscale 2 --outputFolder experiments/SRdispStereo_SRStereo_compare_test --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 0 --eval_fcn l1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.0001 --lossWeights -1 0.75 0.25 --loadmodel $pretrained_SRdisp_carla $pretrained_Stereo2_carla --half
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereo --dispscale 2 --outputFolder experiments/SRdispStereo_SRStereo_compare_test --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 0 --eval_fcn l1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.00002 --lossWeights 0.5 0.375 0.125 --loadmodel $pretrained_SRdisp_carla $pretrained_Stereo2_carla --half
 
 
 ## experiment 5: SRdispStereoRefine_SRStereo_compare_carla (TODO)
 ## test subject: SRdispStereoRefine (proposed) > SRStereo
 ## finetune SRdispStereoRefine using same parameters with SRStereo_Stereo1_compare_carla
-#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_SRStereo_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 1 --eval_fcn l1 --itRefine 1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.00002 --lossWeights 1 0 0 --loadmodel $pretrained_SRdisp_carla $pretrained_Stereo2_carla --half
-#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_SRStereo_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 1 --eval_fcn l1 --itRefine 1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.00002 --lossWeights 0.5 0.375 0.125 --loadmodel $pretrained_SRdisp_carla $pretrained_Stereo2_carla --half
+## (SERVER 199)
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_SRStereo_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 0 --eval_fcn l1 --itRefine 1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.00002 --lossWeights 1 0 0 --loadmodel $pretrained_SRdisp_carla $pretrained_Stereo2_carla --half
+## (SERVER 162)
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_SRStereo_compare_carla --datapath $carla_kitti_dataset --dataset carla_kitti --load_scale 1 0.5 --trainCrop 128 1024 --epochs 5 --log_every 50 --test_every 0 --eval_fcn l1 --itRefine 1 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.00002 --lossWeights 0.5 0.375 0.125 --loadmodel $pretrained_SRdisp_carla $pretrained_Stereo2_carla --half
 
 #
 ## prepare: pretrain_SR_kitti (TODO)
 ## finetune SR on kitti2015
-#PYTHONPATH=./ python train/SR_train.py --model SR --outputFolder experiments/pretrain_SR_kitti --datapath $carla_kitti_dataset --dataset carla_kitti --trainCrop 128 1024 --epochs 6 --log_every 50 --test_every 2 --eval_fcn l1 --batchsize_train 4 --batchsize_test $(( 3 * $nGPUs))  --lr 0.0001 2 0.00005 4 0.000025 --loadmodel $pretrained_EDSR_DIV2K --half
+#PYTHONPATH=./ python train/SR_train.py --model SR --outputFolder experiments/pretrain_SR_kitti --datapath $carla_kitti_dataset --dataset carla_kitti --trainCrop 128 1024 --epochs 300 --log_every 50 --test_every 10 --eval_fcn l1 --batchsize_train 4 --batchsize_test $(( 2 * $nGPUs))  --lr 0.0001 2 0.00005 4 0.000025 --loadmodel $pretrained_EDSR_DIV2K --half
 #
 ## experiment settings
 #pretrained_SR_kitti=logs/experiments/pretrain_SR_kitti/Stereo_train/

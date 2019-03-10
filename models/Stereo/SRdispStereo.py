@@ -27,10 +27,6 @@ class SRdispStereo(SRStereo):
         return outputsReturn
 
     def test(self, batch, evalType='l1', returnOutputs=False, kitti=False):
-        myUtils.assertBatchLen(batch, (4, 8))
-        if len(batch) == 8:
-            batch = batch.lastScaleBatch()
-
         scores, outputs, rawOutputs = super(SRdispStereo, self).test(batch, evalType, returnOutputs, kitti)
         for (warpTo, outSRs, (outDispHigh, outDispLow)), side in zip(rawOutputs, ('L', 'R')):
             if returnOutputs:
