@@ -128,7 +128,7 @@ class Train:
                     minTestScoreEpoch = epoch
                 testReaults = myUtils.NameValues(
                     ('minTestScore', 'minTestScoreEpoch'), (minTestScore, minTestScoreEpoch))
-                printMessage = 'Training status: %s' % testReaults.strPrint('')
+                printMessage = 'Training status: %s' % testReaults.strPrint()
                 self.tensorboardLogger.writer.add_text('trainPrint/epochs', printMessage,
                                                        global_step=self.global_step)
                 print(printMessage)

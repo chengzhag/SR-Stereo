@@ -14,17 +14,26 @@ class NameValues(collections.OrderedDict):
             if value is not None:
                 super(NameValues, self).__setitem__(prefix + name + suffix, value)
 
-    def strPrint(self, unit='', prefix='', suffix=''):
-        str = ''
+    def strPrint(self, prefix='', suffix=''):
+        strReturn = ''
         for name, value in super(NameValues, self).items():
-            str += '%s: ' % (prefix + name + suffix)
-            if type(value) in (list, tuple):
-                for v in value:
-                    str += '%.3f%s, ' % (v, unit)
+            if name.find('outlier') != -1:
+                unit = '%'
             else:
-                str += '%.3f%s, ' % (value, unit)
+                unit = ''
+            strReturn += '%s: ' % (prefix + name + suffix)
+            def addValue(value):
+                s = ''
+                if type(value) in (list, tuple):
+                    for v in value:
+                        s += addValue(v)
+                else:
+                    s += '%.3f%s, ' % (value, unit)
+                return s
 
-        return str
+            strReturn += addValue(value)
+
+        return strReturn
 
     def strSuffix(self, prefix='', suffix=''):
         sSuffix = ''
