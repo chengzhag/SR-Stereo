@@ -81,7 +81,7 @@ class SRdispStereoRefine(SRdispStereo):
 
                 if dispOut is not None:
                     if returnOutputs:
-                        outputs['outputDispLow' + side + itSuffix] = dispOut / self.outputMaxDisp
+                        outputs['outputDisp' + side + itSuffix] = dispOut / self.outputMaxDisp
 
                     if dispOut.dim() == 2:
                         dispOut = dispOut.unsqueeze(0)
@@ -120,11 +120,13 @@ class SRdispStereoRefine(SRdispStereo):
         # progress > 2/3: p = 1
         if random.random() < progress * 1.5:
             self.itRefine = random.randint(0, 1)
+            dispChoice = self.itRefine
             rawOuputs = self.predict(batch.lastScaleBatch(), mask=(1, 1))[-1]
             dispsOut = [myUtils.getLastNotList(rawOutputsSide).unsqueeze(1) for rawOutputsSide in rawOuputs]
             warpBatch = myUtils.Batch(batch.lowestResRGBs() + dispsOut, cuda=batch.cuda, half=batch.half)
         else:
             warpBatch = batch.lastScaleBatch()
+            dispChoice = -1
 
         cated, warpTos = self._sr.warpAndCat(warpBatch)
         batch.lowestResRGBs(cated)
@@ -132,6 +134,7 @@ class SRdispStereoRefine(SRdispStereo):
         losses, outputs = super(SRdispStereo, self).train(
             batch, returnOutputs=returnOutputs, kitti=kitti, weights=weights
         )
+        losses['dispChoice'] = dispChoice
         for warpTo, side in zip(warpTos, ('L', 'R')):
             if returnOutputs:
                 if warpTo is not None:
