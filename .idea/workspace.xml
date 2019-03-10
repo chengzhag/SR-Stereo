@@ -2,11 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5af41d42-9f6a-4e3f-b5e4-a4d9632ca140" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/models/Model.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/Model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train/SR_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train/SR_train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train/Stereo_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train/Stereo_train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/deployment.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/experiments.sh" beforeDir="false" afterPath="$PROJECT_DIR$/experiments.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train/Train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train/Train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/myUtils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/myUtils.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -128,11 +127,11 @@
               </provider>
             </entry>
           </file>
-          <file pinned="false" current-in-tab="false">
+          <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/experiments.sh">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="282">
-                  <caret line="72" column="77" selection-start-line="72" selection-start-column="77" selection-end-line="72" selection-end-column="77" />
+                <state relative-caret-position="291">
+                  <caret line="64" lean-forward="true" selection-start-line="64" selection-end-line="64" />
                 </state>
               </provider>
             </entry>
@@ -161,7 +160,7 @@
               </provider>
             </entry>
           </file>
-          <file pinned="false" current-in-tab="true">
+          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/models/Model.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="285">
@@ -264,8 +263,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/train/Train.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="266">
-                  <caret line="116" column="60" selection-start-line="116" selection-start-column="55" selection-end-line="116" selection-end-column="60" />
+                <state relative-caret-position="239">
+                  <caret line="120" column="48" selection-start-line="120" selection-start-column="48" selection-end-line="120" selection-end-column="48" />
                   <folding>
                     <element signature="e#0#37#0" expanded="true" />
                   </folding>
@@ -303,7 +302,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>eval</find>
       <find>PSMNet_pretrained_sceneflow</find>
       <find>pretrained</find>
       <find>logs/pretrained</find>
@@ -333,9 +331,9 @@
       <find>eval_fcn</find>
       <find>test</find>
       <find>test_e</find>
+      <find>--test_every 0</find>
     </findStrings>
     <replaceStrings>
-      <replace>.py --outputFolder --</replace>
       <replace>SRdisp_cropsize_test</replace>
       <replace>--outputFolder experiments/</replace>
       <replace>CUDA_VISIBLE_DEVICES=2,3</replace>
@@ -365,6 +363,7 @@
       <replace>SRStereo_PSMNet_compare_carla</replace>
       <replace>SRStereo_Stereo1_compare_carla</replace>
       <replace>pretrain_Stereo1_Stereo2</replace>
+      <replace>--test_every -2</replace>
     </replaceStrings>
     <dirStrings>
       <dir>C:\Users\85057\OneDrive - std.uestc.edu.cn\projects\SR-Stereo\SR-Stereo</dir>
@@ -424,12 +423,12 @@
         <option value="$PROJECT_DIR$/models/Stereo/SRStereo.py" />
         <option value="$PROJECT_DIR$/models/Stereo/SRdispStereo.py" />
         <option value="$PROJECT_DIR$/models/Stereo/SRdispStereoRefine.py" />
-        <option value="$PROJECT_DIR$/experiments.sh" />
         <option value="$PROJECT_DIR$/utils/myUtils.py" />
         <option value="$PROJECT_DIR$/train/Stereo_train.py" />
         <option value="$PROJECT_DIR$/train/SR_train.py" />
-        <option value="$PROJECT_DIR$/train/Train.py" />
         <option value="$PROJECT_DIR$/models/Model.py" />
+        <option value="$PROJECT_DIR$/experiments.sh" />
+        <option value="$PROJECT_DIR$/train/Train.py" />
       </list>
     </option>
   </component>
@@ -1991,12 +1990,12 @@
       <workItem from="1552005727549" duration="1018000" />
       <workItem from="1552007162717" duration="48405000" />
       <workItem from="1552110024709" duration="25108000" />
-      <workItem from="1552187225806" duration="16931000" />
+      <workItem from="1552187225806" duration="17531000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="751266000" />
+    <option name="totallyTimeSpent" value="751866000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -2009,6 +2008,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49770993" visible="true" weight="0.13539445" />
       <window_info id="Structure" order="1" sideWeight="0.50229007" side_tool="true" weight="0.10181237" />
@@ -2560,13 +2560,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/experiments.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="282">
-          <caret line="72" column="77" selection-start-line="72" selection-start-column="77" selection-end-line="72" selection-end-column="77" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/models/Stereo/SRdispStereoRefine.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="104">
@@ -2607,10 +2600,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/experiments.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="291">
+          <caret line="64" lean-forward="true" selection-start-line="64" selection-end-line="64" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/train/Train.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="266">
-          <caret line="116" column="60" selection-start-line="116" selection-start-column="55" selection-end-line="116" selection-end-column="60" />
+        <state relative-caret-position="239">
+          <caret line="120" column="48" selection-start-line="120" selection-start-column="48" selection-end-line="120" selection-end-column="48" />
           <folding>
             <element signature="e#0#37#0" expanded="true" />
           </folding>
