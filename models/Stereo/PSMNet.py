@@ -37,6 +37,33 @@ class RawPSMNetScale(rawPSMNet):
             outputs = autoPad.unpad(outputs)
         return outputs
 
+    def load_state_dict(self, state_dict, strict=False):
+        match = True
+        newModelDict = self.state_dict()
+        selectedModelDict = {}
+        for loadName, loadValue in state_dict.items():
+            posiblePrefix = 'stereo.module.'
+            if loadName.startswith(posiblePrefix):
+                loadName = loadName[len(posiblePrefix):]
+                match = False
+            if loadName in newModelDict and newModelDict[loadName].size() == loadValue.size():
+                selectedModelDict[loadName] = loadValue
+            else:
+                message = 'Warning! While copying the parameter named {}, ' \
+                          'whose dimensions in the model are {} and ' \
+                          'whose dimensions in the checkpoint are {}.' \
+                    .format(
+                    loadName, newModelDict[loadName].size() if loadName in newModelDict else '(Not found)',
+                    loadValue.size()
+                )
+                if strict:
+                    raise Exception(message)
+                else:
+                    print(message)
+        newModelDict.update(selectedModelDict)
+        super(RawPSMNetScale, self).load_state_dict(newModelDict, strict=False)
+        return match
+
 class PSMNet(Stereo):
     # dataset: only used for suffix of saveFolderName
     def __init__(self, maxdisp=192, dispScale=1, cuda=True, half=False, stage='unnamed', dataset=None,
