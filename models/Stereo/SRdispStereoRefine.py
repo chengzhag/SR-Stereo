@@ -101,6 +101,8 @@ class SRdispStereoRefine(SRdispStereo):
                         gtDisp = gtDisp[mask]
 
                     scores[evalType + side + itSuffix] = evalFcn.getEvalFcn(evalType)(gtDisp, dispOut)
+                    if it == len(rawOutputs) - 1:
+                        scores[evalType + side] = scores[evalType + side + itSuffix]
 
         return scores, outputs, rawOutputs
 
