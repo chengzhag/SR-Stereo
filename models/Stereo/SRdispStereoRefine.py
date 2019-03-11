@@ -81,8 +81,11 @@ class SRdispStereoRefine(SRdispStereo):
                         if outSr is not None:
                             outputs['outputSr' + sideSr + side + itSuffix] = outSr
                 if gtSR is not None:
-                    scores['l1' + 'Sr' + side + itSuffix] = evalFcn.l1(
+                    scoreSR = evalFcn.l1(
                         gtSR * self._sr.args.rgb_range, outSRs[0] * self._sr.args.rgb_range)
+                    scores['l1' + 'Sr' + side + itSuffix] = scoreSR
+                    if it == len(rawOutputs) - 1:
+                        scores['l1' + 'Sr' + side] = scoreSR
 
                 if dispOut is not None:
                     if returnOutputs:
@@ -103,9 +106,10 @@ class SRdispStereoRefine(SRdispStereo):
                         dispOut = dispOut[mask]
                         gtDisp = gtDisp[mask]
 
-                    scores[evalType + side + itSuffix] = evalFcn.getEvalFcn(evalType)(gtDisp, dispOut)
+                    scoreDisp = evalFcn.getEvalFcn(evalType)(gtDisp, dispOut)
+                    scores[evalType + side + itSuffix] = scoreDisp
                     if it == len(rawOutputs) - 1:
-                        scores[evalType + side] = scores[evalType + side + itSuffix]
+                        scores[evalType + side] = scoreDisp
 
         return scores, outputs, rawOutputs
 
