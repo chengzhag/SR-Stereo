@@ -63,11 +63,12 @@ class SRStereo(Stereo):
             gtSRs = (None, None)
 
         scores, outputs, rawOutputs = super(SRStereo, self).test(batch, evalType, returnOutputs, kitti)
-        for rawOutputsSide, side, gtSR, iSide in zip(rawOutputs, ('L', 'R'), gtSRs, (0, 1)):
+        for rawOutputsSide, side, gtSR in zip(rawOutputs, ('L', 'R'), gtSRs):
             if rawOutputsSide is not None:
                 outSRs, (outDispHigh, outDispLow) = rawOutputsSide[-2:]
                 if gtSR is not None:
-                    scores['l1' + 'Sr' + side] = evalFcn.l1(gtSR, outSRs[iSide])
+                    scores['l1' + 'Sr' + side] = evalFcn.l1(
+                        gtSR * self._sr.args.rgb_range, outSRs[0] * self._sr.args.rgb_range)
                 if returnOutputs:
                     if outDispHigh is not None:
                         outputs['outputDispHigh' + side] = outDispHigh / (self.outputMaxDisp * 2)

@@ -32,8 +32,10 @@ class SRdispStereoRefine(SRdispStereo):
             ) for lowResInput in batch.lowestResRGBs()]
             initialBatch = myUtils.Batch(4)
             initialBatch.lowestResRGBs(outSRs)
-            psmnetDownOuts = self._stereo.predict(initialBatch)
-            outputsReturn = [[[outSRs, psmnetDownOut] for psmnetDownOut in psmnetDownOuts]]
+            psmnetDownOuts = self._stereo.predict(initialBatch, mask=mask)
+            outputsReturn = [[[outSRsReturn, psmnetDownOut]
+                              for outSRsReturn, psmnetDownOut
+                              in zip((outSRs, outSRs[::-1]), psmnetDownOuts)]]
             if itRefine > 0:
                 initialDisps = [myUtils.getLastNotList(dispsSide).unsqueeze(1).type_as(batch[0]) for dispsSide in psmnetDownOuts]
                 batch.lowestResDisps(initialDisps)
@@ -64,7 +66,7 @@ class SRdispStereoRefine(SRdispStereo):
 
         for it, rawOutput in enumerate(rawOutputs):
             itSuffix = str(it)
-            for gtDisp, gtSR, rawOutputSide, side, iSide in zip(disps, gtSRs, rawOutput, ('L', 'R'), (0, 1)):
+            for gtDisp, gtSR, rawOutputSide, side in zip(disps, gtSRs, rawOutput, ('L', 'R')):
                 if it == 0:
                     outSRs, (outDispHigh, dispOut) = rawOutputSide
                 else:
@@ -79,7 +81,8 @@ class SRdispStereoRefine(SRdispStereo):
                         if outSr is not None:
                             outputs['outputSr' + sideSr + side + itSuffix] = outSr
                 if gtSR is not None:
-                    scores['l1' + 'Sr' + side + itSuffix] = evalFcn.l1(gtSR, outSRs[iSide])
+                    scores['l1' + 'Sr' + side + itSuffix] = evalFcn.l1(
+                        gtSR * self._sr.args.rgb_range, outSRs[0] * self._sr.args.rgb_range)
 
                 if dispOut is not None:
                     if returnOutputs:
