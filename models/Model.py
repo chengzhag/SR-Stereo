@@ -128,7 +128,7 @@ class Model:
         except RuntimeError:
             match = self.model.module.load_state_dict(loadModelDict)
 
-        if match:
+        if match is None or match:
             if 'optimizer' in loadStateDict.keys() and self.optimizer is not None:
                 self.optimizer.load_state_dict(loadStateDict['optimizer'])
         else:
