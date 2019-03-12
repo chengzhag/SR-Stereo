@@ -61,89 +61,100 @@ class myImageFloder(data.Dataset):
                 if self.y1 is None: self.y1 = random.randint(0, h - self.hCrop)
                 return input.crop((self.x1, self.y1, self.x1 + self.wCrop, self.y1 + self.hCrop))
 
-        randomCrop = RandomCrop(trainCrop=self.trainCrop)
+        def getPatch():
+            randomCrop = RandomCrop(trainCrop=self.trainCrop)
 
-        if self.randomLR is not None:
-            isLorR = random.randint(0, 1) == 1
-            randomMask = list(self.mask[:])
-            if self.randomLR == 'disp':
-                iStart = 2
-            elif self.randomLR == 'rgb':
-                iStart = 0
-            else:
-                raise Exception(f'No randomLR setting: {self.randomLR}')
-
-            for i in range(iStart, iStart + 2):
-                randomMask[i::4] = [isLorR and original for original in randomMask[i::4]]
-                isLorR = not isLorR
-        else:
-            randomMask = self.mask
-
-        def loadIm(dirsIndex, loader, scaleRatios, isRGBorDepth):
-            ims = []
-            if not randomMask[dirsIndex] or self.dirs[dirsIndex] is None:
-                return [np.array([], dtype=np.float32),] * len(self.loadScale)
-            im0 = loader(self.dirs[dirsIndex][index])
-            if type(im0) == np.ndarray:
-                im0 = Image.fromarray(im0)
-
-            # scale first to reduce time consumption
-            scaleMethod = Image.ANTIALIAS if isRGBorDepth else Image.NEAREST
-            im0 = scale(im0, scaleMethod, (scaleRatios[0],))[0]
-            ims.append(im0)
-
-            multiScales = []
-            if len(scaleRatios) > 1:
-                for i in range(1, len(scaleRatios)):
-                    multiScales.append(scaleRatios[i] / scaleRatios[0])
-
-            if self.mode == 'PIL':
-                pass
-            else:
-                if self.mode == 'rawScaledTensor':
-                    pass
-                elif self.mode in ('training', 'testing', 'submission'):
-                    if self.mode == 'training':
-                        # random crop
-                        ims[0] = randomCrop(ims[0])
-                    elif self.mode == 'testing':
-                        if self.testCrop is not None:
-                            # crop to the same size
-                            ims[0] = testCrop(ims[0])
-                    elif self.mode == 'submission':
-                        # do no crop
-                        pass
-                    else:
-                        raise Exception('No stats \'%s\'' % self.mode)
-                    # scale to different sizes specified by scaleRatios
+            if self.randomLR is not None:
+                isLorR = random.randint(0, 1) == 1
+                randomMask = list(self.mask[:])
+                if self.randomLR == 'disp':
+                    iStart = 2
+                elif self.randomLR == 'rgb':
+                    iStart = 0
                 else:
-                    raise Exception('No mode %s!' % self.mode)
+                    raise Exception(f'No randomLR setting: {self.randomLR}')
 
-                # scale to different sizes specified by scaleRatios
-                ims += scale(ims[0], scaleMethod, multiScales)
-                ims = [transforms.ToTensor()(im) for im in ims]
+                for i in range(iStart, iStart + 2):
+                    randomMask[i::4] = [isLorR and original for original in randomMask[i::4]]
+                    isLorR = not isLorR
+            else:
+                randomMask = self.mask
 
-            ims = [np.ascontiguousarray(im, dtype=np.float32) for im, scaleRatio in zip(ims, scaleRatios)]
-            if not isRGBorDepth:
-                ims = [im / self.dispScale * scaleRatio for im, scaleRatio in zip(ims, scaleRatios)]
-            return ims
+            def loadIm(dirsIndex, loader, scaleRatios, isRGBorDepth):
+                ims = []
+                if not randomMask[dirsIndex] or self.dirs[dirsIndex] is None:
+                    return [np.array([], dtype=np.float32),] * len(self.loadScale)
+                im0 = loader(self.dirs[dirsIndex][index])
+                if type(im0) == np.ndarray:
+                    im0 = Image.fromarray(im0)
 
-        inputL = loadIm(0, self.inputLoader, self.loadScale, True)
-        inputR = loadIm(1, self.inputLoader, self.loadScale, True)
+                # scale first to reduce time consumption
+                scaleMethod = Image.ANTIALIAS if isRGBorDepth else Image.NEAREST
+                im0 = scale(im0, scaleMethod, (scaleRatios[0],))[0]
+                ims.append(im0)
 
-        gtL = loadIm(2, self.gtLoader, self.loadScale, False)
-        gtR = loadIm(3, self.gtLoader, self.loadScale, False)
+                multiScales = []
+                if len(scaleRatios) > 1:
+                    for i in range(1, len(scaleRatios)):
+                        multiScales.append(scaleRatios[i] / scaleRatios[0])
 
-        outputs = [inputL, inputR, gtL, gtR]
-        # for iIms, ims in enumerate(outputs):
-        #     iCompare = iIms + 1 if iIms % 2 == 0 else iIms - 1
-        #     for iScale in range(len(ims)):
-        #         if ims[iScale].size == 0:
-        #             ims[iScale] = np.zeros_like(outputs[iCompare][iScale])
+                if self.mode == 'PIL':
+                    pass
+                else:
+                    if self.mode == 'rawScaledTensor':
+                        pass
+                    elif self.mode in ('training', 'testing', 'submission'):
+                        if self.mode == 'training':
+                            # random crop
+                            ims[0] = randomCrop(ims[0])
+                        elif self.mode == 'testing':
+                            if self.testCrop is not None:
+                                # crop to the same size
+                                ims[0] = testCrop(ims[0])
+                        elif self.mode == 'submission':
+                            # do no crop
+                            pass
+                        else:
+                            raise Exception('No stats \'%s\'' % self.mode)
+                        # scale to different sizes specified by scaleRatios
+                    else:
+                        raise Exception('No mode %s!' % self.mode)
 
-        r = [im for scale in zip(*outputs) for im in scale]
+                    # scale to different sizes specified by scaleRatios
+                    ims += scale(ims[0], scaleMethod, multiScales)
+                    ims = [transforms.ToTensor()(im) for im in ims]
+                    if not isRGBorDepth and ims[0].max() == 0:
+                        # print('Note: Crop has no data, recropping...')
+                        return None
 
-        return tuple(r)
+                ims = [np.ascontiguousarray(im, dtype=np.float32) for im, scaleRatio in zip(ims, scaleRatios)]
+                if not isRGBorDepth:
+                    ims = [im / self.dispScale * scaleRatio for im, scaleRatio in zip(ims, scaleRatios)]
+                return ims
+
+            gtL = loadIm(2, self.gtLoader, self.loadScale, False)
+            if gtL is None:
+                return None
+            gtR = loadIm(3, self.gtLoader, self.loadScale, False)
+            if gtR is None:
+                return None
+
+            inputL = loadIm(0, self.inputLoader, self.loadScale, True)
+            inputR = loadIm(1, self.inputLoader, self.loadScale, True)
+
+            outputs = [inputL, inputR, gtL, gtR]
+            return outputs
+
+        while True:
+            outputs = getPatch()
+            if outputs is not None:
+                # for iIms, ims in enumerate(outputs):
+                #     iCompare = iIms + 1 if iIms % 2 == 0 else iIms - 1
+                #     for iScale in range(len(ims)):
+                #         if ims[iScale].size == 0:
+                #             ims[iScale] = np.zeros_like(outputs[iCompare][iScale])
+                r = [im for scale in zip(*outputs) for im in scale]
+                return tuple(r)
 
     def __len__(self):
         for dirs in self.dirs:
