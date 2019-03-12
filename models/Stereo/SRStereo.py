@@ -164,8 +164,7 @@ class SRStereo(Stereo):
                 (lambda im: im, myUtils.flipLR),
                 ('L', 'R')
         ):
-            if (not all([gt is None for gt in dispGTs])) \
-                    or (all([t is not None for t in (srGtL, srGtR)])):
+            if (not all([gt is None for gt in dispGTs])):
                 lossesList, outputsList = self.trainOneSide(
                     *process([inputL, inputR, srGtL, srGtR, dispGTs]),
                     returnOutputs=returnOutputs,
