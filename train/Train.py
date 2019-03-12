@@ -120,8 +120,8 @@ class Train:
                            trainLoss=totalTrainLoss if epoch > 0 else None)
             # test
             if ((self.testEvery > 0 and epoch > 0 and epoch % self.testEvery == 0)
-                or (self.testEvery in (0, -2) and epoch == self.nEpochs)
-                or (self.testEvery not in (0, -1) and epoch == 0)) \
+                or (self.testEvery == 0 and (epoch == 0 or epoch == self.nEpochs))
+                or (self.testEvery < 0 and (-epoch) % self.testEvery == 0)) \
                     and self.test is not None:
                 testScores = self.test(model=self.model, global_step=self.global_step).values()
                 testScore = sum(testScores) / len(testScores)

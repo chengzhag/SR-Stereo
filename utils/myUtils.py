@@ -173,9 +173,9 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                                                                'set to 0 to save after the last epoch.'),
                  'test_every': lambda: parser.add_argument('--test_every', type=int, default=1,
                                                            help='test every test_every epochs. '
-                                                                'set to -1 to stop testing. '
-                                                                'set to 0 to test after the last epoch. '
-                                                                'set to -2 to testt before the first epoch and after the last epoch.'),
+                                                                '> 0 will not test before training. '
+                                                                '= 0 will test before training and after final epoch. '
+                                                                '< 0 will test before training'),
                  'epochs': lambda: parser.add_argument('--epochs', type=int, default=10,
                                                        help='number of epochs to train'),
                  'lr': lambda: parser.add_argument('--lr', type=float, default=[0.001], help='', nargs='+'),
