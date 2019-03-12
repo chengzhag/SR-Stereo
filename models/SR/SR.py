@@ -140,7 +140,7 @@ class SR(Model):
         rawOutputs = self.predict(batch.lastScaleBatch(), mask=mask)
         for gt, rawOutputsSide, side in zip(batch.highResRGBs(), rawOutputs, ('L', 'R')):
             output = myUtils.getLastNotList(rawOutputsSide)
-            scores[evalType + side] = evalFcn.getEvalFcn(evalType)(
+            scores[evalType + 'Sr' + side] = evalFcn.getEvalFcn(evalType)(
                 gt * self.args.rgb_range, output * self.args.rgb_range
             )if output is not None else None
             if returnOutputs:
