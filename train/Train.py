@@ -47,6 +47,7 @@ class Train:
         lossesAvg = None
         self.global_step = (self.startEpoch - 1) * len(self.trainImgLoader) if self.startEpoch > 0 else 0
         filter = myUtils.Filter()
+        lossesAvgIt = 0
         for epoch in range(self.startEpoch, self.nEpochs + 1):
             if epoch > 0:
                 # Train
@@ -75,15 +76,17 @@ class Train:
                     else:
                         for name in lossesAvg.keys():
                             lossesAvg[name] += lossesPairs[name]
+                    lossesAvgIt += 1
 
                     if doLog:
                         for name in lossesAvg.keys():
-                            lossesAvg[name] /= self.logEvery
+                            lossesAvg[name] /= lossesAvgIt
                         lossesAvg['lr'] = self.lrNow
                         for name, value in lossesAvg.items():
                             self.tensorboardLogger.writer.add_scalar('trainLosses/' + name, value,
                                                                      self.global_step)
                         lossesAvg = None
+                        lossesAvgIt = 0
 
                         for name, im in ims.items():
                             if im is not None:
