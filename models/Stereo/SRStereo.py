@@ -148,6 +148,10 @@ class SRStereo(Stereo):
         if len(batch) == 4:
             batch = myUtils.Batch([None] * 4 + batch.batch)
 
+        # if has no highResRGBs, use lowestResRGBs as GTs
+        if all([sr is None for sr in batch.highResRGBs()]):
+            batch.highResRGBs(batch.lowestResRGBs())
+
         imgLowL, imgLowR = batch.lowestResRGBs()
         imgHighL, imgHighR = batch.highResRGBs()
 
