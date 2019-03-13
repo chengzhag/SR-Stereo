@@ -190,6 +190,8 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                                                          help='evaluation function used in testing'),
                  'batchsize_test': lambda: parser.add_argument('--batchsize_test', type=int, default=4,
                                                                help='testing batch size'),
+                 'subValidSet': lambda: parser.add_argument('--subValidSet', type=float, default=1,
+                                                               help='test with part of valid set'),
                  # submission
                  'subtype': lambda: parser.add_argument('--subtype', type=str, default='eval',
                                                         help='dataset type used for submission (eval/test)'),

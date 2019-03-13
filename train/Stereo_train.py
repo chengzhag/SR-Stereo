@@ -44,7 +44,7 @@ class Train(Base):
 def main():
     parser = myUtils.getBasicParser(
         ['outputFolder', 'maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
-         'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
+         'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test', 'subValidSet',
          'batchsize_train', 'log_every', 'test_every', 'save_every', 'epochs', 'lr', 'half',
          'lossWeights', 'randomLR', 'resume', 'itRefine'],
         description='train or finetune Stereo net')
@@ -63,7 +63,8 @@ def main():
                                                              batchSizes=(args.batchsize_train, args.batchsize_test),
                                                              loadScale=args.load_scale,
                                                              mode='training',
-                                                             randomLR=args.randomLR)
+                                                             randomLR=args.randomLR,
+                                                             subValidSet=args.subValidSet)
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))

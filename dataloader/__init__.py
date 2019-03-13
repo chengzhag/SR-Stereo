@@ -4,7 +4,7 @@ import torch
 # cropScale: Defaultly set to loadScale to remain ratio between loaded image and cropped image.
 # loadScale: A list of scale to load. Will return 4 * len(loadScale) images. Should be decreasing values.
 def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSizes=(12, 11),
-                  loadScale=(1,), mode='normal', mask=(1, 1, 1, 1), randomLR=None):
+                  loadScale=(1,), mode='normal', mask=(1, 1, 1, 1), randomLR=None, subValidSet=1):
     if not hasattr(loadScale, '__iter__'):
         loadScale = (loadScale,)
     if dataset == 'sceneflow':
@@ -23,6 +23,10 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
     paths = list(listFile.dataloader(datapath))
     pathsTrain = paths[0:4]
     pathsTest = paths[4:8]
+    if subValidSet < 1:
+        pathsTest = list(zip(*pathsTest))
+        pathsTest = pathsTest[:round(len(pathsTest) * subValidSet)]
+        pathsTest = list(zip(*pathsTest))
 
     # For KITTI, images have different resolutions. Crop will be needed.
     kitti = dataset in ('kitti2012', 'kitti2015')
