@@ -302,6 +302,12 @@ class Batch:
         if cuda:
             self.batch = [(im.cuda() if cuda else im) if im is not None else None for im in self.batch]
 
+        def assertData(t):
+            if t is not None and torch.isnan(t).any():
+                raise Exception('Error: Data has nan in it')
+
+        forNestingList(self.batch, assertData)
+
     def _assertLen(self, len):
         if len % 4 != 0:
             raise Exception(f'Error: input batch with length {len} doesnot match required 4n!')
