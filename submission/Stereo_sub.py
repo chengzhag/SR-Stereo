@@ -12,20 +12,14 @@ class Submission(Base):
         super(Submission, self).__init__(subImgLoader)
 
     def _subIt(self, batch):
-        def preprocess(disp):
-            dispOut = disp.squeeze()
-            dispOut = dispOut.data.cpu().numpy()
-            dispOut = (dispOut * 256).astype('uint16')
-            return dispOut
-
         rawOutputs = self.model.predict(batch.detach(), mask=(1, 0))[0]
         dispOut = myUtils.getLastNotList(rawOutputs)
 
         outputs = collections.OrderedDict()
-        outputs['dispOutL'] = preprocess(dispOut)
+        outputs['dispOutL'] = myUtils.savePreprocessDisp(dispOut)
         gtL = batch.highResDisps()[0]
         if gtL is not None:
-            outputs['gtL'] = preprocess(gtL)
+            outputs['gtL'] = myUtils.savePreprocessDisp(gtL)
         return outputs
 
 

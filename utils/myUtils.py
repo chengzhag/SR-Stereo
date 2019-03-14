@@ -448,3 +448,16 @@ class Filter:
     def __call__(self, x):
         self.old = x if self.old is None else self.old * (1 - self.weight) + x * self.weight
         return self.old
+
+def savePreprocessRGB(im):
+    output = im.squeeze()
+    output = output.data.cpu().numpy()
+    output = output.transpose(1, 2, 0)
+    output = (output * 255).astype('uint8')
+    return output
+
+def savePreprocessDisp(disp):
+    dispOut = disp.squeeze()
+    dispOut = dispOut.data.cpu().numpy()
+    dispOut = (dispOut * 256).astype('uint16')
+    return dispOut

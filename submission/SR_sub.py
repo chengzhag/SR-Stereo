@@ -12,27 +12,25 @@ class Submission(Base):
         super(Submission, self).__init__(subImgLoader)
 
     def _subIt(self, batch):
-        def preprocess(im):
-            output = im.squeeze()
-            output = output.data.cpu().numpy()
-            output = output.transpose(1, 2, 0)
-            output = (output * 255).astype('uint8')
-            return output
+        outputs = collections.OrderedDict()
+        if len(batch) == 8:
+            dispsSR = batch.highResDisps()
+            gts = batch.highResRGBs()
+            for dispSr, gt, suffix in zip(dispsSR, gts, ('L', 'R')):
+                if dispSr is not None:
+                    outputs['dispSr' + suffix] = myUtils.savePreprocessDisp(dispSr)
+                if gt is not None:
+                    outputs['gtSr' + suffix] = myUtils.savePreprocessRGB(gt)
+            batch = batch.lastScaleBatch()
 
         outSRs = self.model.predict(batch=batch.lastScaleBatch().detach())
 
         inputs = batch.lowestResRGBs()
-        if len(batch) == 8:
-            gts = batch.highResRGBs()
-        else:
-            gts = (None, None)
-        outputs = collections.OrderedDict()
-        for input, outSR, gt, suffix in zip(inputs, outSRs, gts, ('L', 'R')):
+
+        for input, outSR, suffix in zip(inputs, outSRs, ('L', 'R')):
             if input is not None:
-                outputs['outputSr' + suffix] = preprocess(outSR)
-                outputs['input' + suffix] = preprocess(input)
-                if gt is not None:
-                    outputs['gtSr' + suffix] = preprocess(gt)
+                outputs['outputSr' + suffix] = myUtils.savePreprocessRGB(outSR)
+                outputs['input' + suffix] = myUtils.savePreprocessRGB(input)
 
         return outputs
 
@@ -50,9 +48,9 @@ def main():
 
     _, imgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
                                             batchSizes=(0, 1),
-                                            loadScale=(args.load_scale[0]),
+                                            loadScale=args.load_scale,
                                             mode=args.subtype,
-                                            mask=(1, 1, 0, 0))
+                                            mask=(1, 1, 1, 1))
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))
