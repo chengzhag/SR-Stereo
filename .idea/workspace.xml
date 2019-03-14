@@ -2,14 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5af41d42-9f6a-4e3f-b5e4-a4d9632ca140" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/SR-Stereo.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/SR-Stereo.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/deployment.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/experiments.sh" beforeDir="false" afterPath="$PROJECT_DIR$/experiments.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/submission/SR_sub.py" beforeDir="false" afterPath="$PROJECT_DIR$/submission/SR_sub.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/submission/Stereo_sub.py" beforeDir="false" afterPath="$PROJECT_DIR$/submission/Stereo_sub.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/myUtils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/myUtils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/Stereo/PSMNetDown.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/Stereo/PSMNetDown.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -66,6 +60,7 @@
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_eval_PSMNet_kitti2015_halfscale.coverage" NAME="Stereo_eval_PSMNet_kitti2015_halfscale Coverage Results" MODIFIED="1551102492390" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_train_PSMNet_carla_kitti_moduletest.coverage" NAME="Stereo_train_PSMNet_carla_kitti_moduletest Coverage Results" MODIFIED="1551252956305" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$SRdisp_train_moduletest_resume.coverage" NAME="SRdisp_train_moduletest_resume Coverage Results" MODIFIED="1551620392449" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
+    <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_train_PSMNetDown_kitti2015_sr.coverage" NAME="Stereo_train_PSMNetDown_kitti2015_sr Coverage Results" MODIFIED="1552575312812" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$warp_carla_kitti.coverage" NAME="warp_carla_kitti Coverage Results" MODIFIED="1550902352264" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$SRdisp_eval_EDSR_carla_kitti.coverage" NAME="SRdisp_eval_EDSR_carla_kitti Coverage Results" MODIFIED="1551258526407" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/SR_Stereo$Stereo_train_SRStereo_kitti2015_pretrained_DIV2K.coverage" NAME="Stereo_train_SRStereo_kitti2015_pretrained_DIV2K Coverage Results" MODIFIED="1552401012503" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
@@ -129,10 +124,22 @@
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/models/Stereo/PSMNetDown.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="335">
+                  <caret line="102" column="58" lean-forward="true" selection-start-line="102" selection-start-column="58" selection-end-line="102" selection-end-column="58" />
+                  <folding>
+                    <element signature="e#0#9#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/experiments.sh">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="228">
-                  <caret line="96" column="489" selection-start-line="96" selection-start-column="489" selection-end-line="96" selection-end-column="489" />
+                <state relative-caret-position="-1574">
+                  <caret line="9" column="62" lean-forward="true" selection-start-line="9" selection-start-column="62" selection-end-line="9" selection-end-column="62" />
                 </state>
               </provider>
             </entry>
@@ -185,8 +192,8 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/dataloader/listKitti2015Files.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="88">
-                  <caret line="21" column="7" selection-start-line="21" selection-start-column="7" selection-end-line="21" selection-end-column="7" />
+                <state relative-caret-position="126">
+                  <caret line="23" selection-start-line="23" selection-end-line="23" />
                 </state>
               </provider>
             </entry>
@@ -360,7 +367,6 @@
         <option value="$PROJECT_DIR$/experiments_preparetests.sh" />
         <option value="$PROJECT_DIR$/models/Stereo/__init__.py" />
         <option value="$PROJECT_DIR$/models/SR/SRdisp.py" />
-        <option value="$PROJECT_DIR$/models/Stereo/PSMNetDown.py" />
         <option value="$PROJECT_DIR$/dataloader/listCarlaKittiFiles.py" />
         <option value="$PROJECT_DIR$/models/Stereo/Stereo.py" />
         <option value="$PROJECT_DIR$/models/SR/warp.py" />
@@ -382,10 +388,11 @@
         <option value="$PROJECT_DIR$/submission/Stereo_sub.py" />
         <option value="$PROJECT_DIR$/submission/SR_sub.py" />
         <option value="$PROJECT_DIR$/experiments.sh" />
+        <option value="$PROJECT_DIR$/models/Stereo/PSMNetDown.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="7">
+  <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="-11" />
     <option name="y" value="-24" />
     <option name="width" value="974" />
@@ -516,7 +523,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.SR_sub_EDSR_kitti2015_trainEval">
+  <component name="RunManager" selected="Python.Stereo_train_PSMNetDown_kitti2015_sr">
     <configuration name="PSMNetDown_train_moduletest" type="PythonConfigurationType" factoryName="Python" folderName="module_test">
       <module name="SR-Stereo" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -1529,6 +1536,29 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="Stereo_train_PSMNetDown_kitti2015_sr" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_train">
+      <module name="SR-Stereo" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+        <env name="CUDA_VISIBLE_DEVICES" value="0,1,2,3" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train/Stereo_train.py" />
+      <option name="PARAMETERS" value="--outputFolder pycharmruns/StereoDown_test --dispscale 2 --datapath ../datasets/kitti/data_scene_flow_sr/training/ --dataset kitti2015 --load_scale 1 0.5 --trainCrop 128 1024 --epochs 3 --log_every 1 --test_every 1 --eval_fcn outlier --batchsize_train 12 --batchsize_test 4 --lr 0.0001 --lossWeights 0.75 0.25 --model PSMNetDown --loadmodel logs/pretrained/PSMNet_pretrained_model_KITTI2015/PSMNet_pretrained_model_KITTI2015.tar" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="Stereo_train_PSMNet_carla_kitti" type="PythonConfigurationType" factoryName="Python" folderName="Stereo_train">
       <module name="SR-Stereo" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -1990,6 +2020,7 @@
       <item itemvalue="Python.Stereo_sub_PSMNet_kitti2015_eval" />
       <item itemvalue="Python.Stereo_sub_PSMNet_kitti2015_eval_half" />
       <item itemvalue="Python.Stereo_train_PSMNetDown_carla_kitti" />
+      <item itemvalue="Python.Stereo_train_PSMNetDown_kitti2015_sr" />
       <item itemvalue="Python.Stereo_train_PSMNetDown_carla_kitti_resume" />
       <item itemvalue="Python.Stereo_train_PSMNet_carla_kitti" />
       <item itemvalue="Python.Stereo_train_PSMNet_kitti2012" />
@@ -2096,12 +2127,12 @@
       <workItem from="1552187225806" duration="28193000" />
       <workItem from="1552268904071" duration="7766000" />
       <workItem from="1552280713622" duration="18360000" />
-      <workItem from="1552312422601" duration="71924000" />
+      <workItem from="1552312422601" duration="73081000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="860578000" />
+    <option name="totallyTimeSpent" value="861735000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -2122,7 +2153,7 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.2657267" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49733475" weight="0.3329718" />
-      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49733475" visible="true" weight="0.35249457" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" sideWeight="0.49733475" visible="true" weight="0.35249457" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.3286334" />
@@ -2356,13 +2387,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/.PyCharm2018.3/system/remote_sources/-904567262/1140026386/torch/nn/modules/conv.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="190">
-          <caret line="319" selection-start-line="319" selection-end-line="319" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/models/SR/RawEDSR/edsr.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="87">
@@ -2512,16 +2536,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-76">
           <caret line="27" selection-start-line="27" selection-end-line="27" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/models/Stereo/PSMNetDown.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="24" column="26" selection-start-line="24" selection-start-column="26" selection-end-line="24" selection-end-column="26" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2744,15 +2758,32 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/dataloader/listKitti2015Files.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="88">
-          <caret line="21" column="7" selection-start-line="21" selection-start-column="7" selection-end-line="21" selection-end-column="7" />
+        <state relative-caret-position="126">
+          <caret line="23" selection-start-line="23" selection-end-line="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.PyCharm2018.3/system/remote_sources/-904567262/1140026386/torch/nn/modules/conv.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="894" selection-start-line="894" selection-end-line="894" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/experiments.sh">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="228">
-          <caret line="96" column="489" selection-start-line="96" selection-start-column="489" selection-end-line="96" selection-end-column="489" />
+        <state relative-caret-position="-1574">
+          <caret line="9" column="62" lean-forward="true" selection-start-line="9" selection-start-column="62" selection-end-line="9" selection-end-column="62" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/Stereo/PSMNetDown.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="335">
+          <caret line="102" column="58" lean-forward="true" selection-start-line="102" selection-start-column="58" selection-end-line="102" selection-end-column="58" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
