@@ -47,12 +47,11 @@ def main():
 
     # Dataset
     import dataloader
-    if args.subtype == 'eval':
-        batchSizes = (0, 1)
+
     _, imgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
-                                            batchSizes=batchSizes,
+                                            batchSizes=(0, 1),
                                             loadScale=(args.load_scale[0]),
-                                            mode='submission',
+                                            mode=args.subtype,
                                             mask=(1, 1, 0, 0))
 
     # Load model

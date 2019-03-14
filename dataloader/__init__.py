@@ -31,6 +31,15 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
     # For KITTI, images have different resolutions. Crop will be needed.
     kitti = dataset in ('kitti2012', 'kitti2015')
 
+    if mode in ('subTrain', 'subEval', 'subTrainEval'):
+        if mode == 'subTrain':
+            pathsTest = pathsTrain
+        elif mode == 'subEval':
+            pass
+        elif mode == 'subTrainEval':
+            pathsTest = [dirsTrain + dirsEval if dirsTrain is not None else None for dirsTrain, dirsEval in zip(pathsTrain, pathsTest)]
+        mode = 'submission'
+
     trainImgLoader = torch.utils.data.DataLoader(
         fileLoader.myImageFloder(*pathsTrain, trainCrop=trainCrop,
                                  kitti=kitti, loadScale=loadScale,
