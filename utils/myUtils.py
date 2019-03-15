@@ -6,6 +6,8 @@ import collections
 import cv2
 import numpy as np
 import torchvision.transforms as transforms
+import random
+
 
 class NameValues(collections.OrderedDict):
     def __init__(self, names=(), values=(), prefix='', suffix=''):
@@ -461,3 +463,10 @@ def savePreprocessDisp(disp):
     dispOut = dispOut.data.cpu().numpy()
     dispOut = (dispOut * 256).astype('uint16')
     return dispOut
+
+def shuffleLists(lists):
+    c = list(zip(*lists))
+    random.shuffle(c)
+    lists = list(zip(*c))
+    return lists
+

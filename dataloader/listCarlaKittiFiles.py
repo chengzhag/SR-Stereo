@@ -2,6 +2,7 @@ import os
 import os.path
 import math
 import random
+from utils import myUtils
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -47,15 +48,10 @@ def dataloader(filepath, trainProportion=0.8, shuffle=False):
             test_right_disp += (_scanImages(filepath, episode, 'Camera3Depth'))
 
     random.seed(2019)
-    def shuffleLists(lists):
-        c = list(zip(*lists))
-        random.shuffle(c)
-        lists = list(zip(*c))
-        return lists
     all_left_img, all_right_img, all_left_disp, all_right_disp = \
-        shuffleLists([all_left_img, all_right_img, all_left_disp, all_right_disp])
+        myUtils.shuffleLists([all_left_img, all_right_img, all_left_disp, all_right_disp])
     test_left_img, test_right_img, test_left_disp, test_right_disp = \
-        shuffleLists([test_left_img, test_right_img, test_left_disp, test_right_disp])
+        myUtils.shuffleLists([test_left_img, test_right_img, test_left_disp, test_right_disp])
 
     return all_left_img, all_right_img, all_left_disp, all_right_disp, test_left_img, test_right_img, test_left_disp, test_right_disp
 

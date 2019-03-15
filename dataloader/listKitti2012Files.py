@@ -1,5 +1,8 @@
 import os
 import os.path
+from utils import myUtils
+import random
+
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -18,6 +21,9 @@ def dataloader(filepath):
 
   image = [img for img in os.listdir(filepath+left_fold) if img.find('_10') > -1]
   image.sort()
+
+  random.seed(251)
+  random.shuffle(image)
 
   train = image[:160]
   val   = image[160:]
