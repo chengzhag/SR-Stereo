@@ -17,8 +17,9 @@ def dataloader(filepath):
   disp_noc   = 'disp_occ/'
 
   image = [img for img in os.listdir(filepath+left_fold) if img.find('_10') > -1]
+  image.sort()
 
-  train = image[:]
+  train = image[:160]
   val   = image[160:]
 
   left_train  = [filepath+left_fold+img for img in train]
