@@ -4,6 +4,7 @@ from PIL import Image
 import numpy as np
 from utils import python_pfm as pfm
 import torchvision.transforms as transforms
+import operator
 
 
 def rgbLoader(path):
@@ -34,6 +35,7 @@ class myImageFloder(data.Dataset):
         self.loadScale = loadScale
         self.trainCrop = trainCrop
         self.randomLR = randomLR
+        self.argument = kitti and mode == 'training' and operator.eq(mask, (1, 1, 0, 0))
 
 
     def __getitem__(self, index):
@@ -61,8 +63,27 @@ class myImageFloder(data.Dataset):
                 if self.y1 is None: self.y1 = random.randint(0, h - self.hCrop)
                 return input.crop((self.x1, self.y1, self.x1 + self.wCrop, self.y1 + self.hCrop))
 
+        class RandomScale:
+            def __init__(self, scaleFrom, scaleTo):
+                self.scale = random.uniform(scaleFrom, scaleTo)
+
+            def __call__(self, method, input):
+                output = scale(input, method, [self.scale])
+                return output[0]
+
+        class RandomRotate:
+            def __init__(self, rotateFrom, rotateTo):
+                self.rotate = random.uniform(rotateFrom, rotateTo)
+
+            def __call__(self, method, input):
+                output = input.rotate(self.rotate, method)
+                return output
+
         def getPatch():
             randomCrop = RandomCrop(trainCrop=self.trainCrop)
+            if self.argument:
+                randomScale = RandomScale(scaleFrom=1, scaleTo=0.5)
+                # randomRotate = RandomRotate(rotateFrom=-30, rotateTo=30)
 
             if self.randomLR is not None:
                 isLorR = random.randint(0, 1) == 1
@@ -90,6 +111,7 @@ class myImageFloder(data.Dataset):
 
                 # scale first to reduce time consumption
                 scaleMethod = Image.ANTIALIAS if isRGBorDepth else Image.NEAREST
+                rotateMethod = Image.BICUBIC if isRGBorDepth else Image.NEAREST
                 im0 = scale(im0, scaleMethod, (scaleRatios[0],))[0]
                 ims.append(im0)
 
@@ -105,6 +127,10 @@ class myImageFloder(data.Dataset):
                         pass
                     elif self.mode in ('training', 'testing', 'submission'):
                         if self.mode == 'training':
+                            # random scale
+                            if self.argument:
+                                ims[0] = randomScale(method=scaleMethod, input=ims[0])
+                                # ims[0] = randomRotate(method=rotateMethod, input=ims[0])
                             # random crop
                             ims[0] = randomCrop(ims[0])
                         elif self.mode == 'testing':
