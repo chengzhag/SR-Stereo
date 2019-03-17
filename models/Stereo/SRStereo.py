@@ -42,6 +42,31 @@ class SRStereo(Stereo):
         self._stereo = None
         self._sr = None
 
+        class BlurDown:
+            def __init__(self, cuda):
+                self.gaussionKernel = [[0.0005, 0.0050, 0.0109, 0.0050, 0.0005],
+                                       [0.0050, 0.0522, 0.1141, 0.0522, 0.0050],
+                                       [0.0109, 0.1141, 0.2491, 0.1141, 0.0109],
+                                       [0.0050, 0.0522, 0.1141, 0.0522, 0.0050],
+                                       [0.0005, 0.0050, 0.0109, 0.0050, 0.0005]]
+                self.gaussionKernel = torch.FloatTensor(
+                    self.gaussionKernel
+                ).unsqueeze(0).unsqueeze(0)
+                if cuda:
+                    self.gaussionKernel = self.gaussionKernel.cuda()
+                self.gaussionKernel = nn.Parameter(data=self.gaussionKernel, requires_grad=False)
+            def __call__(self, im):
+                paddedIm = nn.functional.pad(im, (2, 2, 2, 2), 'reflect')
+                bluredIm = []
+                for c in range(paddedIm.size()[1]):
+                    bluredIm.append(nn.functional.conv2d(paddedIm[:, c:c+1, :, :],
+                                                         self.gaussionKernel,
+                                                         stride=2))
+                bluredIm = torch.cat(bluredIm, dim=1)
+                return bluredIm
+
+        self.blurDown = BlurDown(cuda=cuda)
+
     def initModel(self):
         self._stereo = self._getStereo()
         self._stereo.initModel()
@@ -90,10 +115,10 @@ class SRStereo(Stereo):
                 if outSr.size() == srGt.size():
                     lossSRside = self._sr.loss(outSr, srGt)
                 else:
-                    lossSRside = self._sr.loss(nn.AvgPool2d((2, 2))(outSr), srGt)
+                    lossSRside = self._sr.loss(self.blurDown(outSr), srGt)
             elif all([t is not None for t in (outSr, input)]):
                 # if dataset has no SR GT, use lowestResRGBs as GTs
-                lossSRside = self._sr.loss(nn.AvgPool2d((2, 2))(outSr), srGt)
+                lossSRside = self._sr.loss(self.blurDown(outSr), srGt)
             else:
                 lossSRside = None
             lossSR = lossSRside if lossSR is None else lossSR + lossSRside
