@@ -87,29 +87,34 @@ pretrained_SRdisp_carla=${experiment_dir}/pretrain_SR_SRdisp_carla/SR_train/1903
 ## kitti experiments
 
 # experiment settings
-pretrained_SR_kitti=${experiment_dir}/pretrain_SR_kitti/SR_train/190316160115_SR_loadScale_1_0.5_trainCrop_64_512_batchSize_64_lossWeights_1_kitti2015
+pretrained_SR_kitti=${experiment_dir}/pretrain_SR_kitti/SR_train/190316231816_SR_loadScale_1_0.5_trainCrop_64_512_batchSize_64_lossWeights_1_kitti2015
 finetuned_Stereo2_carla=${experiment_dir}/Stereo1_Stereo2_compare_carla/Stereo_train/190310025752_PSMNetDown_loadScale_1.0_0.5_trainCrop_128_1024_batchSize_12_lossWeights_0.8_0.2_carla_kitti
-pretrained_PSMNet_kitti2015_trainSet=logs/experiments/SRStereo_PSMNet_compare_kitti/Stereo_train/190315145644_PSMNet_loadScale_1.0_trainCrop_256_512_batchSize_12_lossWeights_1_kitti2015
+pretrained_PSMNet_kitti2015_trainSet=${experiment_dir}/SRStereo_PSMNet_compare_kitti/Stereo_train/190315145644_PSMNet_loadScale_1.0_trainCrop_256_512_batchSize_12_lossWeights_1_kitti2015
+pretrained_Stereo2_kitti=${experiment_dir}/pretrain_Stereo2_kitti/Stereo_train/190316090420_PSMNetDown_loadScale_1.0_0.5_trainCrop_128_1024_batchSize_12_lossWeights_0.0_1.0_kitti2015
 
-
-## prepare: pretrain_SR_kitti (SERVER 135)
+## prepare: pretrain_SR_kitti (DONE: 190316231816)
 ## finetune SR on kitti2015
-PYTHONPATH=./ python train/SR_train.py --model SR --outputFolder experiments/pretrain_SR_kitti --datapath $kitti2015_dataset --dataset kitti2015 --trainCrop 64 512 --epochs 6000 --save_every 50 --log_every 50 --test_every 50 --eval_fcn l1 --batchsize_train 64 --batchsize_test $(( 4 * $nGPUs))  --lr 0.0001 600 0.00005 1200 0.00002 1800 0.00001 --loadmodel $pretrained_EDSR_DIV2K --half
+##(DONE: 190316232201)
+##PYTHONPATH=./ python train/SR_train.py --model SR --outputFolder experiments/pretrain_SR_kitti --datapath $kitti2015_dataset --dataset kitti2015 --trainCrop 64 512 --epochs 6000 --save_every 300 --log_every 50 --test_every 50 --eval_fcn l1 --batchsize_train 64 --batchsize_test $(( 4 * $nGPUs))  --lr 0.0001 3000 0.00005 4000 0.00002 5000 0.00001 --loadmodel $pretrained_EDSR_DIV2K --half
+#(DONE: 190316231816)
+#PYTHONPATH=./ python train/SR_train.py --model SR --outputFolder experiments/pretrain_SR_kitti --datapath $kitti2015_dataset --dataset kitti2015 --trainCrop 64 512 --epochs 6000 --save_every 300 --log_every 50 --test_every 50 --eval_fcn l1 --batchsize_train 64 --batchsize_test $(( 4 * $nGPUs))  --lr 0.0001 --loadmodel $pretrained_EDSR_DIV2K --half
 
-## prepare: pretrain_Stereo2_kitti (SERVER 199)
-#PYTHONPATH=./ python train/Stereo_train.py --model PSMNetDown --dispscale 2 --outputFolder experiments/pretrain_Stereo2_kitti --datapath $kitti2015_sr_dataset --dataset kitti2015 --load_scale 1 0.5 --trainCrop 128 1024 --epochs 1200 --save_every 10 --log_every 50 --test_every 10 --eval_fcn outlier --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 200 0.0005 350 0.0002 500 0.0001 650 0.00005 800 0.00002 950 0.00001 --lossWeights 0 1 --loadmodel $pretrained_PSMNet_kitti2015_trainSet --half
+## prepare: pretrain_Stereo2_kitti (DONE: 190316090420, not so good)
+#PYTHONPATH=./ python train/Stereo_train.py --model PSMNetDown --dispscale 2 --outputFolder experiments/pretrain_Stereo2_kitti --datapath $kitti2015_sr_dataset --dataset kitti2015 --load_scale 1 0.5 --trainCrop 128 1024 --epochs 1200 --save_every 50 --log_every 50 --test_every 10 --eval_fcn outlier --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 200 0.0005 350 0.0002 500 0.0001 650 0.00005 800 0.00002 950 0.00001 --lossWeights 0 1 --loadmodel $pretrained_PSMNet_kitti2015_trainSet --half
 
 
 ## experiment 6: SRStereo_PSMNet_compare_kitti (TODO)
 ## test subject: fintuning SRStereo with KITTI 2015
-## create baseline PSMNet (SERVER 199)
-#PYTHONPATH=./ python train/Stereo_train.py  --model PSMNet --dispscale 1 --outputFolder experiments/SRStereo_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 256 512 --epochs 1200 --save_every 10  --log_every 50 --test_every 10 --eval_fcn outlier --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 200 0.0001 --loadmodel $pretrained_PSMNet_sceneflow
-## finetune SRStereo without updating SR (DONE)
-#PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder experiments/SRStereo_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 1200 --save_every 10  --log_every 50 --test_every 10 --eval_fcn outlier --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 300 0.0005 400 0.0002 500 0.0001 600 0.00005 700 0.00002 800 0.00001 --lossWeights -1 0 1 --loadmodel /media/omnisky/zc/SR-Stereo/SR-Stereo/logs/experiments/SRStereo_PSMNet_compare_kitti/Stereo_train/190314113439_SRStereo_loadScale_1.0_trainCrop_64_512_batchSize_12_lossWeights_-1.0_0.0_1.0_kitti2015 --half --resume
-## finetune SRStereo initialized with PSMNet pretrained with KITTI without updating SR (SERVER 95)
-#PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder experiments/SRStereo_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 1200 --save_every 10 --log_every 50 --test_every 10 --eval_fcn outlier --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 300 0.0005 450 0.0002 600 0.0001 750 0.00005 900 0.00002 1050 0.00001 --lossWeights -1 0 1 --loadmodel $pretrained_SR_carla $pretrained_PSMNet_kitti2015_trainSet --half
-## finetune SRStereo initialized with PSMNet pretrained with KITTI and SR finetuned with KITTI without updating SR (TODO: SERVER 199)
-#PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder experiments/SRStereo_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 1200 --save_every 10 --log_every 50 --test_every 10 --eval_fcn outlier --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 300 0.0005 450 0.0002 600 0.0001 750 0.00005 900 0.00002 1050 0.00001 --lossWeights -1 0 1 --loadmodel $pretrained_SR_kitti $pretrained_PSMNet_kitti2015_trainSet --half
+## create baseline PSMNet (DONE: 190315145644)
+#PYTHONPATH=./ python train/Stereo_train.py  --model PSMNet --dispscale 1 --outputFolder experiments/SRStereo_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 256 512 --epochs 1200 --save_every 50  --log_every 50 --test_every 10 --eval_fcn outlier --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 200 0.0001 --loadmodel $pretrained_PSMNet_sceneflow
+### finetune SRStereo without updating SR (ABANDONED)
+##PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder experiments/SRStereo_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 1200 --save_every 50  --log_every 50 --test_every 10 --eval_fcn outlier --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 300 0.0005 400 0.0002 500 0.0001 600 0.00005 700 0.00002 800 0.00001 --lossWeights -1 0 1 --loadmodel /media/omnisky/zc/SR-Stereo/SR-Stereo/logs/experiments/SRStereo_PSMNet_compare_kitti/Stereo_train/190314113439_SRStereo_loadScale_1.0_trainCrop_64_512_batchSize_12_lossWeights_-1.0_0.0_1.0_kitti2015 --half --resume
+## finetune SRStereo initialized with PSMNet pretrained with KITTI without updating SR (DONE)
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder experiments/SRStereo_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 1200 --save_every 50 --log_every 50 --test_every 10 --eval_fcn outlier --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 300 0.0005 450 0.0002 600 0.0001 750 0.00005 900 0.00002 1050 0.00001 --lossWeights -1 0 1 --loadmodel $pretrained_SR_carla $pretrained_PSMNet_kitti2015_trainSet --half
+## finetune SRStereo initialized with PSMNet pretrained with KITTI and SR finetuned with KITTI without updating SR (SERVER 95)
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder experiments/SRStereo_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 1200 --save_every 50 --log_every 50 --test_every 10 --eval_fcn outlier --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 300 0.0005 450 0.0002 600 0.0001 --lossWeights -1 0 1 --loadmodel $pretrained_SR_kitti $pretrained_PSMNet_kitti2015_trainSet --half
+## finetune SRStereo initialized with PSMNet pretrained with KITTI and SR finetuned with KITTI with updating SR (SERVER 199)
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder experiments/SRStereo_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 1200 --save_every 50 --log_every 50 --test_every 10 --eval_fcn outlier --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 300 0.0005 450 0.0002 600 0.0001 --lossWeights 0.5 0 0.5 --loadmodel $pretrained_SR_kitti $pretrained_PSMNet_kitti2015_trainSet --half
 
 
 ## prepare: pretrain_SRdisp_kitti (TODO)
