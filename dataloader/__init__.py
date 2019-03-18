@@ -5,6 +5,7 @@ import torch
 # loadScale: A list of scale to load. Will return 4 * len(loadScale) images. Should be decreasing values.
 def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSizes=(12, 11),
                   loadScale=(1,), mode='normal', mask=(1, 1, 1, 1), randomLR=None, subValidSet=1):
+    subModes = ('subTrain', 'subEval', 'subTrainEval')
     if not hasattr(loadScale, '__iter__'):
         loadScale = (loadScale,)
     if dataset == 'sceneflow':
@@ -31,13 +32,17 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
     # For KITTI, images have different resolutions. Crop will be needed.
     kitti = dataset in ('kitti2012', 'kitti2015', 'kitti2015_dense')
     if dataset in ('kitti2012', 'kitti2015'):
+        mask = [a and b for a, b in zip(mask, (1, 1, 1, 0))]
         dispScale = 256
+        kittiScale = 1
     elif dataset == 'kitti2015_dense':
         dispScale = 170
+        kittiScale = 2
     else:
         dispScale = 1
+        kittiScale = 1
 
-    if mode in ('subTrain', 'subEval', 'subTrainEval'):
+    if mode in subModes:
         if mode == 'subTrain':
             pathsTest = pathsTrain
         elif mode == 'subEval':
@@ -49,14 +54,16 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
     trainImgLoader = torch.utils.data.DataLoader(
         fileLoader.myImageFloder(*pathsTrain, trainCrop=trainCrop,
                                  kitti=kitti, loadScale=loadScale,
-                                 mode=mode, mask=mask, randomLR=randomLR, dispScale=dispScale),
+                                 mode=mode, mask=mask, randomLR=randomLR,
+                                 dispScale=dispScale, kittiScale=kittiScale),
         batch_size=batchSizes[0], shuffle=True, num_workers=4, drop_last=False) if batchSizes[0] > 0 else None
 
     testImgLoader = torch.utils.data.DataLoader(
         fileLoader.myImageFloder(*pathsTest, trainCrop=trainCrop,
                                  kitti=kitti, loadScale=loadScale,
                                  mode='testing' if mode == 'training' else mode,
-                                 mask=mask, randomLR=randomLR, dispScale=dispScale),
+                                 mask=mask, randomLR=randomLR,
+                                 dispScale=dispScale, kittiScale=kittiScale),
         batch_size=batchSizes[1], shuffle=False, num_workers=4, drop_last=False) if batchSizes[1] > 0 else None
 
     # Add dataset info to imgLoader objects

@@ -23,14 +23,14 @@ class myImageFloder(data.Dataset):
     # trainCrop = (W, H)
     def __init__(self, inputLdirs=None, inputRdirs=None, gtLdirs=None, gtRdirs=None,
                  trainCrop=(256, 512), kitti=False, loadScale=(1,), mode='training',
-                 mask=(1, 1, 1, 1), randomLR=None, dispScale=1):
+                 mask=(1, 1, 1, 1), randomLR=None, dispScale=1, kittiScale=1):
         self.mask = mask
         self.mode = mode
         self.dirs = (inputLdirs, inputRdirs, gtLdirs, gtRdirs)
         self.inputLoader = rgbLoader
         self.gtLoader = grayLoader if kitti else pfmLoader
         self.trainCrop = trainCrop
-        self.testCrop = (round(1232 * loadScale[0]), round(368 * loadScale[0])) if kitti else None
+        self.testCrop = (round(1232 * loadScale[0] * kittiScale), round(368 * loadScale[0] * kittiScale)) if kitti else None
         self.dispScale = dispScale
         self.loadScale = loadScale
         self.trainCrop = trainCrop
@@ -111,7 +111,7 @@ class myImageFloder(data.Dataset):
 
                 # scale first to reduce time consumption
                 scaleMethod = Image.ANTIALIAS if isRGBorDepth else Image.NEAREST
-                rotateMethod = Image.BICUBIC if isRGBorDepth else Image.NEAREST
+                # rotateMethod = Image.BICUBIC if isRGBorDepth else Image.NEAREST
                 im0 = scale(im0, scaleMethod, (scaleRatios[0],))[0]
                 ims.append(im0)
 
