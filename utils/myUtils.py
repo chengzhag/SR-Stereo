@@ -195,7 +195,7 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                  'subValidSet': lambda: parser.add_argument('--subValidSet', type=float, default=1,
                                                                help='test with part of valid set'),
                  # submission
-                 'subtype': lambda: parser.add_argument('--subtype', type=str, default='subEval',
+                 'subtype': lambda: parser.add_argument('--subtype', type=str, default=None,
                                                         help='dataset type used for submission (eval/test)'),
                  # module test
                  'nsample_save': lambda: parser.add_argument('--nsample_save', type=int, default=1,

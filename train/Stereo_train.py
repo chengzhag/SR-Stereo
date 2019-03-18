@@ -46,7 +46,7 @@ def main():
         ['outputFolder', 'maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test', 'subValidSet',
          'batchsize_train', 'log_every', 'test_every', 'save_every', 'epochs', 'lr', 'half',
-         'lossWeights', 'randomLR', 'resume', 'itRefine'],
+         'lossWeights', 'randomLR', 'resume', 'itRefine', 'subtype'],
         description='train or finetune Stereo net')
 
     args = parser.parse_args()
@@ -62,7 +62,7 @@ def main():
                                                              trainCrop=args.trainCrop,
                                                              batchSizes=(args.batchsize_train, args.batchsize_test),
                                                              loadScale=args.load_scale,
-                                                             mode='training',
+                                                             mode='training' if args.subtype is None else args.subtype,
                                                              randomLR=args.randomLR,
                                                              subValidSet=args.subValidSet)
 

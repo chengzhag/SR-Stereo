@@ -31,7 +31,7 @@ def main():
         ['outputFolder', 'datapath', 'model', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
          'batchsize_train', 'log_every', 'test_every', 'save_every', 'epochs', 'lr', 'half',
-         'withMask', 'randomLR', 'lossWeights', 'resume'],
+         'withMask', 'randomLR', 'lossWeights', 'resume', 'subtype'],
         description='train or finetune SR net')
 
     args = parser.parse_args()
@@ -53,7 +53,7 @@ def main():
                                                              trainCrop=args.trainCrop,
                                                              batchSizes=(args.batchsize_train, args.batchsize_test),
                                                              loadScale=(args.load_scale[0], args.load_scale[0] / 2),
-                                                             mode='training',
+                                                             mode='training' if args.subtype is None else args.subtype,
                                                              mask=mask,
                                                              randomLR=args.randomLR)
 

@@ -103,8 +103,6 @@ finetuned_SRdispStereoRefine_carla=${experiment_dir}/SRdispStereoRefine_SRStereo
 ## finetune SR on kitti2015
 #PYTHONPATH=./ python train/SR_train.py --model SR --outputFolder experiments/pretrain_SR_kitti --datapath $kitti2015_dataset --dataset kitti2015 --trainCrop 64 512 --epochs 6000 --save_every 300 --log_every 50 --test_every 50 --eval_fcn l1 --batchsize_train 64 --batchsize_test $(( 4 * $nGPUs))  --lr 0.0001 --loadmodel $pretrained_EDSR_DIV2K --half
 
-## prepare: pretrain_Stereo2_kitti (ABANDONED: 190316090420)
-#PYTHONPATH=./ python train/Stereo_train.py --model PSMNetDown --dispscale 2 --outputFolder experiments/pretrain_Stereo2_kitti --datapath $kitti2015_sr_dataset --dataset kitti2015 --load_scale 1 0.5 --trainCrop 128 1024 --epochs 1200 --save_every 50 --log_every 50 --test_every 10 --eval_fcn outlier --batchsize_train 12 --batchsize_test $nGPUs --lr 0.001 200 0.0005 350 0.0002 500 0.0001 650 0.00005 800 0.00002 950 0.00001 --lossWeights 0 1 --loadmodel $pretrained_PSMNet_kitti2015_trainSet --half
 
 ## experiment 6: SRStereo_PSMNet_compare_kitti (DONE)
 ## test subject: fintuning SRStereo with KITTI 2015
@@ -124,10 +122,7 @@ finetuned_SRdispStereoRefine_carla=${experiment_dir}/SRdispStereoRefine_SRStereo
 #PYTHONPATH=./ python submission/SR_sub.py --datapath $kitti2015_dataset --dataset kitti2015 --loadmodel $finetuned_SRStereo_kitti --load_scale 2 1 --subtype subTrainEval --half
 #PYTHONPATH=./ python submission/Stereo_sub.py --model SRStereo --dispscale 2 --datapath $kitti2015_dataset --dataset kitti2015 --loadmodel $finetuned_SRStereo_kitti --load_scale 1 --subtype subTrainEval --half
 
-## finetune SRdisp on kitti2015_dense: compare different initialization checkpoints
-## finetune SRdisp initialized from EDSR_baseline_x2(TODO: SERVER 162)
-#PYTHONPATH=./ python train/SR_train.py --model SRdisp --outputFolder experiments/pretrain_SRdisp_kitti --datapath $kitti2015_dense_dataset --dataset kitti2015_dense --trainCrop 64 2040 --epochs 1200 --save_every 50 --log_every 50 --test_every 10 --eval_fcn l1 --batchsize_train 16 --batchsize_test $(( 2 * $nGPUs)) --lr 0.0005 400 0.0002 550 0.0001 700 0.00005 850 0.00002 1000 0.00001 --loadmodel $pretrained_EDSR_DIV2K --half
-## finetune SRdisp initialized from SRdispStereoRefine_SRStereo_compare_carla(TODO: SERVER 135)
+## finetune SRdisp on kitti2015_dense: compare different initialization checkpoints (SERVER 135)
 #PYTHONPATH=./ python train/SR_train.py --model SRdisp --outputFolder experiments/pretrain_SRdisp_kitti --datapath $kitti2015_dense_dataset --dataset kitti2015_dense --trainCrop 64 2040 --epochs 1200 --save_every 50 --log_every 50 --test_every 10 --eval_fcn l1 --batchsize_train 16 --batchsize_test $(( 2 * $nGPUs)) --lr 0.0005 400 0.0002 550 0.0001 700 0.00005 850 0.00002 1000 0.00001 --loadmodel $finetuned_SRdispStereoRefine_carla --half
 
 
