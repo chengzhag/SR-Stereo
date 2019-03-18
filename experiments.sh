@@ -123,12 +123,12 @@ finetuned_SRdispStereoRefine_carla=${experiment_dir}/SRdispStereoRefine_SRStereo
 #PYTHONPATH=./ python submission/Stereo_sub.py --model SRStereo --dispscale 2 --datapath $kitti2015_dataset --dataset kitti2015 --loadmodel $finetuned_SRStereo_kitti --load_scale 1 --subtype subTrainEval --half
 
 ## finetune SRdisp on kitti2015_dense: compare different initialization checkpoints (SERVER 135)
-#PYTHONPATH=./ python train/SR_train.py --model SRdisp --outputFolder experiments/pretrain_SRdisp_kitti --datapath $kitti2015_dense_dataset --dataset kitti2015_dense --trainCrop 64 2040 --epochs 1200 --save_every 50 --log_every 50 --test_every 10 --eval_fcn l1 --batchsize_train 16 --batchsize_test $(( 2 * $nGPUs)) --lr 0.0005 400 0.0002 550 0.0001 700 0.00005 850 0.00002 1000 0.00001 --loadmodel $finetuned_SRdispStereoRefine_carla --half
+PYTHONPATH=./ python train/SR_train.py --model SRdisp --outputFolder experiments/pretrain_SRdisp_kitti --datapath $kitti2015_dense_dataset --dataset kitti2015_dense --trainCrop 64 2040 --epochs 1200 --save_every 50 --log_every 50 --test_every 10 --eval_fcn l1 --batchsize_train 16 --batchsize_test $(( 2 * $nGPUs)) --lr 0.0005 300 0.0002 450 0.0001 700 0.00005 850 0.00002 1000 0.00001 --loadmodel $finetuned_SRdispStereoRefine_carla --half
 
 
 ## experiment 7: SRdispStereoRefine_PSMNet_compare_kitti (TODO)
 ## test subject: fintuning SRdispStereoRefine with KITTI 2015
 ## fintune SRdispStereoRefine with updating SRdisp
-#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 300 --save_every 10 --log_every 50 --test_every 10 --eval_fcn outlier --itRefine 2 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.0001 --lossWeights 0.5 0 0.5 --loadmodel $pretrained_SRdisp_kitti $finetuned_SRStereo_kitti --half
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 300 --save_every 50 --log_every 50 --test_every 10 --eval_fcn outlier --itRefine 2 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.0001 --lossWeights 0.5 0 0.5 --loadmodel $pretrained_SRdisp_kitti $finetuned_SRStereo_kitti --half
 
 
