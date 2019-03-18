@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5af41d42-9f6a-4e3f-b5e4-a4d9632ca140" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/deployment.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/experiments.sh" beforeDir="false" afterPath="$PROJECT_DIR$/experiments.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/models/Stereo/SRStereo.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/Stereo/SRStereo.py" afterDir="false" />
@@ -129,8 +128,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/experiments.sh">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="275">
-                  <caret line="118" column="521" selection-start-line="118" selection-start-column="521" selection-end-line="118" selection-end-column="521" />
+                <state relative-caret-position="300">
+                  <caret line="110" column="50" selection-start-line="110" selection-start-column="50" selection-end-line="110" selection-end-column="50" />
                 </state>
               </provider>
             </entry>
@@ -186,8 +185,8 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/submission/Stereo_sub.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="304">
-                  <caret line="21" column="36" selection-start-line="21" selection-start-column="36" selection-end-line="21" selection-end-column="36" />
+                <state relative-caret-position="397">
+                  <caret line="26" lean-forward="true" selection-start-line="26" selection-end-line="26" />
                 </state>
               </provider>
             </entry>
@@ -232,8 +231,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/models/Stereo/SRStereo.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-65">
-                  <caret line="52" column="39" lean-forward="true" selection-start-line="52" selection-start-column="39" selection-end-line="52" selection-end-column="39" />
+                <state relative-caret-position="292">
+                  <caret line="67" column="9" selection-start-line="67" selection-start-column="9" selection-end-line="67" selection-end-column="9" />
                   <folding>
                     <element signature="e#0#27#0" expanded="true" />
                   </folding>
@@ -283,7 +282,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>199</find>
       <find>162</find>
       <find>iSide</find>
       <find>('L', 'R')</find>
@@ -308,11 +306,12 @@
       <find>pretrained_Stereo2_kitti</find>
       <find>pretrained_PSMNet_kitti2015</find>
       <find>save_every 50</find>
-      <find />
       <find>FloatTensor</find>
       <find>load_scale</find>
-      <find>SERVER</find>
       <find>emp</find>
+      <find />
+      <find>SERVER</find>
+      <find>5004</find>
     </findStrings>
     <replaceStrings>
       <replace>batch[-2:]</replace>
@@ -2173,12 +2172,12 @@
       <workItem from="1552268904071" duration="7766000" />
       <workItem from="1552280713622" duration="18360000" />
       <workItem from="1552312422601" duration="102797000" />
-      <workItem from="1552782522372" duration="13224000" />
+      <workItem from="1552782522372" duration="23267000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="904675000" />
+    <option name="totallyTimeSpent" value="914718000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -2769,13 +2768,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/submission/Stereo_sub.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="304">
-          <caret line="21" column="36" selection-start-line="21" selection-start-column="36" selection-end-line="21" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/submission/SR_sub.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="133">
@@ -2860,10 +2852,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/submission/Stereo_sub.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="397">
+          <caret line="26" lean-forward="true" selection-start-line="26" selection-end-line="26" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/models/Stereo/SRStereo.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-65">
-          <caret line="52" column="39" lean-forward="true" selection-start-line="52" selection-start-column="39" selection-end-line="52" selection-end-column="39" />
+        <state relative-caret-position="292">
+          <caret line="67" column="9" selection-start-line="67" selection-start-column="9" selection-end-line="67" selection-end-column="9" />
           <folding>
             <element signature="e#0#27#0" expanded="true" />
           </folding>
@@ -2872,8 +2871,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/experiments.sh">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="275">
-          <caret line="118" column="521" selection-start-line="118" selection-start-column="521" selection-end-line="118" selection-end-column="521" />
+        <state relative-caret-position="300">
+          <caret line="110" column="50" selection-start-line="110" selection-start-column="50" selection-end-line="110" selection-end-column="50" />
         </state>
       </provider>
     </entry>
