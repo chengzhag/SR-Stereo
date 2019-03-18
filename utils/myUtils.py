@@ -458,10 +458,10 @@ def savePreprocessRGB(im):
     output = (output * 255).astype('uint8')
     return output
 
-def savePreprocessDisp(disp):
+def savePreprocessDisp(disp, dispScale=256):
     dispOut = disp.squeeze()
     dispOut = dispOut.data.cpu().numpy()
-    dispOut = (dispOut * 256).astype('uint16')
+    dispOut = (dispOut * dispScale).astype('uint16')
     return dispOut
 
 def shuffleLists(lists):

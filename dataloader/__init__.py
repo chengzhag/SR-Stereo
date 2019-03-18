@@ -11,7 +11,7 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
         from dataloader import listSceneFlowFiles as listFile
     elif dataset == 'kitti2012':
         from dataloader import listKitti2012Files as listFile
-    elif dataset == 'kitti2015':
+    elif dataset in ('kitti2015', 'kitti2015_dense'):
         from dataloader import listKitti2015Files as listFile
     elif dataset == 'carla_kitti':
         from dataloader import listCarlaKittiFiles as listFile
@@ -29,7 +29,13 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
         pathsTest = list(zip(*pathsTest))
 
     # For KITTI, images have different resolutions. Crop will be needed.
-    kitti = dataset in ('kitti2012', 'kitti2015')
+    kitti = dataset in ('kitti2012', 'kitti2015', 'kitti2015_dense')
+    if dataset in ('kitti2012', 'kitti2015'):
+        dispScale = 256
+    elif dataset == 'kitti2015_dense':
+        dispScale = 170
+    else:
+        dispScale = 1
 
     if mode in ('subTrain', 'subEval', 'subTrainEval'):
         if mode == 'subTrain':
@@ -43,14 +49,14 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
     trainImgLoader = torch.utils.data.DataLoader(
         fileLoader.myImageFloder(*pathsTrain, trainCrop=trainCrop,
                                  kitti=kitti, loadScale=loadScale,
-                                 mode=mode, mask=mask, randomLR=randomLR),
+                                 mode=mode, mask=mask, randomLR=randomLR, dispScale=dispScale),
         batch_size=batchSizes[0], shuffle=True, num_workers=4, drop_last=False) if batchSizes[0] > 0 else None
 
     testImgLoader = torch.utils.data.DataLoader(
         fileLoader.myImageFloder(*pathsTest, trainCrop=trainCrop,
                                  kitti=kitti, loadScale=loadScale,
                                  mode='testing' if mode == 'training' else mode,
-                                 mask=mask, randomLR=randomLR),
+                                 mask=mask, randomLR=randomLR, dispScale=dispScale),
         batch_size=batchSizes[1], shuffle=False, num_workers=4, drop_last=False) if batchSizes[1] > 0 else None
 
     # Add dataset info to imgLoader objects

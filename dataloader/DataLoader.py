@@ -23,7 +23,7 @@ class myImageFloder(data.Dataset):
     # trainCrop = (W, H)
     def __init__(self, inputLdirs=None, inputRdirs=None, gtLdirs=None, gtRdirs=None,
                  trainCrop=(256, 512), kitti=False, loadScale=(1,), mode='training',
-                 mask=(1, 1, 1, 1), randomLR=None):
+                 mask=(1, 1, 1, 1), randomLR=None, dispScale=1):
         self.mask = mask
         self.mode = mode
         self.dirs = (inputLdirs, inputRdirs, gtLdirs, gtRdirs)
@@ -31,7 +31,7 @@ class myImageFloder(data.Dataset):
         self.gtLoader = grayLoader if kitti else pfmLoader
         self.trainCrop = trainCrop
         self.testCrop = (round(1232 * loadScale[0]), round(368 * loadScale[0])) if kitti else None
-        self.dispScale = 256 if kitti else 1
+        self.dispScale = dispScale
         self.loadScale = loadScale
         self.trainCrop = trainCrop
         self.randomLR = randomLR
