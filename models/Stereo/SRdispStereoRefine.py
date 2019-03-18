@@ -19,6 +19,7 @@ class SRdispStereoRefine(SRdispStereo):
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
+    # mask: useless in this case
     def predict(self, batch, mask=(1,1), itRefine=None):
         if itRefine is None:
             itRefine = self.itRefine
@@ -32,17 +33,20 @@ class SRdispStereoRefine(SRdispStereo):
             ) for lowResInput in batch.lowestResRGBs()]
             initialBatch = myUtils.Batch(4)
             initialBatch.lowestResRGBs(outSRs)
-            psmnetDownOuts = self._stereo.predict(initialBatch, mask=mask)
+            psmnetDownOuts = self._stereo.predict(initialBatch)
             outputsReturn = [[[outSRsReturn, psmnetDownOut]
                               for outSRsReturn, psmnetDownOut
                               in zip((outSRs, outSRs[::-1]), psmnetDownOuts)]]
             if itRefine > 0:
-                initialDisps = [myUtils.getLastNotList(dispsSide).unsqueeze(1).type_as(batch[0]) for dispsSide in psmnetDownOuts]
+                initialDisps = [myUtils.getLastNotList(dispsSide).unsqueeze(1).type_as(batch[0])
+                                if myUtils.getLastNotList(dispsSide) is not None else None
+                                for dispsSide in psmnetDownOuts]
                 batch.lowestResDisps(initialDisps)
                 for i in range(itRefine):
-                    itOutputs = super(SRdispStereoRefine, self).predict(batch.detach(), mask=mask)
+                    itOutputs = super(SRdispStereoRefine, self).predict(batch.detach())
                     outputsReturn.append(itOutputs)
                     dispOuts = [myUtils.getLastNotList(itOutputsSide).unsqueeze(1).type_as(batch[0])
+                                if myUtils.getLastNotList(itOutputsSide) is not None else None
                                 for itOutputsSide in itOutputs]
                     batch.lowestResDisps(dispOuts)
 
@@ -80,14 +84,14 @@ class SRdispStereoRefine(SRdispStereo):
                     for outSr, sideSr in zip(outSRs, ('L', 'R')):
                         if outSr is not None:
                             outputs['outputSr' + sideSr + side + itSuffix] = outSr
-                if gtSR is not None:
+                if gtSR is not None and outSRs[0] is not None:
                     scoreSR = evalFcn.l1(
                         gtSR * self._sr.args.rgb_range, outSRs[0] * self._sr.args.rgb_range)
                     scores['l1' + 'Sr' + side + itSuffix] = scoreSR
                     if it == len(rawOutputs) - 1:
                         scores['l1' + 'Sr' + side] = scoreSR
 
-                if dispOut is not None:
+                if dispOut is not None and gtDisp is not None:
                     if returnOutputs:
                         outputs['outputDisp' + side + itSuffix] = dispOut / self.outputMaxDisp
 
@@ -120,7 +124,7 @@ class SRdispStereoRefine(SRdispStereo):
     def train(self, batch, returnOutputs=False, kitti=False, weights=(0, 1, 0), progress=0):
         myUtils.assertBatchLen(batch, (4, 8))
         if len(batch) == 4:
-            batch = myUtils.Batch([None] * 4 + batch.batch)
+            batch = myUtils.Batch([None] * 4 + batch.batch, cuda=batch.cuda, half=batch.half)
 
         # if has no highResRGBs, use lowestResRGBs as GTs
         if all([sr is None for sr in batch.highResRGBs()]):
@@ -128,8 +132,8 @@ class SRdispStereoRefine(SRdispStereo):
 
         # probability of training with dispsOut as input:
         # progress = [0, 1]: p = [0, 1]
-        if random.random() < progress:
-            itRefine = random.randint(0, 1)
+        if random.random() < progress or kitti == True:
+            itRefine = random.randint(0, 2)
             dispChoice = itRefine
             rawOuputs = self.predict(batch.lastScaleBatch(), mask=(1, 1), itRefine=itRefine)[-1]
             dispsOut = [myUtils.getLastNotList(rawOutputsSide).unsqueeze(1) for rawOutputsSide in rawOuputs]
