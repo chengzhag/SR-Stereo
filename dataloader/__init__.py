@@ -5,15 +5,21 @@ import torch
 # loadScale: A list of scale to load. Will return 4 * len(loadScale) images. Should be decreasing values.
 def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSizes=(12, 11),
                   loadScale=(1,), mode='normal', mask=(1, 1, 1, 1), randomLR=None, subValidSet=1):
-    subModes = ('subTrain', 'subEval', 'subTrainEval')
+    subModes = ('subTrain', 'subEval', 'subTrainEval', 'subTest')
     if not hasattr(loadScale, '__iter__'):
         loadScale = (loadScale,)
     if dataset == 'sceneflow':
         from dataloader import listSceneFlowFiles as listFile
     elif dataset == 'kitti2012':
-        from dataloader import listKitti2012Files as listFile
+        if mode == 'subTest':
+            from dataloader import KITTI_submission_loader2012 as listFile
+        else:
+            from dataloader import listKitti2012Files as listFile
     elif dataset in ('kitti2015', 'kitti2015_dense'):
-        from dataloader import listKitti2015Files as listFile
+        if mode == 'subTest':
+            from dataloader import KITTI_submission_loader as listFile
+        else:
+            from dataloader import listKitti2015Files as listFile
     elif dataset == 'carla_kitti':
         from dataloader import listCarlaKittiFiles as listFile
     else:
@@ -23,7 +29,10 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
 
     paths = list(listFile.dataloader(datapath))
     pathsTrain = paths[0:4]
-    pathsTest = paths[4:8]
+    if len(paths) == 8:
+        pathsTest = paths[4:8]
+    else:
+        pathsTest = None
     if subValidSet < 1:
         pathsTest = list(zip(*pathsTest))
         pathsTest = pathsTest[:round(len(pathsTest) * subValidSet)]
@@ -49,6 +58,8 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
             pass
         elif mode == 'subTrainEval':
             pathsTest = [dirsTrain + dirsEval if dirsTrain is not None else None for dirsTrain, dirsEval in zip(pathsTrain, pathsTest)]
+        elif mode == 'subTest':
+            pathsTest = pathsTrain
         mode = 'submission'
 
     trainImgLoader = torch.utils.data.DataLoader(

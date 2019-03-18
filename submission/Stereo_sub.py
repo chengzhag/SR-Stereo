@@ -19,7 +19,8 @@ class Submission(Base):
         outputs = collections.OrderedDict()
         for gtDisp, rawOutputsSide, side in zip(batch.lowestResDisps(), rawOutputs, ('L', 'R')):
             dispOut = myUtils.getLastNotList(rawOutputsSide)
-            outputs['dispOut' + side] = myUtils.savePreprocessDisp(dispOut)
+            if dispOut is not None:
+                outputs['dispOut' + side] = myUtils.savePreprocessDisp(dispOut)
             if gtDisp is not None:
                 outputs['gtDisp' + side] = myUtils.savePreprocessDisp(gtDisp)
 
