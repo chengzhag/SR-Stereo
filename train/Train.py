@@ -23,7 +23,8 @@ class Train:
         self.startEpoch = startEpoch
         self.global_step = 0
         self.tensorboardLogger = myUtils.TensorboardLogger()
-        self.test.tensorboardLogger = self.tensorboardLogger  # should be initialized in _trainIt
+        if self.test is not None:
+            self.test.tensorboardLogger = self.tensorboardLogger  # should be initialized in _trainIt
 
     def _trainIt(self, batch, log):
         return None, None
@@ -123,6 +124,7 @@ class Train:
                 or (self.testEvery == 0 and (epoch == 0 or epoch == self.nEpochs))
                 or (self.testEvery < 0 and (-epoch) % self.testEvery == 0)) \
                     and self.test is not None:
+                torch.cuda.empty_cache()
                 testScores = self.test(model=self.model, global_step=self.global_step).values()
                 testScore = sum(testScores) / len(testScores)
                 try:

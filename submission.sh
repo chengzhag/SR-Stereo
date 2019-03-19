@@ -26,19 +26,20 @@ nGPUs=$(( (${#CUDA_VISIBLE_DEVICES} + 1) / 2 ))
 
 
 pretrained_SR_kitti=${submission_dir}/pretrain_SR_kitti/SR_train/190318163338_SR_loadScale_1_0.5_trainCrop_64_512_batchSize_64_lossWeights_1_kitti2015
-pretrained_SRStereo_kitti=${submission_dir}/SRStereo_finetune_kitti/Stereo_train/
+pretrained_SRStereo_kitti=${submission_dir}/SRStereo_finetune_kitti/Stereo_train/190318225658_SRStereo_loadScale_1.0_trainCrop_64_512_batchSize_12_lossWeights_-1.0_0.0_1.0_kitti2015
 finetuned_SRStereo_kitti=${submission_dir}/SRStereo_finetune_kitti/Stereo_train/
 finetuned_SRdispStereoRefine_carla=${submission_dir}/SRdispStereoRefine_SRStereo_compare_carla/Stereo_train/190313215524_SRdispStereoRefine_loadScale_1.0_0.5_trainCrop_128_1024_batchSize_12_lossWeights_0.5_0.4_0.1_carla_kitti
 pretrained_SRdisp_kitti=${submission_dir}/pretrain_SRdisp_kitti/SR_train/
 
-## prepare: pretrain_SR_kitti (SERVER 162)
+## prepare: pretrain_SR_kitti (DONE: 190318163338)
 ## finetune SR on kitti2015
-PYTHONPATH=./ python train/SR_train.py --model SR --outputFolder submission/pretrain_SR_kitti --datapath $kitti2015_dataset --dataset kitti2015 --trainCrop 64 512 --epochs 6000 --save_every 300 --log_every 50 --batchsize_train 64 --lr 0.0001 --loadmodel $pretrained_EDSR_DIV2K --half --subtype subFinal
+#PYTHONPATH=./ python train/SR_train.py --model SR --outputFolder submission/pretrain_SR_kitti --datapath $kitti2015_dataset --dataset kitti2015 --trainCrop 64 512 --epochs 6000 --save_every 300 --log_every 50 --batchsize_train 64 --lr 0.0001 --loadmodel $pretrained_EDSR_DIV2K --half --subtype subFinal
 
-## SRStereo_finetune_kitti (TODO)
-## finetune SRStereo initialized with PSMNet pretrained with KITTI and SR finetuned with KITTI without updating SR (TODO)
-#PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder submission/SRStereo_finetune_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 1200 --save_every 300 --log_every 50 --batchsize_train 12 --lr 0.001 300 0.0005 450 0.0002 600 0.0001 --lossWeights -1 0 1 --loadmodel $pretrained_SR_kitti $pretrained_PSMNet_kitti2015 --half --subtype subFinal
-## finetune SRStereo initialized with prefinetuned SRStereo with updating SR (TODO)
+## SRStereo_finetune_kitti (DOING)
+## finetune SRStereo initialized with PSMNet pretrained with KITTI and SR finetuned with KITTI without updating SR (SERVER 162)
+PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder submission/SRStereo_finetune_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 1200 --save_every 300 --log_every 50 --batchsize_train 12 --lr 0.001 300 0.0005 450 0.0002 600 0.0001 --lossWeights -1 0 1 --loadmodel $pretrained_SR_kitti $pretrained_PSMNet_kitti2015 --half --subtype subFinal
+## finetune SRStereo initialized with prefinetuned SRStereo with updating SR (SERVER 162)
+#pretrained_SRStereo_kitti=${submission_dir}/SRStereo_finetune_kitti/Stereo_train/190318225658_SRStereo_loadScale_1.0_trainCrop_64_512_batchSize_12_lossWeights_-1.0_0.0_1.0_kitti2015
 #PYTHONPATH=./ python train/Stereo_train.py  --model SRStereo --dispscale 2 --outputFolder submission/SRStereo_finetune_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 300 --save_every 50 --log_every 50 --batchsize_train 12 --lr 0.0001 --lossWeights 0.5 0 0.5 --loadmodel $pretrained_SRStereo_kitti --half --subtype subFinal
 #
 #

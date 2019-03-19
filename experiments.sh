@@ -124,9 +124,11 @@ pretrained_SRdisp_kitti=${experiment_dir}/pretrain_SRdisp_kitti/SR_train/1903181
 #PYTHONPATH=./ python train/SR_train.py --model SRdisp --outputFolder experiments/pretrain_SRdisp_kitti --datapath $kitti2015_dense_dataset --dataset kitti2015_dense --trainCrop 64 2040 --epochs 1500 --save_every 50 --log_every 50 --test_every 10 --eval_fcn l1 --batchsize_train 16 --batchsize_test $(( 2 * $nGPUs)) --lr 0.0005 300 0.0002 500 0.0001 700 0.00005 900 0.00002 1100 0.00001 --loadmodel $finetuned_SRdispStereoRefine_carla --half
 
 
-## experiment 7: SRdispStereoRefine_PSMNet_compare_kitti (SERVER 95)
+## experiment 7: SRdispStereoRefine_PSMNet_compare_kitti (DOING)
 ## test subject: fintuning SRdispStereoRefine with KITTI 2015
 ## fintune SRdispStereoRefine with updating SRdisp
-PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 300 --save_every 50 --log_every 10 --test_every -30 --eval_fcn outlier --itRefine 2 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.0001 --lossWeights 0.5 0 0.5 --loadmodel $pretrained_SRdisp_kitti $finetuned_SRStereo_kitti --half
-
+#(SERVER 95)
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 300 --save_every 50 --log_every 10 --test_every -30 --eval_fcn outlier --itRefine 2 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.0001 --lossWeights 0.5 0 0.5 --loadmodel $pretrained_SRdisp_kitti $finetuned_SRStereo_kitti --half
+#(TODO: SERVER 95)
+PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 300 --save_every 50 --log_every 10 --test_every -30 --eval_fcn outlier --itRefine 2 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.00002 --lossWeights 0.5 0 0.5 --loadmodel $pretrained_SRdisp_kitti $finetuned_SRStereo_kitti --half
 

@@ -133,7 +133,10 @@ class SRdispStereoRefine(SRdispStereo):
         # probability of training with dispsOut as input:
         # progress = [0, 1]: p = [0, 1]
         if random.random() < progress or kitti == True:
-            itRefine = random.randint(0, 2)
+            if random.random() > progress:
+                itRefine = random.randint(1, 2)
+            else:
+                itRefine = random.randint(0, 1)
             dispChoice = itRefine
             rawOuputs = self.predict(batch.lastScaleBatch(), mask=(1, 1), itRefine=itRefine)[-1]
             dispsOut = [myUtils.getLastNotList(rawOutputsSide).unsqueeze(1) for rawOutputsSide in rawOuputs]

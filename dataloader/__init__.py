@@ -66,6 +66,7 @@ def getDataLoader(datapath, dataset='sceneflow', trainCrop=(256, 512), batchSize
     if mode == 'subFinal':
         pathsTrain = [dirsTrain + dirsEval if dirsTrain is not None else None for dirsTrain, dirsEval in
                      zip(pathsTrain, pathsTest)]
+        batchSizes = [batchSizes[0], 0]
         mode = 'training'
 
     trainImgLoader = torch.utils.data.DataLoader(

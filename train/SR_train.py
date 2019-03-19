@@ -75,7 +75,7 @@ def main():
 
     # Train
     test = SR_eval.Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
-                              ndisLog=args.ndis_log)
+                              ndisLog=args.ndis_log) if testImgLoader is not None else None
     train = Train(trainImgLoader=trainImgLoader, nEpochs=args.epochs, lr=args.lr,
                   logEvery=args.log_every, ndisLog=args.ndis_log,
                   testEvery=args.test_every, Test=test,
