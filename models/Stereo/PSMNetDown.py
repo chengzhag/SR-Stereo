@@ -98,10 +98,12 @@ class PSMNetDown(PSMNet):
         myUtils.assertBatchLen(batch, 8)
         batch = myUtils.Batch(batch.highResRGBs() + batch.lowestResDisps(), cuda=batch.cuda, half=batch.half)
         scores, outputs, rawOutputs = super(PSMNetDown, self).test(batch, evalType, returnOutputs, kitti)
-        for (outDispHigh, outDispLow), side in zip(rawOutputs, ('L', 'R')):
-            if returnOutputs:
-                if outDispHigh is not None:
-                    outputs['outputDispHigh' + side] = outDispHigh / (self.outputMaxDisp * 2)
+        for rawOutputsSide, side in zip(rawOutputs, ('L', 'R')):
+            if rawOutputsSide is not None:
+                (outDispHigh, outDispLow) = rawOutputsSide
+                if returnOutputs:
+                    if outDispHigh is not None:
+                        outputs['outputDispHigh' + side] = outDispHigh / (self.outputMaxDisp * 2)
         return scores, outputs, rawOutputs
 
 

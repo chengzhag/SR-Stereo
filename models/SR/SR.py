@@ -23,16 +23,23 @@ class RawEDSR(edsr.EDSR):
         return output
 
     def load_state_dict(self, state_dict, strict=False):
+        match = True
         newModelDict = self.state_dict()
         selectedModelDict = {}
         for loadName, loadValue in state_dict.items():
+            posiblePrefix = 'sr.module.'
+            if loadName.startswith(posiblePrefix):
+                loadName = loadName[len(posiblePrefix):]
+                match = False
             if loadName in newModelDict and newModelDict[loadName].size() == loadValue.size():
                 selectedModelDict[loadName] = loadValue
             else:
                 message = 'Warning! While copying the parameter named {}, ' \
                           'whose dimensions in the model are {} and ' \
                           'whose dimensions in the checkpoint are {}.' \
-                          .format(loadName, newModelDict[loadName].size(), loadValue.size())
+                          .format(
+                    loadName, newModelDict[loadName].size() if loadName in newModelDict else '(Not found)', loadValue.size()
+                )
                 if strict:
                     raise Exception(message)
                 else:
@@ -44,6 +51,7 @@ class RawEDSR(edsr.EDSR):
                     print(message)
         newModelDict.update(selectedModelDict)
         super(RawEDSR, self).load_state_dict(newModelDict, strict=False)
+        return match
 
 
 class SR(Model):
@@ -132,7 +140,7 @@ class SR(Model):
         rawOutputs = self.predict(batch.lastScaleBatch(), mask=mask)
         for gt, rawOutputsSide, side in zip(batch.highResRGBs(), rawOutputs, ('L', 'R')):
             output = myUtils.getLastNotList(rawOutputsSide)
-            scores[evalType + side] = evalFcn.getEvalFcn(evalType)(
+            scores[evalType + 'Sr' + side] = evalFcn.getEvalFcn(evalType)(
                 gt * self.args.rgb_range, output * self.args.rgb_range
             )if output is not None else None
             if returnOutputs:

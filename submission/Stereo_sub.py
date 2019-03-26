@@ -12,20 +12,24 @@ class Submission(Base):
         super(Submission, self).__init__(subImgLoader)
 
     def _subIt(self, batch):
-        def preprocess(disp):
-            dispOut = disp.squeeze()
-            dispOut = dispOut.data.cpu().numpy()
-            dispOut = (dispOut * 256).astype('uint16')
-            return dispOut
-
-        rawOutputs = self.model.predict(batch.detach(), mask=(1, 0))[0]
-        dispOut = myUtils.getLastNotList(rawOutputs)
+        rawOutputs = self.model.predict(batch.detach(), mask=(1, 1))
+        if myUtils.depth(rawOutputs) == 4:
+            rawOutputs = rawOutputs[-1]
 
         outputs = collections.OrderedDict()
-        outputs['dispOutL'] = preprocess(dispOut)
-        gtL = batch.highResDisps()[0]
-        if gtL is not None:
-            outputs['gtL'] = preprocess(gtL)
+        for gtDisp, rawOutputsSide, side in zip(batch.lowestResDisps(), rawOutputs, ('L', 'R')):
+            dispOut = myUtils.getLastNotList(rawOutputsSide)
+            if dispOut is not None:
+                outputs['dispOut' + side] = myUtils.savePreprocessDisp(dispOut)
+            if gtDisp is not None:
+                outputs['gtDisp' + side] = myUtils.savePreprocessDisp(gtDisp)
+
+            # for SRStereo, save outDispHighs together
+            if type(rawOutputsSide) in (tuple, list) and len(rawOutputsSide) == 2 \
+                and type(rawOutputsSide[1]) in (tuple, list) and len(rawOutputsSide[1]) == 2:
+                outputs['dispOutHigh' + side] = myUtils.savePreprocessDisp(rawOutputsSide[1][0], dispScale=170)
+
+
         return outputs
 
 
@@ -38,12 +42,11 @@ def main():
 
     # Dataset
     import dataloader
-    if args.subtype == 'eval':
-        batchSizes = (0, 1)
+
     _, imgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
-                                            batchSizes=batchSizes,
+                                            batchSizes=(0, 1),
                                             loadScale=args.load_scale,
-                                            mode='submission',
+                                            mode=args.subtype,
                                             mask=(1, 1, 1, 0))
 
     # Load model

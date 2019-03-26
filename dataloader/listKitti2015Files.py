@@ -4,6 +4,9 @@ from PIL import Image
 import os
 import os.path
 import numpy as np
+from utils import myUtils
+import random
+
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -22,6 +25,10 @@ def dataloader(filepath):
   disp_R = 'disp_occ_1/'
 
   image = [img for img in os.listdir(filepath+left_fold) if img.find('_10') > -1]
+  image.sort()
+
+  random.seed(251)
+  random.shuffle(image)
 
   train = image[:160]
   val   = image[160:]
@@ -29,11 +36,11 @@ def dataloader(filepath):
   left_train  = [filepath+left_fold+img for img in train]
   right_train = [filepath+right_fold+img for img in train]
   disp_train_L = [filepath+disp_L+img for img in train]
-  #disp_train_R = [filepath+disp_R+img for img in train]
+  disp_train_R = [filepath+disp_R+img for img in train]
 
   left_val  = [filepath+left_fold+img for img in val]
   right_val = [filepath+right_fold+img for img in val]
   disp_val_L = [filepath+disp_L+img for img in val]
-  #disp_val_R = [filepath+disp_R+img for img in val]
+  disp_val_R = [filepath+disp_R+img for img in val]
 
-  return left_train, right_train, disp_train_L, None, left_val, right_val, disp_val_L, None
+  return left_train, right_train, disp_train_L, disp_train_R, left_val, right_val, disp_val_L, disp_val_R

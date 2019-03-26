@@ -31,7 +31,7 @@ def main():
         ['outputFolder', 'datapath', 'model', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
          'ndis_log', 'dataset', 'load_scale', 'trainCrop', 'batchsize_test',
          'batchsize_train', 'log_every', 'test_every', 'save_every', 'epochs', 'lr', 'half',
-         'withMask', 'randomLR', 'lossWeights', 'resume'],
+         'withMask', 'randomLR', 'lossWeights', 'resume', 'subtype'],
         description='train or finetune SR net')
 
     args = parser.parse_args()
@@ -53,7 +53,7 @@ def main():
                                                              trainCrop=args.trainCrop,
                                                              batchSizes=(args.batchsize_train, args.batchsize_test),
                                                              loadScale=(args.load_scale[0], args.load_scale[0] / 2),
-                                                             mode='training',
+                                                             mode='training' if args.subtype is None else args.subtype,
                                                              mask=mask,
                                                              randomLR=args.randomLR)
 
@@ -75,11 +75,11 @@ def main():
 
     # Train
     test = SR_eval.Evaluation(testImgLoader=testImgLoader, evalFcn=args.eval_fcn,
-                              ndisLog=args.ndis_log)
+                              ndisLog=args.ndis_log) if testImgLoader is not None else None
     train = Train(trainImgLoader=trainImgLoader, nEpochs=args.epochs, lr=args.lr,
                   logEvery=args.log_every, ndisLog=args.ndis_log,
                   testEvery=args.test_every, Test=test,
-                  startEpoch=epoch + 1 if args.resume else 1, saveEvery=args.save_every)
+                  startEpoch=epoch + 1 if args.resume else 0, saveEvery=args.save_every)
     train(model=sr)
 
 

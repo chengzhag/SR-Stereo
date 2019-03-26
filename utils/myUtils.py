@@ -6,6 +6,8 @@ import collections
 import cv2
 import numpy as np
 import torchvision.transforms as transforms
+import random
+
 
 class NameValues(collections.OrderedDict):
     def __init__(self, names=(), values=(), prefix='', suffix=''):
@@ -14,17 +16,26 @@ class NameValues(collections.OrderedDict):
             if value is not None:
                 super(NameValues, self).__setitem__(prefix + name + suffix, value)
 
-    def strPrint(self, unit='', prefix='', suffix=''):
-        str = ''
+    def strPrint(self, prefix='', suffix=''):
+        strReturn = ''
         for name, value in super(NameValues, self).items():
-            str += '%s: ' % (prefix + name + suffix)
-            if type(value) in (list, tuple):
-                for v in value:
-                    str += '%.3f%s, ' % (v, unit)
+            if name.find('outlier') != -1:
+                unit = '%'
             else:
-                str += '%.3f%s, ' % (value, unit)
+                unit = ''
+            strReturn += '%s: ' % (prefix + name + suffix)
+            def addValue(value):
+                s = ''
+                if type(value) in (list, tuple):
+                    for v in value:
+                        s += addValue(v)
+                else:
+                    s += '%.3f%s, ' % (value, unit)
+                return s
 
-        return str
+            strReturn += addValue(value)
+
+        return strReturn
 
     def strSuffix(self, prefix='', suffix=''):
         sSuffix = ''
@@ -163,7 +174,10 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                                                                'set to -1 to train without saving; '
                                                                'set to 0 to save after the last epoch.'),
                  'test_every': lambda: parser.add_argument('--test_every', type=int, default=1,
-                                                           help='test every test_every epochs. set to 0 to stop testing'),
+                                                           help='test every test_every epochs. '
+                                                                '> 0 will not test before training. '
+                                                                '= 0 will test before training and after final epoch. '
+                                                                '< 0 will test before training'),
                  'epochs': lambda: parser.add_argument('--epochs', type=int, default=10,
                                                        help='number of epochs to train'),
                  'lr': lambda: parser.add_argument('--lr', type=float, default=[0.001], help='', nargs='+'),
@@ -178,8 +192,10 @@ def getBasicParser(includeKeys=['all'], description='Stereo'):
                                                          help='evaluation function used in testing'),
                  'batchsize_test': lambda: parser.add_argument('--batchsize_test', type=int, default=4,
                                                                help='testing batch size'),
+                 'subValidSet': lambda: parser.add_argument('--subValidSet', type=float, default=1,
+                                                               help='test with part of valid set'),
                  # submission
-                 'subtype': lambda: parser.add_argument('--subtype', type=str, default='eval',
+                 'subtype': lambda: parser.add_argument('--subtype', type=str, default=None,
                                                         help='dataset type used for submission (eval/test)'),
                  # module test
                  'nsample_save': lambda: parser.add_argument('--nsample_save', type=int, default=1,
@@ -287,6 +303,12 @@ class Batch:
             self.batch = [(im.half() if half else im) if im is not None else None for im in self.batch]
         if cuda:
             self.batch = [(im.cuda() if cuda else im) if im is not None else None for im in self.batch]
+
+        def assertData(t):
+            if t is not None and torch.isnan(t).any():
+                raise Exception('Error: Data has nan in it')
+
+        forNestingList(self.batch, assertData)
 
     def _assertLen(self, len):
         if len % 4 != 0:
@@ -428,3 +450,23 @@ class Filter:
     def __call__(self, x):
         self.old = x if self.old is None else self.old * (1 - self.weight) + x * self.weight
         return self.old
+
+def savePreprocessRGB(im):
+    output = im.squeeze()
+    output = output.data.cpu().numpy()
+    output = output.transpose(1, 2, 0)
+    output = (output * 255).astype('uint8')
+    return output
+
+def savePreprocessDisp(disp, dispScale=256):
+    dispOut = disp.squeeze()
+    dispOut = dispOut.data.cpu().numpy()
+    dispOut = (dispOut * dispScale).astype('uint16')
+    return dispOut
+
+def shuffleLists(lists):
+    c = list(zip(*lists))
+    random.shuffle(c)
+    lists = list(zip(*c))
+    return lists
+

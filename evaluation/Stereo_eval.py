@@ -31,7 +31,7 @@ class Evaluation(Base):
 def main():
     parser = myUtils.getBasicParser(
         ['outputFolder', 'maxdisp', 'dispscale', 'model', 'datapath', 'loadmodel', 'no_cuda', 'seed', 'eval_fcn',
-         'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half', 'resume', 'itRefine'],
+         'ndis_log', 'dataset', 'load_scale', 'batchsize_test', 'half', 'resume', 'itRefine', 'subValidSet'],
         description='evaluate Stereo net or SR-Stereo net')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -44,7 +44,8 @@ def main():
     import dataloader
     _, testImgLoader = dataloader.getDataLoader(datapath=args.datapath, dataset=args.dataset,
                                                 batchSizes=(0, args.batchsize_test),
-                                                loadScale=args.load_scale, mode='testing')
+                                                loadScale=args.load_scale, mode='testing',
+                                                subValidSet=args.subValidSet)
 
     # Load model
     stage, _ = os.path.splitext(os.path.basename(__file__))

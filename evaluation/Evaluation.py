@@ -25,7 +25,6 @@ class Evaluation:
         # Evaluation
         tic = time.time()
         ticFull = time.time()
-        scoreUnit = '%' if 'outlier' in self.evalFcn else ''
         filter = myUtils.Filter()
         for batch_idx, batch in enumerate(self.testImgLoader, 1):
             batch = myUtils.Batch(batch, cuda=self.model.cuda, half=self.model.half)
@@ -56,7 +55,7 @@ class Evaluation:
 
             printMessage = 'it %d/%d, %s%sleft %.2fh' % (
                 batch_idx, len(self.testImgLoader),
-                scoresPairs.strPrint(scoreUnit), avgTestScores.strPrint(scoreUnit, suffix='Avg'), timeLeft)
+                scoresPairs.strPrint(), avgTestScores.strPrint(suffix='Avg'), timeLeft)
             print(printMessage)
             self.tensorboardLogger.writer.add_text('testPrint/iterations', printMessage,
                                                    global_step=global_step)

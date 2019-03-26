@@ -42,6 +42,32 @@ class SRStereo(Stereo):
         self._stereo = None
         self._sr = None
 
+        ## Abandoned
+        # class BlurDown:
+        #     def __init__(self, cuda):
+        #         self.gaussionKernel = [[0.0005, 0.0050, 0.0109, 0.0050, 0.0005],
+        #                                [0.0050, 0.0522, 0.1141, 0.0522, 0.0050],
+        #                                [0.0109, 0.1141, 0.2491, 0.1141, 0.0109],
+        #                                [0.0050, 0.0522, 0.1141, 0.0522, 0.0050],
+        #                                [0.0005, 0.0050, 0.0109, 0.0050, 0.0005]]
+        #         self.gaussionKernel = torch.FloatTensor(
+        #             self.gaussionKernel
+        #         ).unsqueeze(0).unsqueeze(0)
+        #         if cuda:
+        #             self.gaussionKernel = self.gaussionKernel.cuda()
+        #         self.gaussionKernel = nn.Parameter(data=self.gaussionKernel, requires_grad=False)
+        #     def __call__(self, im):
+        #         paddedIm = nn.functional.pad(im, (2, 2, 2, 2), 'reflect')
+        #         bluredIm = []
+        #         for c in range(paddedIm.size()[1]):
+        #             bluredIm.append(nn.functional.conv2d(paddedIm[:, c:c+1, :, :],
+        #                                                  self.gaussionKernel,
+        #                                                  stride=2))
+        #         bluredIm = torch.cat(bluredIm, dim=1)
+        #         return bluredIm
+        #
+        # self.blurDown = BlurDown(cuda=cuda)
+
     def initModel(self):
         self._stereo = self._getStereo()
         self._stereo.initModel()
@@ -57,18 +83,18 @@ class SRStereo(Stereo):
     def test(self, batch, evalType='l1', returnOutputs=False, kitti=False):
         myUtils.assertBatchLen(batch, (4, 8))
         if len(batch) == 8:
-            batch = batch.lastScaleBatch()
             gtSRs = batch.highResRGBs()
             batch = batch.lastScaleBatch()
         else:
             gtSRs = (None, None)
 
         scores, outputs, rawOutputs = super(SRStereo, self).test(batch, evalType, returnOutputs, kitti)
-        for rawOutputsSide, side, gtSR, iSide in zip(rawOutputs, ('L', 'R'), gtSRs, (0, 1)):
+        for rawOutputsSide, side, gtSR in zip(rawOutputs, ('L', 'R'), gtSRs):
             if rawOutputsSide is not None:
                 outSRs, (outDispHigh, outDispLow) = rawOutputsSide[-2:]
                 if gtSR is not None:
-                    scores['l1' + 'Sr' + side] = evalFcn.l1(gtSR, outSRs[iSide])
+                    scores['l1' + 'Sr' + side] = evalFcn.l1(
+                        gtSR * self._sr.args.rgb_range, outSRs[0] * self._sr.args.rgb_range)
                 if returnOutputs:
                     if outDispHigh is not None:
                         outputs['outputDispHigh' + side] = outDispHigh / (self.outputMaxDisp * 2)
@@ -90,9 +116,11 @@ class SRStereo(Stereo):
                 if outSr.size() == srGt.size():
                     lossSRside = self._sr.loss(outSr, srGt)
                 else:
+                    # lossSRside = self._sr.loss(self.blurDown(outSr), srGt)
                     lossSRside = self._sr.loss(nn.AvgPool2d((2, 2))(outSr), srGt)
             elif all([t is not None for t in (outSr, input)]):
                 # if dataset has no SR GT, use lowestResRGBs as GTs
+                # lossSRside = self._sr.loss(self.blurDown(outSr), srGt)
                 lossSRside = self._sr.loss(nn.AvgPool2d((2, 2))(outSr), srGt)
             else:
                 lossSRside = None
@@ -148,6 +176,10 @@ class SRStereo(Stereo):
         if len(batch) == 4:
             batch = myUtils.Batch([None] * 4 + batch.batch)
 
+        # if has no highResRGBs, use lowestResRGBs as GTs
+        if all([sr is None for sr in batch.highResRGBs()]):
+            batch.highResRGBs(batch.lowestResRGBs())
+
         imgLowL, imgLowR = batch.lowestResRGBs()
         imgHighL, imgHighR = batch.highResRGBs()
 
@@ -160,8 +192,7 @@ class SRStereo(Stereo):
                 (lambda im: im, myUtils.flipLR),
                 ('L', 'R')
         ):
-            if (not all([gt is None for gt in dispGTs])) \
-                    or (all([t is not None for t in (srGtL, srGtR)])):
+            if (not all([gt is None for gt in dispGTs])):
                 lossesList, outputsList = self.trainOneSide(
                     *process([inputL, inputR, srGtL, srGtR, dispGTs]),
                     returnOutputs=returnOutputs,

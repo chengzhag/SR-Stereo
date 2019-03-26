@@ -16,21 +16,18 @@ class SRdispStereo(SRStereo):
 
     # imgL: RGB value range 0~1
     # output: RGB value range 0~1
+    # mask: useless in this case
     def predict(self, batch, mask=(1,1)):
         myUtils.assertBatchLen(batch, 4)
         self.predictPrepare()
 
         cated, warpTos = self._sr.warpAndCat(batch)
         batch.highResRGBs(cated)
-        outputs = super(SRdispStereo, self).predict(batch, mask)
+        outputs = super(SRdispStereo, self).predict(batch)
         outputsReturn = [[warpTo] + outputsSide for warpTo, outputsSide in zip(warpTos, outputs)]
         return outputsReturn
 
     def test(self, batch, evalType='l1', returnOutputs=False, kitti=False):
-        myUtils.assertBatchLen(batch, (4, 8))
-        if len(batch) == 8:
-            batch = batch.lastScaleBatch()
-
         scores, outputs, rawOutputs = super(SRdispStereo, self).test(batch, evalType, returnOutputs, kitti)
         for (warpTo, outSRs, (outDispHigh, outDispLow)), side in zip(rawOutputs, ('L', 'R')):
             if returnOutputs:
