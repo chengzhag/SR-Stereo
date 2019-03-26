@@ -127,8 +127,12 @@ pretrained_SRdisp_kitti=${experiment_dir}/pretrain_SRdisp_kitti/SR_train/1903181
 ## experiment 7: SRdispStereoRefine_PSMNet_compare_kitti (DOING)
 ## test subject: fintuning SRdispStereoRefine with KITTI 2015
 ## fintune SRdispStereoRefine with updating SRdisp
-#(SERVER 95)
+# (DONE: 190319082201)
 #PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 300 --save_every 50 --log_every 10 --test_every -30 --eval_fcn outlier --itRefine 2 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.0001 --lossWeights 0.5 0 0.5 --loadmodel $pretrained_SRdisp_kitti $finetuned_SRStereo_kitti --half
-#(TODO: SERVER 95)
-PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 300 --save_every 50 --log_every 10 --test_every -30 --eval_fcn outlier --itRefine 2 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.00002 --lossWeights 0.5 0 0.5 --loadmodel $pretrained_SRdisp_kitti $finetuned_SRStereo_kitti --half
+# (DONE: 190319175407)
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 300 --save_every 50 --log_every 10 --test_every -30 --eval_fcn outlier --itRefine 2 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.00002 --lossWeights 0.5 0 0.5 --loadmodel $pretrained_SRdisp_kitti $finetuned_SRStereo_kitti --half
+# initialize SRdisp wirh $finetuned_SRdispStereoRefine_carla. finetune with updating SRdisp (DONE: 190320081959)
+#PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 300 --save_every 50 --log_every 10 --test_every -30 --eval_fcn outlier --itRefine 2 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.0001 --lossWeights 0.5 0 0.5 --loadmodel $finetuned_SRdispStereoRefine_carla $finetuned_SRStereo_kitti --half
+# initialize SRdisp wirh $finetuned_SRdispStereoRefine_carla. finetune without updating SRdisp (DONE: 190320102041)
+PYTHONPATH=./ python train/Stereo_train.py  --model SRdispStereoRefine --dispscale 2 --outputFolder experiments/SRdispStereoRefine_PSMNet_compare_kitti --datapath $kitti2015_dataset --dataset kitti2015 --load_scale 1 --trainCrop 64 512 --epochs 300 --save_every 50 --log_every 10 --test_every -30 --eval_fcn outlier --itRefine 2 --batchsize_train 12 --batchsize_test $nGPUs --lr 0.0001 --lossWeights -1 0 1 --loadmodel $finetuned_SRdispStereoRefine_carla $finetuned_SRStereo_kitti --half
 
